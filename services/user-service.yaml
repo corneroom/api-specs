@@ -1,0 +1,4742 @@
+openapi: 3.0.0
+info:
+  title: Project X - User Service API
+  description: |
+    API specification for the User service of Project X.
+    
+    ## Enhanced Profile API
+    The `/users/me` endpoint provides enhanced nested profile format:
+    - PATCH method supports partial updates with enhanced nested structure
+    - Enhanced format organizes profile data into logical sections (basic_info, lifestyle, travel_experience, etc.)
+  version: 1.0.0
+  contact:
+    name: project-x-api
+    url: https://www.inspiredtech.ca
+    email: info@aircouch.com
+  termsOfService: https://www.inspiredtech.ca/terms
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+tags:
+  - name: user
+    description: User operations
+paths:
+  /users/heartbeat:
+    get:
+      description: Returns the heartbeat status of the user service.
+      summary: User service heartbeat
+      tags:
+        - user
+      operationId: userHeartbeat
+      x-google-backend:
+        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      responses:
+        "200":
+          description: User service heartbeat
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Email already exists.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Phone number already registered.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Incorrect email or password.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Incorrect phone number or OTP.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Verification code is invalid or expired.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+      security: []
+  /users/register/email:
+    post:
+      description: Registers a new user using email address.
+      summary: User signup via email
+      tags:
+        - user
+      operationId: emailSignUp
+      x-google-backend:
+        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  minLength: 8
+                  maxLength: 50
+        description: The user to register
+        required: true
+      responses:
+        "201":
+          description: The registered user with JWT token
+          headers:
+            X-Corneroom-Access:
+              description: JWT access token (new standard header, Title-Case per Go convention).
+              schema:
+                type: string
+                example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            X-Corneroom-Refresh:
+              description: Refresh token for future token refreshes (new standard header, Title-Case per Go convention).
+              schema:
+                type: string
+                example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            Authorization:
+              description: Bearer JWT token (legacy header, to be phased out - use X-Corneroom-Access).
+              schema:
+                type: string
+                example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Response containing a single user object.
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      first_name:
+                        type: string
+                      email:
+                        type: string
+                      status:
+                        type: string
+                  toast:
+                    type: string
+                    example: User registered successfully.
+                  error:
+                    type: string
+                    example: "Email already exists."
+                required:
+                  - success
+                  - data
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: User not found.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Authentication required.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+      security: []
+  /users/register/email/confirm:
+    post:
+      description: Confirms user registration via email verification code.
+      summary: User signup via email confirmation
+      tags:
+        - user
+      operationId: emailSignUpOTPConfirm
+      x-google-backend:
+        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                contact:
+                  type: string
+                  format: email
+                  description: The email address used for registration
+                otp:
+                  type: string
+                  description: The email verification code
+                  maxLength: 6
+                  pattern: ^[0-9]*$
+              required:
+                - otp
+                - contact
+        description: The email verification code
+        required: true
+      responses:
+        "201":
+          description: The registered and confirmed user with tokens in headers
+          headers:
+            Authorization:
+              description: Bearer JWT access token to be used for subsequent requests.
+              schema:
+                type: string
+                example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Response containing a single user object.
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      first_name:
+                        type: string
+                      last_name:
+                        type: string
+                      email:
+                        type: string
+                      bio:
+                        type: string
+                      avatar:
+                        type: string
+                        format: uri
+                      phone:
+                        type: string
+                      birthday:
+                        type: string
+                        format: date-time
+                      city:
+                        type: string
+                      country:
+                        type: string
+                        maxItems: 10
+                      interests:
+                        type: array
+                        items:
+                          type: string
+                        maxItems: 10
+                      languages:
+                        type: array
+                        items:
+                          type: string
+                        maxItems: 10
+                      created_at:
+                        type: string
+                        format: date-time
+                      updated_at:
+                        type: string
+                        format: date-time
+                      gender:
+                        type: string
+                        enum:
+                          - Male
+                          - Female
+                          - Non-binary
+                          - Transgender
+                          - Genderqueer
+                          - Genderfluid
+                          - Agender
+                          - Two-spirit
+                          - Bigender
+                          - Other
+                          - Prefer not to say
+                      status:
+                        type: string
+                        enum:
+                          - active
+                          - suspended
+                          - pending
+                          - deleted
+                      deleted:
+                        type: boolean
+                      deleted_at:
+                        type: string
+                        format: date-time
+                  toast:
+                    type: string
+                    example: User registered successfully.
+                  error:
+                    type: string
+                    example: "Invalid or expired verification code."
+                required:
+                  - success
+                  - data
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: An unexpected error occurred.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Email already exists.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+      security: []
+  /users/register/phone:
+    post:
+      description: Registers a new user using phone number.
+      summary: User signup via phone number
+      tags:
+        - user
+      operationId: phoneSignUp
+      x-google-backend:
+        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - phone_number
+                - password
+              properties:
+                phone_number:
+                  type: string
+                  description: The phone number in E.164 format (e.g., +1234567890)
+                password:
+                  type: string
+                  minLength: 8
+                  maxLength: 50
+        description: The user to register
+        required: true
+      responses:
+        "201":
+          description: The registered user
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Phone number already registered.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Incorrect email or password.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+      security: []
+  /users/register/phone/confirm:
+    post:
+      description: Confirms user registration via phone verification code.
+      summary: User signup via phone number confirmation
+      tags:
+        - user
+      operationId: phoneSignUpOTPConfirm
+      x-google-backend:
+        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                contact:
+                  type: string
+                  description: The phone number in E.164 format (e.g., +1234567890)
+                otp:
+                  type: string
+                  description: The phone verification code
+                  maxLength: 6
+                  pattern: ^[0-9]*$
+              required:
+                - otp
+                - contact
+        description: The phone verification code
+        required: true
+      responses:
+        "201":
+          description: The registered and confirmed user with tokens in headers
+          headers:
+            Authorization:
+              description: Bearer JWT access token to be used for subsequent requests.
+              schema:
+                type: string
+                example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Response containing a single user object.
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      first_name:
+                        type: string
+                      last_name:
+                        type: string
+                      email:
+                        type: string
+                      bio:
+                        type: string
+                      avatar:
+                        type: string
+                        format: uri
+                      phone:
+                        type: string
+                      birthday:
+                        type: string
+                        format: date-time
+                      city:
+                        type: string
+                      country:
+                        type: string
+                        maxItems: 10
+                      interests:
+                        type: array
+                        items:
+                          type: string
+                        maxItems: 10
+                      languages:
+                        type: array
+                        items:
+                          type: string
+                        maxItems: 10
+                      created_at:
+                        type: string
+                        format: date-time
+                      updated_at:
+                        type: string
+                        format: date-time
+                      gender:
+                        type: string
+                        enum:
+                          - Male
+                          - Female
+                          - Non-binary
+                          - Transgender
+                          - Genderqueer
+                          - Genderfluid
+                          - Agender
+                          - Two-spirit
+                          - Bigender
+                          - Other
+                          - Prefer not to say
+                      status:
+                        type: string
+                        enum:
+                          - active
+                          - suspended
+                          - pending
+                          - deleted
+                      deleted:
+                        type: boolean
+                      deleted_at:
+                        type: string
+                        format: date-time
+                  toast:
+                    type: string
+                    example: User registered successfully.
+                  error:
+                    type: string
+                    example: "Invalid or expired phone verification code."
+                required:
+                  - success
+                  - data
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Incorrect phone number or OTP.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Verification code is invalid or expired.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+      security: []
+  /users/register/otp/email:
+    post:
+      description: Registers a new user using OTP sent to email.
+      summary: Resend registration email OTP
+      tags:
+        - user
+      operationId: sendRegistrationEmailOTP
+      x-google-backend:
+        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: The email address to send the OTP
+              required:
+                - email
+        description: The email address to send the OTP
+        required: true
+      responses:
+        "201":
+          description: The OTP sent to the email
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: User not found.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Authentication required.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: An unexpected error occurred.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+      security: []
+  /users/register/otp/phone:
+    post:
+      description: Registers a new user using OTP sent to phone.
+      summary: Resend registration Phone OTP
+      tags:
+        - user
+      operationId: sendRegistrationPhoneOTP
+      x-google-backend:
+        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                phone_number:
+                  type: string
+                  description: The phone number in E.164 format (e.g., +1234567890)
+              required:
+                - phone_number
+        description: The phone number to send the OTP
+        required: true
+      responses:
+        "201":
+          description: The OTP sent to the phone
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Email already exists.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Phone number already registered.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Incorrect email or password.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+      security: []
+  /users/social/auth:
+    post:
+      description: Authenticates user via social login provider.
+      summary: User auth via social media
+      tags:
+        - user
+      operationId: socialAuth
+      x-google-backend:
+        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - id_token
+              properties:
+                id_token:
+                  type: string
+                  description: The social media token
+        description: The user cred to authenticate
+        required: true
+      responses:
+        "200":
+          description: Return a user with JWT tokens in headers if exists or create a new user
+          headers:
+            Authorization:
+              description: Bearer JWT access token to be used for subsequent requests.
+              schema:
+                type: string
+                example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Response for user social authentication.
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      first_name:
+                        type: string
+                      last_name:
+                        type: string
+                      email:
+                        type: string
+                      bio:
+                        type: string
+                      avatar:
+                        type: string
+                        format: uri
+                      phone:
+                        type: string
+                      birthday:
+                        type: string
+                        format: date-time
+                      city:
+                        type: string
+                      country:
+                        type: string
+                        maxItems: 10
+                      interests:
+                        type: array
+                        items:
+                          type: string
+                        maxItems: 10
+                      languages:
+                        type: array
+                        items:
+                          type: string
+                        maxItems: 10
+                      created_at:
+                        type: string
+                        format: date-time
+                      updated_at:
+                        type: string
+                        format: date-time
+                      gender:
+                        type: string
+                        enum:
+                          - Male
+                          - Female
+                          - Non-binary
+                          - Transgender
+                          - Genderqueer
+                          - Genderfluid
+                          - Agender
+                          - Two-spirit
+                          - Bigender
+                          - Other
+                          - Prefer not to say
+                  toast:
+                    type: string
+                    example: Social authentication successful.
+                  error:
+                    type: string
+                    example: "Social authentication failed."
+                required:
+                  - success
+                  - data
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Incorrect phone number or OTP.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Verification code is invalid or expired.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+      security: []
+  /users/login/email:
+    post:
+      description: Logs in a user using email and password.
+      summary: Sign in a user via email
+      tags:
+        - user
+      operationId: emailSignIn
+      x-google-backend:
+        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  minLength: 8
+                  maxLength: 50
+        description: The credentials to login
+        required: true
+      responses:
+        "200":
+          description: The logged in user with tokens in headers
+          headers:
+            Authorization:
+              description: Bearer JWT access token to be used for subsequent requests.
+              schema:
+                type: string
+                example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Response for user login (email/phone).
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      first_name:
+                        type: string
+                      last_name:
+                        type: string
+                      email:
+                        type: string
+                      bio:
+                        type: string
+                      avatar:
+                        type: string
+                        format: uri
+                      phone:
+                        type: string
+                      birthday:
+                        type: string
+                        format: date-time
+                      city:
+                        type: string
+                      country:
+                        type: string
+                        maxItems: 10
+                      interests:
+                        type: array
+                        items:
+                          type: string
+                        maxItems: 10
+                      languages:
+                        type: array
+                        items:
+                          type: string
+                        maxItems: 10
+                      created_at:
+                        type: string
+                        format: date-time
+                      updated_at:
+                        type: string
+                        format: date-time
+                      gender:
+                        type: string
+                        enum:
+                          - Male
+                          - Female
+                          - Non-binary
+                          - Transgender
+                          - Genderqueer
+                          - Genderfluid
+                          - Agender
+                          - Two-spirit
+                          - Bigender
+                          - Other
+                          - Prefer not to say
+                  toast:
+                    type: string
+                    example: Login successful.
+                  error:
+                    type: string
+                    example: "Incorrect email or password."
+                required:
+                  - success
+                  - data
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: User not found.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Authentication required.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+      security: []
+  /users/login/phone:
+    post:
+      description: Logs in a user using phone number and OTP.
+      summary: Sign in a user via phone number
+      tags:
+        - user
+      operationId: phoneSignIn
+      x-google-backend:
+        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - phone_number
+                - password
+              properties:
+                phone_number:
+                  type: string
+                  description: The phone number in E.164 format (e.g., +1234567890)
+                password:
+                  type: string
+                  minLength: 8
+                  maxLength: 50
+        description: The credentials to login
+        required: true
+      responses:
+        "200":
+          description: The logged in user with tokens in headers
+          headers:
+            Authorization:
+              description: Bearer JWT access token to be used for subsequent requests.
+              schema:
+                type: string
+                example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Response for user login (email/phone).
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      first_name:
+                        type: string
+                      last_name:
+                        type: string
+                      email:
+                        type: string
+                      bio:
+                        type: string
+                      avatar:
+                        type: string
+                        format: uri
+                      phone:
+                        type: string
+                      birthday:
+                        type: string
+                        format: date-time
+                      city:
+                        type: string
+                      country:
+                        type: string
+                        maxItems: 10
+                      interests:
+                        type: array
+                        items:
+                          type: string
+                        maxItems: 10
+                      languages:
+                        type: array
+                        items:
+                          type: string
+                        maxItems: 10
+                      created_at:
+                        type: string
+                        format: date-time
+                      updated_at:
+                        type: string
+                        format: date-time
+                      gender:
+                        type: string
+                        enum:
+                          - Male
+                          - Female
+                          - Non-binary
+                          - Transgender
+                          - Genderqueer
+                          - Genderfluid
+                          - Agender
+                          - Two-spirit
+                          - Bigender
+                          - Other
+                          - Prefer not to say
+                  toast:
+                    type: string
+                    example: Login successful.
+                  error:
+                    type: string
+                    example: "Incorrect phone number or OTP."
+                required:
+                  - success
+                  - data
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: An unexpected error occurred.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Email already exists.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+      security: []
+  /users/login/otp/initiate:
+    post:
+      description: Initiates passwordless login by sending an OTP to the user's verified contact (email or phone). The user must have a verified email or phone number to use this endpoint.
+      summary: Initiate OTP-based passwordless login
+      tags:
+        - user
+      operationId: initiateOTPLogin
+      x-google-backend:
+        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - contact
+                - method
+              properties:
+                contact:
+                  type: string
+                  description: The email address or phone number (E.164 format) to send OTP to
+                  example: "user@example.com"
+                method:
+                  type: string
+                  enum:
+                    - EMAIL
+                    - SMS
+                    - WHATSAPP
+                  description: The delivery method for the OTP.
+                device_info:
+                  type: object
+                  description: Optional device information
+                  properties:
+                    device_id:
+                      type: string
+                    device_type:
+                      type: string
+                    device_model:
+                      type: string
+                    app_version:
+                      type: string
+                    system_name:
+                      type: string
+        description: Contact information and delivery method
+        required: true
+      responses:
+        "200":
+          description: OTP sent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  toast:
+                    type: string
+                    example: "OTP sent successfully. Please check your email for the verification code."
+                  error:
+                    type: string
+                required:
+                  - success
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: "Failed to validate request body: method must be one of [EMAIL SMS WHATSAPP]"
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: "Oops! Something went wrong. Please try again later."
+                required:
+                  - success
+                  - error
+        "401":
+          description: Unauthorized - invalid credentials or unverified contact
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: "Invalid credentials."
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: "Invalid credentials."
+                required:
+                  - success
+                  - error
+        "403":
+          description: Forbidden - account not active
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: "Account is not active."
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: "Your account is not active."
+                required:
+                  - success
+                  - error
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: "An unexpected error occurred."
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: "Oops! Something went wrong. Please try again later."
+                required:
+                  - success
+                  - error
+      security: []
+  /users/login/otp/verify:
+    post:
+      description: Verifies the OTP code and completes passwordless login. Returns JWT access and refresh tokens in headers along with the user profile.
+      summary: Verify OTP and complete passwordless login
+      tags:
+        - user
+      operationId: verifyOTPLogin
+      x-google-backend:
+        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - contact
+                - method
+                - otp
+              properties:
+                contact:
+                  type: string
+                  description: The email address or phone number (E.164 format) used to initiate login
+                  example: "user@example.com"
+                method:
+                  type: string
+                  enum:
+                    - EMAIL
+                    - SMS
+                    - WHATSAPP
+                  description: The delivery method used.
+                otp:
+                  type: string
+                  minLength: 6
+                  maxLength: 6
+                  description: The 6-digit OTP code received
+                  example: "123456"
+                device_info:
+                  type: object
+                  description: Optional device information
+                  properties:
+                    device_id:
+                      type: string
+                    device_type:
+                      type: string
+                    device_model:
+                      type: string
+                    app_version:
+                      type: string
+                    system_name:
+                      type: string
+                fcm_token:
+                  type: string
+                  description: Optional FCM token for push notifications
+                location:
+                  type: object
+                  description: Optional location data
+                  properties:
+                    latitude:
+                      type: number
+                      format: float
+                    longitude:
+                      type: number
+                      format: float
+        description: OTP verification details
+        required: true
+      responses:
+        "200":
+          description: Login successful - user authenticated with tokens in headers
+          headers:
+            Authorization:
+              description: Bearer JWT access token to be used for subsequent requests.
+              schema:
+                type: string
+                example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            X-Corneroom-Access:
+              description: JWT access token (new standard header, Title-Case per Go convention).
+              schema:
+                type: string
+                example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            X-Corneroom-Refresh:
+              description: Refresh token for future token refreshes (new standard header, Title-Case per Go convention).
+              schema:
+                type: string
+                example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Response for successful OTP login.
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: "#/components/schemas/EnhancedUserProfileResponse"
+                  toast:
+                    type: string
+                    example: "Welcome back! You're now logged in."
+                  error:
+                    type: string
+                required:
+                  - success
+                  - data
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: "Failed to validate request body: otp must be 6 characters"
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: "Oops! Something went wrong. Please try again later."
+                required:
+                  - success
+                  - error
+        "401":
+          description: Unauthorized - invalid or expired OTP
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: "OTP verification failed: OTP expired"
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: "Invalid or expired OTP. Please try again."
+                required:
+                  - success
+                  - error
+        "403":
+          description: Forbidden - account not active
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: "Account is not active."
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: "Your account is not active."
+                required:
+                  - success
+                  - error
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: "An unexpected error occurred."
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: "Oops! Something went wrong. Please try again later."
+                required:
+                  - success
+                  - error
+      security: []
+  /users/refresh:
+    post:
+      description: Refreshes an access token using a refresh token. Returns new access and refresh tokens in headers.
+      summary: Refresh access token
+      tags:
+        - user
+      operationId: refreshToken
+      x-google-backend:
+        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refresh_token:
+                  type: string
+                  description: The refresh token (prefer sending in X-Corneroom-Refresh header)
+              description: Optional refresh token in body (prefer header if available)
+        required: false
+      responses:
+        "200":
+          description: Tokens refreshed successfully
+          headers:
+            X-Corneroom-Access:
+              description: JWT access token (new standard header, Title-Case per Go convention).
+              schema:
+                type: string
+                example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            X-Corneroom-Refresh:
+              description: Refresh token for future token refreshes (new standard header, Title-Case per Go convention).
+              schema:
+                type: string
+                example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+            Authorization:
+              description: Bearer JWT access token (legacy header, to be phased out - use X-Corneroom-Access).
+              schema:
+                type: string
+                example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  toast:
+                    type: string
+                    example: Tokens refreshed successfully.
+                  error:
+                    type: string
+                required:
+                  - success
+        "400":
+          description: Bad request - refresh token missing
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Refresh token is required.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Please provide a refresh token.
+                required:
+                  - success
+                  - error
+        "401":
+          description: Unauthorized - invalid or expired refresh token
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Invalid or expired refresh token.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Please log in again.
+                required:
+                  - success
+                  - error
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: An unexpected error occurred.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+      security: []
+  /users/password/reset:
+    post:
+      description: Initiates a password reset flow by sending a reset code to the user's email.
+      summary: Request password reset
+      tags:
+        - user
+      operationId: requestPasswordReset
+      x-google-backend:
+        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: The email address of the user requesting password reset
+        description: The password reset request
+        required: true
+      responses:
+        "200":
+          description: Password reset code sent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  toast:
+                    type: string
+                    description: Success message for the client UI.
+                    example: Password reset initiated successfully. Please check your email for further instructions.
+                  error:
+                    type: string
+                required:
+                  - success
+        "400":
+          description: Bad request - invalid email or validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Failed to parse request body
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Oops! Something went wrong. Please try again later.
+                required:
+                  - success
+                  - error
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Failed to reset password
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Oops! Something went wrong. Please try again later.
+                required:
+                  - success
+                  - error
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: An unexpected error occurred.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+      security: []
+  /users/password/reset/verify:
+    post:
+      description: Verifies the password reset OTP code and creates a session token for completing the password reset. This endpoint is called after the user enters the 6-digit OTP code received via email.
+      summary: Verify password reset OTP
+      tags:
+        - user
+      operationId: verifyPasswordResetOTP
+      x-google-backend:
+        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - otp
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: The email address that received the OTP
+                otp:
+                  type: string
+                  minLength: 6
+                  maxLength: 6
+                  description: The 6-digit OTP code received via email
+        description: The password reset OTP verification request
+        required: true
+      responses:
+        "200":
+          description: OTP verified successfully, session token created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      valid:
+                        type: boolean
+                        example: true
+                      email:
+                        type: string
+                        format: email
+                        description: The email address associated with the OTP
+                      session_token:
+                        type: string
+                        description: Session token to use for completing password reset (15 minute expiry)
+                  toast:
+                    type: string
+                    example: Code verified successfully.
+                  error:
+                    type: string
+                required:
+                  - success
+                  - data
+        "400":
+          description: Bad request - invalid or expired OTP, or validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Invalid or expired verification code.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Invalid or expired verification code. Please try again.
+                required:
+                  - success
+                  - error
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: An unexpected error occurred.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+      security: []
+  /users/password/confirm:
+    post:
+      description: Confirms and completes the password reset using the session token obtained from the verify endpoint.
+      summary: Confirm password reset
+      tags:
+        - user
+      operationId: confirmPasswordReset
+      x-google-backend:
+        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - session_token
+                - password
+                - verify_password
+              properties:
+                session_token:
+                  type: string
+                  description: The session token obtained from /users/password/reset/verify endpoint
+                password:
+                  type: string
+                  minLength: 8
+                  maxLength: 50
+                  description: The new password
+                verify_password:
+                  type: string
+                  minLength: 8
+                  maxLength: 50
+                  description: Verify the new password (must match password)
+        description: The password reset confirmation request
+        required: true
+      responses:
+        "200":
+          description: Password reset completed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  toast:
+                    type: string
+                    description: Success message for the client UI.
+                    example: Password reset successfully.
+                  error:
+                    type: string
+                required:
+                  - success
+        "400":
+          description: Bad request - invalid token, passwords don't match, or validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Failed to parse request body
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Oops! Something went wrong. Please try again later.
+                required:
+                  - success
+                  - error
+        "500":
+          description: Internal server error - token expired, invalid, or other server error
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Failed to reset password
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Oops! Something went wrong. Please try again later.
+                required:
+                  - success
+                  - error
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: An unexpected error occurred.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+      security: []
+  /users/me:
+    get:
+      description: Retrieves the current user's enhanced profile information.
+      summary: Get current user profile
+      tags:
+        - user
+      operationId: getCurrentUser
+      x-google-backend:
+        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      responses:
+        "200":
+          description: The current user profile in enhanced format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnhancedUserProfileResponse'
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Phone number already registered.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: "User not found."
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Incorrect phone number or OTP.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+    patch:
+      description: Updates the current user's profile information using enhanced nested format for partial updates.
+      summary: Update current user profile
+      tags:
+        - user
+      operationId: updateCurrentUser
+      x-google-backend:
+        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnhancedProfileUpdateRequest'
+        description: Profile update data in enhanced nested format
+        required: true
+      responses:
+        "200":
+          description: The updated user profile in enhanced format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnhancedUserProfileResponse'
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Verification code is invalid or expired.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: "User not found."
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Authentication required.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+    delete:
+      description: |
+        Validates if the current user can be deleted and sends a deletion request to Slack for manual review.
+        
+        This endpoint performs validation checks across multiple services:
+        - Active/confirmed bookings (booking-service)
+        - Upcoming bookings (booking-service)
+        - Pending payments (payment-service)
+        - Active listings as host (community-service)
+        - Any other business constraints
+        
+        If validation fails, returns detailed errors/warnings. If validation passes,
+        sends a deletion request to Slack channel for manual approval.
+        
+        **Note:** This endpoint does NOT actually delete the user. Actual deletion
+        requires manual approval via Slack and will be handled separately.
+      summary: Request user account deletion
+      tags:
+        - user
+      operationId: requestUserDeletion
+      x-google-backend:
+        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      responses:
+        "200":
+          description: Validation passed - deletion request sent to Slack
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserDeletionResponse"
+        "400":
+          description: Validation failed - user cannot be deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserDeletionValidationError"
+        "401":
+          description: Unauthorized - Authentication required
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "Authentication required."
+                  toast:
+                    type: string
+                    example: "Please log in to continue."
+                required:
+                  - success
+                  - error
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "An unexpected error occurred."
+                  toast:
+                    type: string
+                    example: "Unable to process your request."
+                required:
+                  - success
+                  - error
+  /users/{userId}/profile:
+    get:
+      description: Retrieves a user's enhanced profile information by user ID. Returns the same profile format as /users/me, but allows viewing other users' profiles. Requires authentication to prevent brute-force enumeration.
+      summary: Get user profile by ID
+      tags:
+        - user
+      operationId: getUserProfileById
+      x-google-backend:
+        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: The unique identifier of the user
+          schema:
+            type: string
+            example: "user-123"
+      responses:
+        "200":
+          description: The user profile in enhanced format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnhancedUserProfileResponse'
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "Invalid user ID format."
+                  toast:
+                    type: string
+                    example: "Unable to process your request."
+                required:
+                  - success
+                  - error
+        "401":
+          description: Unauthorized - Authentication required
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: "Authentication required."
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: "Please log in to view user profiles."
+                required:
+                  - success
+                  - error
+        "403":
+          description: Forbidden - User profile may be private or inaccessible
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: "Access to this user profile is restricted."
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: "You don't have permission to view this profile."
+                required:
+                  - success
+                  - error
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: "User not found."
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: "User profile not available."
+                required:
+                  - success
+                  - error
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: "An unexpected error occurred"
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: "Unable to process your request."
+                required:
+                  - success
+                  - error
+  /users/me/stats:
+    get:
+      description: Retrieves the current user's statistics for dashboard display.
+      summary: Get current user statistics
+      tags:
+        - user
+      operationId: getCurrentUserStats
+      x-google-backend:
+        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      responses:
+        "200":
+          description: The current user statistics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      message_response_rate:
+                        type: number
+                        format: float
+                        description: Percentage of messages responded to
+                        example: 92.0
+                      review_response_rate:
+                        type: number
+                        format: float
+                        description: Percentage of reviews responded to
+                        example: 85.0
+                      total_reviews:
+                        type: integer
+                        description: Total number of reviews received
+                        example: 0
+                      total_messages:
+                        type: integer
+                        description: Total number of messages sent/received
+                        example: 0
+                      average_response_time:
+                        type: number
+                        format: float
+                        description: Average response time in hours
+                        example: 2.5
+                      average_rating:
+                        type: number
+                        format: float
+                        description: Average rating received
+                        example: 0.0
+                      total_listings:
+                        type: integer
+                        description: Total number of listings
+                        example: 0
+                      last_calculated:
+                        type: string
+                        format: date-time
+                        description: When stats were last calculated
+                        example: "2025-01-27T10:30:00Z"
+                  toast:
+                    type: string
+                    example: "User statistics retrieved successfully."
+                  error:
+                    type: string
+                required:
+                  - success
+                  - data
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: "User not found."
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: "Unable to process your request."
+                required:
+                  - success
+                  - error
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: "Authentication required."
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: "Please log in to access this resource."
+                required:
+                  - success
+                  - error
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: "User not found."
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: "Unable to process your request."
+                required:
+                  - success
+                  - error
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: "An unexpected error occurred."
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: "Unable to process your request."
+                required:
+                  - success
+                  - error
+  /users/me/avatar:
+    patch:
+      description: Updates the current user's avatar image.
+      summary: Update current user's avatar
+      tags:
+        - user
+      operationId: updateCurrentUserAvatar
+      x-google-backend:
+        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: string
+              format: uri
+        description: JSON body with Avatar URL
+        required: true
+      responses:
+        "200":
+          description: The updated user
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Response containing the updated user avatar.
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      avatar:
+                        type: string
+                        format: uri
+                        description: The updated avatar URL
+                    description: The updated avatar object
+                  toast:
+                    type: string
+                    example: Avatar updated successfully.
+                  error:
+                    type: string
+                    example: "Invalid image format."
+                required:
+                  - success
+                  - data
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: An unexpected error occurred.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: "User not found."
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: "An unexpected error occurred."
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+    delete:
+      description: Deletes the current user's avatar image.
+      summary: Delete current user's avatar
+      tags:
+        - user
+      operationId: deleteCurrentUserAvatar
+      x-google-backend:
+        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      responses:
+        "200":
+          description: The updated user
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Response containing the updated user avatar.
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      avatar:
+                        type: string
+                        format: uri
+                        description: The updated avatar URL
+                    description: The updated avatar object
+                  toast:
+                    type: string
+                    example: Avatar updated successfully.
+                  error:
+                    type: string
+                    example: "No avatar to delete."
+                required:
+                  - success
+                  - data
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: "User not found."
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: "User not found."
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: "User not found."
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+    post:
+      description: Uploads a new avatar image for the current user.
+      summary: Change current user's password
+      tags:
+        - user
+      operationId: changeCurrentUserPassword
+      x-google-backend:
+        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                old_password:
+                  type: string
+                  minLength: 8
+                  maxLength: 50
+                  description: The current password
+                new_password:
+                  type: string
+                  minLength: 8
+                  maxLength: 50
+                  description: The new password
+                verify_password:
+                  type: string
+                  minLength: 8
+                  maxLength: 50
+                  description: Verify the new password
+              required:
+                - old_password
+                - new_password
+                - verify_password
+        description: The password change request
+        required: true
+      responses:
+        "200":
+          description: The password change response
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: "User not found."
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: "User not found."
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: "User not found."
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+  /users/me/logout:
+    post:
+      description: Logs out the current user by revoking all refresh tokens. Access tokens remain valid until they expire (stateless JWT design). This endpoint prevents refresh token abuse after logout.
+      summary: Logout current user
+      tags:
+        - user
+      operationId: logoutCurrentUser
+      x-google-backend:
+        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      responses:
+        "200":
+          description: User logged out successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Logout response
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  toast:
+                    type: string
+                    example: "Logged out successfully"
+                  error:
+                    type: string
+                required:
+                  - success
+                  - toast
+        "401":
+          description: Unauthorized - Authentication required
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: "Authentication required."
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: "Please log in to continue."
+                required:
+                  - success
+                  - error
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: "An unexpected error occurred."
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: "Unable to process your request."
+                required:
+                  - success
+                  - error
+  /users/me/phone/confirm:
+    post:
+      description: Confirms the user's phone number with a verification code.
+      summary: Confirm current user's phone number verification
+      tags:
+        - user
+      operationId: confirmCurrentUserPhoneNumberVerification
+      x-google-backend:
+        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                otp:
+                  type: string
+                  description: The verification code sent to the user's phone
+                  maxLength: 6
+                  pattern: ^[0-9]*$
+                contact:
+                  type: string
+                  description: The phone number to verify
+                  maxLength: 20
+                  example: "+1234567890"
+              required:
+                - otp
+                - contact
+        description: JSON body with the verification code for confirmation
+        required: true
+      responses:
+        "200":
+          description: Phone Number Successfully Verified
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: "User not found."
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: "User not found."
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: "User not found."
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+  /users/me/phone/verify:
+    post:
+      description: Verifies the user's phone number.
+      summary: Initiate phone number verification for the current user
+      tags:
+        - user
+      operationId: initiateCurrentUserPhoneNumberVerification
+      x-google-backend:
+        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                phone_number:
+                  type: string
+                  description: The phone number to verify
+                  maxLength: 20
+                  example: "+1234567890"
+              required:
+                - phone_number
+        description: JSON body with the phone number for verification initiation
+        required: true
+      responses:
+        "200":
+          description: Verification Initiated Successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Response for email/phone verification (initiate/confirm).
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      verified:
+                        type: boolean
+                        description: Whether the verification was successful
+                        example: true
+                      method:
+                        type: string
+                        description: Verification method (e.g., 'email', 'phone')
+                        example: email
+                      contact:
+                        type: string
+                        description: The contact info verified
+                        example: user@example.com
+                  toast:
+                    type: string
+                    example: Verification successful.
+                  error:
+                    type: string
+                    example: "Verification code is invalid or expired."
+                required:
+                  - success
+                  - data
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: "User not found."
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: "User not found."
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+  /users/me/phone/add:
+    patch:
+      description: Adds a new phone number to the user's profile.
+      summary: Add a new phone number to the current user
+      tags:
+        - user
+      operationId: addCurrentUserPhone
+      x-google-backend:
+        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                phone_number:
+                  type: string
+                  description: The phone number in E.164 format (e.g., +1234567890)
+              required:
+                - phone_number
+        description: The phone number to add
+        required: true
+      responses:
+        "200":
+          description: Phone number added and verification initiated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  error:
+                    type: string
+        "409":
+          description: Phone number already in use
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  error:
+                    type: string
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  error:
+                    type: string
+  /users/me/email/add:
+    patch:
+      description: Adds a new email address to the user's profile.
+      summary: Add a new email to the current user
+      tags:
+        - user
+      operationId: addCurrentUserEmail
+      x-google-backend:
+        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+              required:
+                - email
+        description: The email to add
+        required: true
+      responses:
+        "200":
+          description: Email added and verification initiated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  error:
+                    type: string
+        "409":
+          description: Email already in use
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  error:
+                    type: string
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  error:
+                    type: string
+  
+  /users/me/email/confirm:
+    post:
+      description: Confirms the user's email address with a verification code.
+      summary: Confirm current user's email
+      tags:
+        - user
+      operationId: confirmCurrentUserEmail
+      x-google-backend:
+        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                otp:
+                  type: string
+                  maxLength: 6
+                  pattern: ^[0-9]*$
+                  description: The email verification code
+                contact:
+                  type: string
+                  format: email
+                  description: The email address to verify
+              required:
+                - otp
+                - contact
+        description: The email verification code
+        required: true
+      responses:
+        "200":
+          description: The email verification response
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Response for email/phone verification (initiate/confirm).
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      verified:
+                        type: boolean
+                        description: Whether the verification was successful
+                        example: true
+                      method:
+                        type: string
+                        description: Verification method (e.g., 'email', 'phone')
+                        example: email
+                      contact:
+                        type: string
+                        description: The contact info verified
+                        example: user@example.com
+                  toast:
+                    type: string
+                    example: Verification successful.
+                  error:
+                    type: string
+                    example: "Email confirmation failed."
+                required:
+                  - success
+                  - data
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: "User not found."
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: "User not found."
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+  /users/me/email/verify:
+    post:
+      description: Verifies the user's email address.
+      summary: Verify current user's email
+      tags:
+        - user
+      operationId: verifyCurrentUserEmail
+      x-google-backend:
+        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+              required:
+                - email
+        description: The email verification request
+      responses:
+        "200":
+          description: The email verification response
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Response for email/phone verification (initiate/confirm).
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      verified:
+                        type: boolean
+                        description: Whether the verification was successful
+                        example: true
+                      method:
+                        type: string
+                        description: Verification method (e.g., 'email', 'phone')
+                        example: email
+                      contact:
+                        type: string
+                        description: The contact info verified
+                        example: user@example.com
+                  toast:
+                    type: string
+                    example: Verification successful.
+                  error:
+                    type: string
+                    example: "Verification code is invalid or expired."
+                required:
+                  - success
+                  - data
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: "User not found."
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: "User not found."
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+  /users/me/identity/verify:
+    post:
+      description: Verifies the user's identity with provided documents.
+      summary: Submit biometric verification request for current user
+      tags:
+        - user
+      operationId: submitCurrentUserBiometricVerificationRequest
+      security:
+        - jwtAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: string
+                  description: The ID of the user
+                documents:
+                  type: object
+                  description: The documents to verify
+                  additionalProperties:
+                    type: object
+                    properties:
+                      front:
+                        type: string
+                        description: URL to the front of the document
+                        format: url
+                      back:
+                        type: string
+                        description: URL to the back of the document
+                        format: url
+                selfies:
+                  type: array
+                  description: Selfies for verification
+                  items:
+                    type: object
+                    properties:
+                      description:
+                        type: string
+                        description: Description of the selfie
+                      urls:
+                        type: array
+                        description: List of selfie URLs
+                        items:
+                          type: string
+                          format: url
+              required:
+                - id
+                - documents
+                - selfies
+        description: Biometric Verification Request
+        required: true
+      responses:
+        "200":
+          description: The identity verification response
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Response for biometric/identity verification.
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      verification_id:
+                        type: string
+                        description: ID of the verification request
+                        example: verif_12345
+                      status:
+                        type: string
+                        description: Status of the identity verification
+                        example: pending
+                      submitted_at:
+                        type: string
+                        format: date-time
+                        description: Submission timestamp
+                        example: 2025-06-16T12:00:00Z
+                  toast:
+                    type: string
+                    example: Identity verification submitted.
+                  error:
+                    type: string
+                    example: "Identity verification failed."
+                required:
+                  - success
+                  - data
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: "User not found."
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: "User not found."
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+  /users/me/devices:
+    get:
+      description: Retrieves all registered devices for the current user.
+      summary: Get current user's registered devices
+      tags:
+        - user
+      operationId: getCurrentUserDevices
+      x-google-backend:
+        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      responses:
+        "200":
+          description: List of registered devices
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        device_id:
+                          type: string
+                          description: Unique device identifier
+                        fcm_token:
+                          type: string
+                          description: Firebase Cloud Messaging token
+                        platform:
+                          type: string
+                          description: Device platform (ios, android, web)
+                        model:
+                          type: string
+                          description: Device model
+                        app_version:
+                          type: string
+                          description: App version
+                        language:
+                          type: string
+                          description: Device language
+                        timezone:
+                          type: string
+                          description: Device timezone
+                        last_seen:
+                          type: string
+                          format: date-time
+                          description: Last time device was active
+                        created_at:
+                          type: string
+                          format: date-time
+                          description: Device registration timestamp
+                  toast:
+                    type: string
+                    example: Devices retrieved successfully
+                  error:
+                    type: string
+                required:
+                  - success
+                  - data
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "Authentication required"
+                required:
+                  - success
+                  - error
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "An unexpected error occurred"
+                required:
+                  - success
+                  - error
+    post:
+      description: Registers a new device or updates an existing device for the current user.
+      summary: Add or update device for current user
+      tags:
+        - user
+      operationId: addOrUpdateCurrentUserDevice
+      x-google-backend:
+        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                device_id:
+                  type: string
+                  description: Unique device identifier
+                fcm_token:
+                  type: string
+                  description: Firebase Cloud Messaging token
+                platform:
+                  type: string
+                  description: Device platform (ios, android, web)
+                model:
+                  type: string
+                  description: Device model
+                app_version:
+                  type: string
+                  description: App version
+                language:
+                  type: string
+                  description: Device language
+                timezone:
+                  type: string
+                  description: Device timezone
+      responses:
+        "200":
+          description: Device registered or updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  toast:
+                    type: string
+                    example: Device registered successfully
+                  error:
+                    type: string
+                required:
+                  - success
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "Authentication required"
+                required:
+                  - success
+                  - error
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "An unexpected error occurred"
+                required:
+                  - success
+                  - error
+    patch:
+      description: Updates an existing device for the current user with partial data.
+      summary: Update device for current user
+      tags:
+        - user
+      operationId: updateCurrentUserDevice
+      x-google-backend:
+        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - device_id
+              properties:
+                device_id:
+                  type: string
+                  description: Unique device identifier to update
+                fcm_token:
+                  type: string
+                  description: Firebase Cloud Messaging token
+                platform:
+                  type: string
+                  description: Device platform (ios, android, web)
+                model:
+                  type: string
+                  description: Device model
+                app_version:
+                  type: string
+                  description: App version
+                language:
+                  type: string
+                  description: Device language
+                timezone:
+                  type: string
+                  description: Device timezone
+        description: Device update data
+        required: true
+      responses:
+        "200":
+          description: Device updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  toast:
+                    type: string
+                    example: Device updated successfully
+                  error:
+                    type: string
+                required:
+                  - success
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "Missing required fields"
+                required:
+                  - success
+                  - error
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "Authentication required"
+                required:
+                  - success
+                  - error
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "An unexpected error occurred"
+                required:
+                  - success
+                  - error
+  /devices/anonymous/{device_id}/interests:
+    post:
+      description: Records a listing interest for an anonymous device (pre-auth marketing/remarketing).
+      summary: Register anonymous device interest in a listing
+      tags:
+        - user
+      operationId: registerAnonymousDeviceInterest
+      x-google-backend:
+        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security: []  # Explicitly mark as unauthenticated (anonymous endpoint)
+      parameters:
+        - name: device_id
+          in: path
+          required: true
+          description: Anonymous device identifier returned from /devices/anonymous
+          schema:
+            type: string
+      requestBody:
+        description: Anonymous device interest data
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - listing_id
+              properties:
+                listing_id:
+                  type: string
+                  description: ID of the listing the device showed interest in
+                source:
+                  type: string
+                  description: Optional source of the interest (e.g. 'listing_detail', 'book_cta')
+                platform:
+                  type: string
+                  description: Optional platform hint (ios, android, web)
+      responses:
+        "200":
+          description: Anonymous interest registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  toast:
+                    type: string
+                    example: Anonymous interest registered successfully
+                  error:
+                    type: string
+                required:
+                  - success
+        "400":
+          description: Invalid request (missing device_id or listing_id)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "Missing required fields"
+                required:
+                  - success
+                  - error
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "An unexpected error occurred"
+                required:
+                  - success
+                  - error
+  /users/me/devices/{device_id}:
+    delete:
+      description: Removes a registered device for the current user.
+      summary: Remove device for current user
+      tags:
+        - user
+      operationId: removeCurrentUserDevice
+      x-google-backend:
+        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      parameters:
+        - name: device_id
+          in: path
+          required: true
+          description: Device ID to remove
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Device removed successfully
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "Device ID required"
+                required:
+                  - success
+                  - error
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "Authentication required"
+                required:
+                  - success
+                  - error
+        "404":
+          description: Device not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "Device not found"
+                required:
+                  - success
+                  - error
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "An unexpected error occurred"
+                required:
+                  - success
+                  - error
+servers:
+  - url: https://project-x-staging-gateway-8ua0taf7.uc.gateway.dev/api/v1
+
+components:
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+
+  schemas:
+    # Enhanced nested profile update request
+    EnhancedProfileUpdateRequest:
+      type: object
+      properties:
+        basic_info:
+          type: object
+          properties:
+            first_name:
+              type: string
+              maxLength: 50
+            last_name:
+              type: string
+              maxLength: 50
+            bio:
+              type: string
+              maxLength: 500
+            avatar_url:
+              type: string
+              format: uri
+            birthday:
+              type: string
+              format: date-time
+            age_range:
+              type: string
+              enum: ["18_24", "25_34", "35_44", "45_54", "55_64", "65_plus"]
+            gender:
+              type: string
+              enum: ["male", "female", "lgbtq", "other", "prefer_not_to_say"]
+            city:
+              type: string
+              maxLength: 100
+            country:
+              type: string
+              maxLength: 100
+            occupation:
+              type: string
+              maxLength: 100
+        lifestyle:
+          type: object
+          properties:
+            sleep_schedule:
+              type: string
+              enum: ["early_bird", "night_owl", "flexible", "varies"]
+            social_style:
+              type: string
+              enum: ["social_butterfly", "prefer_quiet", "balanced", "depends_on_mood"]
+            smoking_preference:
+              type: string
+              enum: ["non_smoker", "occasional_smoker", "regular_smoker", "vaping_only", "no_preference"]
+        travel_experience:
+          type: object
+          properties:
+            amazing_experience:
+              type: string
+              maxLength: 500
+            countries_visited:
+              type: array
+              items:
+                type: string
+                maxLength: 50
+              maxItems: 50
+            last_country_visited:
+              type: string
+              maxLength: 50
+            travel_frequency:
+              type: string
+              enum: ["weekly", "monthly", "quarterly", "yearly", "rarely"]
+        interests_hobbies:
+          type: object
+          properties:
+            hobbies:
+              type: array
+              items:
+                type: string
+                maxLength: 50
+              maxItems: 10
+            interests:
+              type: array
+              items:
+                type: string
+                maxLength: 50
+              maxItems: 10
+            languages_spoken:
+              type: array
+              items:
+                type: string
+                maxLength: 30
+              maxItems: 10
+            languages_learning:
+              type: array
+              items:
+                type: string
+                maxLength: 30
+              maxItems: 10
+        personal:
+          type: object
+          properties:
+            fun_fact:
+              type: string
+              maxLength: 300
+            why_host_travel:
+              type: string
+              maxLength: 500
+        hosting_preferences:
+          type: object
+          properties:
+            preferred_guest_age_range:
+              type: array
+              items:
+                type: string
+                enum: ["18_24", "25_34", "35_44", "45_54", "55_64", "65_plus"]
+            accepts_pets:
+              type: boolean
+            house_rules:
+              type: array
+              items:
+                type: string
+                maxLength: 100
+              maxItems: 10
+            space_type:
+              type: string
+              enum: ["private_room", "shared_room", "entire_place", "common_area"]
+        address:
+          type: object
+          properties:
+            street:
+              type: string
+            city:
+              type: string
+            state:
+              type: string
+            postal_code:
+              type: string
+            country:
+              type: string
+            coordinates:
+              type: object
+              properties:
+                latitude:
+                  type: number
+                longitude:
+                  type: number
+
+    # Enhanced user profile response format
+    EnhancedUserProfileResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            id:
+              type: string
+            has_listing:
+              type: boolean
+              description: Whether the user has any active listings (is a host)
+              example: true
+            basic_info:
+              type: object
+              properties:
+                first_name:
+                  type: string
+                last_name:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                phone:
+                  type: string
+                avatar_url:
+                  type: string
+                  format: uri
+                bio:
+                  type: string
+                birthday:
+                  type: string
+                  format: date-time
+                age_range:
+                  type: string
+                gender:
+                  type: string
+                city:
+                  type: string
+                country:
+                  type: string
+                occupation:
+                  type: string
+                registration_method:
+                  type: string
+            lifestyle:
+              type: object
+              properties:
+                sleep_schedule:
+                  type: string
+                social_style:
+                  type: string
+                smoking_preference:
+                  type: string
+            travel_experience:
+              type: object
+              properties:
+                amazing_experience:
+                  type: string
+                countries_visited:
+                  type: array
+                  items:
+                    type: string
+                last_country_visited:
+                  type: string
+                travel_frequency:
+                  type: string
+            interests_hobbies:
+              type: object
+              properties:
+                hobbies:
+                  type: array
+                  items:
+                    type: string
+                interests:
+                  type: array
+                  items:
+                    type: string
+                languages_spoken:
+                  type: array
+                  items:
+                    type: string
+                languages_learning:
+                  type: array
+                  items:
+                    type: string
+            personal:
+              type: object
+              properties:
+                fun_fact:
+                  type: string
+                why_host_travel:
+                  type: string
+            hosting_preferences:
+              type: object
+              properties:
+                preferred_guest_age_range:
+                  type: array
+                  items:
+                    type: string
+                accepts_pets:
+                  type: boolean
+                house_rules:
+                  type: array
+                  items:
+                    type: string
+                space_type:
+                  type: string
+            address:
+              type: object
+            contacts:
+              type: array
+              items:
+                type: object
+            verifications:
+              type: array
+              description: List of user verification records
+              items:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: Type of verification
+                    enum: ["facematch", "background", "location", "livevideo", "pose", "badge"]
+                    example: "facematch"
+                  timestamp:
+                    type: string
+                    format: date-time
+                    description: When this verification was created/updated
+                    example: "2025-01-01T00:00:00Z"
+                  status:
+                    type: string
+                    description: Current verification status
+                    enum: ["pending", "approved", "rejected", "not_started"]
+                    example: "approved"
+                  expires_at:
+                    type: string
+                    format: date-time
+                    description: When this verification expires (optional)
+                    nullable: true
+            badges:
+              type: object
+              properties:
+                earned_badges:
+                  type: array
+                  items:
+                    type: object
+                badge_counts:
+                  type: object
+            events:
+              type: array
+              items:
+                type: object
+            system_info:
+              type: object
+              properties:
+                fcm_token:
+                  type: string
+                status:
+                  type: string
+                deleted:
+                  type: boolean
+                deleted_at:
+                  type: string
+                  format: date-time
+                roles:
+                  type: array
+                  items:
+                    type: string
+                created_at:
+                  type: string
+                  format: date-time
+                updated_at:
+                  type: string
+                  format: date-time
+        toast:
+          type: string
+          example: "Enhanced user profile retrieved successfully."
+        error:
+          type: string
+      required:
+        - success
+        - data
+    UserDeletionResponse:
+      type: object
+      description: Successful user deletion request response
+      properties:
+        success:
+          type: boolean
+          example: true
+        toast:
+          type: string
+          example: "Deletion request submitted successfully. You will be contacted via email."
+        data:
+          type: object
+          properties:
+            request_id:
+              type: string
+              description: Unique ID for tracking the deletion request
+              example: "del_req_abc123xyz"
+            submitted_at:
+              type: string
+              format: date-time
+              example: "2025-12-02T10:30:00Z"
+          required:
+            - request_id
+            - submitted_at
+        error:
+          type: string
+      required:
+        - success
+        - toast
+        - data
+    UserDeletionValidationError:
+      type: object
+      description: User deletion validation error response
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          example: "Cannot delete account due to active bookings or pending payments"
+        toast:
+          type: string
+          example: "Your account cannot be deleted at this time. Please resolve the issues below."
+        data:
+          type: object
+          properties:
+            errors:
+              type: array
+              description: Blocking errors that prevent deletion
+              items:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    enum:
+                      - "active_bookings"
+                      - "upcoming_bookings"
+                      - "pending_payments"
+                      - "active_listings"
+                      - "pending_verifications"
+                    example: "active_bookings"
+                  message:
+                    type: string
+                    example: "Cannot delete account: You have 2 active bookings"
+                  details:
+                    type: object
+                    description: Additional context (booking IDs, counts, etc.)
+                    additionalProperties: true
+                required:
+                  - code
+                  - message
+            warnings:
+              type: array
+              description: Non-blocking warnings (informational)
+              items:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    example: "account_age"
+                  message:
+                    type: string
+                    example: "Account is less than 30 days old"
+                  details:
+                    type: object
+                    additionalProperties: true
+                required:
+                  - code
+                  - message
+          required:
+            - errors
+            - warnings
+      required:
+        - success
+        - error
+        - toast
+        - data

@@ -1,0 +1,32 @@
+{
+  "name": "api-specs",
+  "version": "1.0.0",
+  "description": "Centralized OpenAPI specifications for microservices",
+  "main": "index.js",
+  "scripts": {
+    "clean": "node scripts/clean.js",
+    "gateway": "npm run clean && node scripts/merge-specs.js && redocly lint gateway/*.yaml",
+    "convert": "bash scripts/convert-all.sh",
+    "validate": "redocly lint services/*.yaml gateway/*.yaml",
+    "swagger": "npm run gateway && npm run convert",
+    "preview": "npx swagger-cli bundle services/booking-service.yaml services/dashboard-service.yaml gateway/app.yaml gateway/dashboard.yaml -o combined-spec.yaml && node scripts/preview.js",
+    "# adhoc commands": "",
+    "validate:openapi": "redocly lint services/*.yaml gateway/*.yaml",
+    "validate:swagger": "swagger-cli validate gateway/*-swagger.yaml"
+  },
+  "dependencies": {
+    "@apidevtools/swagger-parser": "^10.1.0",
+    "api-spec-converter": "^2.12.0",
+    "express": "^5.1.0",
+    "glob": "^10.3.10",
+    "js-yaml": "^4.1.1",
+    "redoc-express": "^2.1.0",
+    "swagger-cli": "^4.0.4",
+    "swagger-ui-express": "^5.0.1",
+    "swagger2openapi": "^7.0.8"
+  },
+  "devDependencies": {
+    "@openapitools/openapi-generator-cli": "^2.25.0",
+    "@redocly/cli": "^1.34.3"
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "deployment-count": 1,
+  "apiName": "corneroom-api",
+  "gateways": {
+    "app": {
+      "name": "App API Gateway",
+      "description": "API Gateway for client-facing application endpoints.......",
+      "version": "1.0.0",
+      "hosts": [
+        { "url": "https://app-staging-gateway-8ua0taf7.uc.gateway.dev/api/v1", "description": "Staging" }
+      ],
+      "basePath": "/api/v1",
+      "services": [
+        "user-service",
+        "listing-service",
+        "booking-service",
+        "review-service",
+        "wishlist-service",
+        "payment-service",
+        "document-service",
+        "chat-service",
+        "community-service",
+        "verification-service"
+      ],
+      "sdkConfig": {
+        "enabled": true,
+        "targets": ["dart"],
+        "platforms": ["flutter"],
+        "description": "Flutter/Dart SDK for mobile app"
+      }
+    },
+    "dashboard": {
+      "name": "Dashboard API Gateway",
+      "description": "API Gateway for admin dashboard endpoints",
+      "version": "1.0.0",
+      "hosts": [
+        { "url": "https://dashboard-staging-gateway-8ua0taf7.uc.gateway.dev/api/v1", "description": "Staging" }
+      ],
+      "basePath": "/api/v1",
+      "services": [
+        "dashboard-service"
+      ],
+      "sdkConfig": {
+        "enabled": true,
+        "targets": ["typescript-fetch"],
+        "platforms": ["react", "web"],
+        "description": "TypeScript SDK for React dashboard"
+      }
+    }
+  },
+  "sdkSettings": {
+    "repositoryUrl": "https://github.com/inspiredtechinc/sdk.git",
+    "outputPaths": {
+      "dart": "openapi-dart-sdk",
+      "typescript-fetch": "openapi-typescript-sdk"
+    },
+    "generators": {
+      "dart": {
+        "generator": "dart",
+        "additionalProperties": {
+          "pubName": "corneroom_api",
+          "pubDescription": "Project X API SDK for Dart/Flutter"
+        }
+      },
+      "typescript-fetch": {
+        "generator": "typescript-fetch",
+        "additionalProperties": {
+          "npmName": "@corneroom/sdk",
+          "npmDescription": "Project X API SDK for TypeScript"
+        }
+      }
+    }
+  }
+}

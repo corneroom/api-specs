@@ -1,0 +1,849 @@
+openapi: 3.0.0
+info:
+  title: Project X - Review Service API
+  description: API specification for the Review service of Project X
+  version: 1.0.0
+  contact:
+    name: project-x-api
+    url: https://www.inspiredtech.ca
+    email: info@aircouch.com
+  termsOfService: https://www.inspiredtech.ca/terms
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+tags:
+  - name: review
+    description: Review operations
+servers:
+  - url: https://app-x-staging-gateway-8ua0taf7.uc.gateway.dev/api/v1
+
+paths:
+  /reviews/heartbeat:
+    get:
+      summary: Health check endpoint
+      description: |
+        This endpoint is used to check the health status of the API service.
+      operationId: getHeartbeat
+      x-google-backend:
+        address: https://review-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      tags:
+        - review
+      security: []
+      responses:
+        "200":
+          description: API is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [healthy]
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  /reviews:
+    get:
+      summary: Get reviews with filters (author, target, type, category, etc.)
+      description: |
+        Retrieve a list of reviews filtered by author, target, type, category, listing, and pagination.
+      tags:
+        - review
+      operationId: listReviews
+      x-google-backend:
+        address: https://review-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      parameters:
+        - name: author
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by author user ID
+        - name: target
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by target user or listing ID
+        - name: type
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [user, listing]
+          description: Filter by review type (user or listing)
+        - name: category
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by review category (e.g., couchsurf, workspace)
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+      responses:
+        "200":
+          description: List of reviews matching filters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/APIResponse"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultResponse"
+        default:
+          description: Default
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultResponse"
+    post:
+      summary: Create a new review (user or listing)
+      description: |
+        Create a new review for a user or listing, specifying context, metrics, and other details.
+      tags:
+        - review
+      operationId: createReview
+      x-google-backend:
+        address: https://review-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReviewRequest"
+            examples:
+              guest_review_space:
+                summary: Guest review of a listing (space)
+                value:
+                  booking_id: "booking_123"
+                  type: "listing"
+                  comment: "The room was clean and comfortable."
+                  metrics:
+                    cleanliness: 5.0
+                    check_in: 4.0
+                    accuracy: 4.5
+                    location: 4.0
+                    value: 4.5
+              guest_review_host:
+                summary: Guest review of a host
+                value:
+                  booking_id: "booking_123"
+                  type: "user"
+                  comment: "Bob was a wonderful host!"
+                  metrics:
+                    hospitality: 5.0
+                    communication: 4.5
+                    cleanliness: 4.5
+                    respectfulness: 5.0
+                    would_visit_again: true
+              host_review_guest:
+                summary: Host review of a guest
+                value:
+                  booking_id: "booking_123"
+                  type: "user"
+                  comment: "Alice was respectful and tidy."
+                  metrics:
+                    communication: 4.0
+                    cleanliness: 4.5
+                    respectfulness: 4.5
+                    would_host_again: true
+      responses:
+        "201":
+          description: Review created and pending approval.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewCreatedResponse"
+              examples:
+                created:
+                  summary: Review created successfully
+                  value:
+                    success: true
+                    toast: "Review submitted and pending approval"
+                    data:
+                      id: "PCNpbQVwyxMiQQpqDz6v"
+                      status: "pending"
+                      booking_id: "E41MrpBF295EmoYdkIiF"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultResponse"
+        "409":
+          description: Duplicate review - review already exists for this booking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultResponse"
+        default:
+          description: Default
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultResponse"
+  /reviews/{id}:
+    get:
+      summary: Get a single review by ID
+      description: |
+        Retrieve a single review by its unique ID.
+      tags:
+        - review
+      operationId: getReviewById
+      x-google-backend:
+        address: https://review-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Review ID
+      responses:
+        "200":
+          description: The review
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/APIResponse"
+        "404":
+          description: Review not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultResponse"
+        default:
+          description: Default
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultResponse"
+    patch:
+      summary: Partially update a review (e.g., change comment, rating, etc.)
+      description: |
+        Update fields of an existing review, such as comment, rating, or metrics.
+      tags:
+        - review
+      operationId: patchReview
+      x-google-backend:
+        address: https://review-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Review ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReviewUpdateRequest"
+      responses:
+        "200":
+          description: The updated review
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/APIResponse"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultResponse"
+        "404":
+          description: Review not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultResponse"
+        default:
+          description: Default
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultResponse"
+    delete:
+      summary: Delete a review
+      description: |
+        Delete a review by its unique ID.
+      tags:
+        - review
+      operationId: deleteReview
+      x-google-backend:
+        address: https://review-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Review ID
+      responses:
+        "200":
+          description: Review deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/APIResponse"
+        "404":
+          description: Review not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultResponse"
+        default:
+          description: Default
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultResponse"
+  /reviews/{id}/report:
+    post:
+      summary: Report an inappropriate review
+      description: |
+        Report a review as inappropriate, misleading, spam, or offensive.
+      tags:
+        - review
+      operationId: reportReview
+      x-google-backend:
+        address: https://review-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Review ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReportReviewRequest"
+      responses:
+        "200":
+          description: Review reported successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/APIResponse"
+        "404":
+          description: Review not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultResponse"
+        default:
+          description: Default
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultResponse"
+  /reviews/{id}/respond:
+    post:
+      summary: Respond to a review
+      description: |
+        Add a response to a review as the target user or listing owner.
+      tags:
+        - review
+      operationId: respondToReview
+      x-google-backend:
+        address: https://review-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Review ID
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReviewResponseRequest"
+      responses:
+        "200":
+          description: Response added successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/APIResponse"
+        "404":
+          description: Review not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultResponse"
+        default:
+          description: Default
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultResponse"
+
+components:
+  schemas:
+    PublicReview:
+      type: object
+      description: Public review information for display (minimal, user-facing)
+      properties:
+        id:
+          type: string
+          description: Unique review identifier
+        comment:
+          type: string
+          description: Review text
+        emoji_sentiment:
+          type: string
+          description: Emoji sentiment (👍, 👍👍, 👎)
+        overall_rating:
+          type: number
+          description: Overall rating score
+        metrics:
+          type: object
+          description: Individual rating metrics (cleanliness, location, etc.)
+          additionalProperties: true
+        created_at:
+          type: string
+          format: date-time
+          description: When the review was created
+        edit_deadline:
+          type: string
+          format: date-time
+          description: Deadline for editing this review (null if not editable)
+        reviewer:
+          type: object
+          description: Person who wrote the review
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+            avatar:
+              type: string
+          required:
+            - id
+            - name
+        listing:
+          type: object
+          description: Listing being reviewed (for listing reviews only)
+          properties:
+            id:
+              type: string
+            title:
+              type: string
+            thumbnail:
+              type: string
+        # Review tracking fields
+        guest_review_listing:
+          type: boolean
+          description: Whether the guest has reviewed the listing
+        guest_review_host:
+          type: boolean
+          description: Whether the guest has reviewed the host
+        host_review_guest:
+          type: boolean
+          description: Whether the host has reviewed the guest
+      required:
+        - id
+        - overall_rating
+        - metrics
+        - created_at
+        - reviewer
+    Review:
+      type: object
+      properties:
+        id:
+          type: string
+        author:
+          type: string
+          description: The user writing the review
+        target:
+          type: string
+          description: The user or listing being reviewed
+        type:
+          type: string
+          enum: [user, listing]
+          description: Type of entity being reviewed
+        category:
+          type: string
+        overall_rating:
+          type: number
+        comment:
+          type: string
+        emoji_sentiment:
+          type: string
+        metrics:
+          type: object
+          additionalProperties: true
+        booking_id:
+          type: string
+        listing:
+          type: object
+          description: Embedded listing object from booking
+          properties:
+            id:
+              type: string
+            title:
+              type: string
+            address:
+              type: string
+            thumbnail:
+              type: string
+        guest:
+          type: object
+          description: Embedded guest object from booking
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+            avatar:
+              type: string
+            created_at:
+              type: string
+              format: date-time
+        host:
+          type: object
+          description: Embedded host object from booking
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+            avatar:
+              type: string
+            created_at:
+              type: string
+              format: date-time
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        edit_deadline:
+          type: string
+          format: date-time
+          description: Deadline for editing this review (based on config period)
+        status:
+          type: string
+        version:
+          type: integer
+        edit_history:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReviewEdit"
+        # Review tracking fields
+        guest_review_listing:
+          type: boolean
+          description: Whether the guest has reviewed the listing
+        guest_review_host:
+          type: boolean
+          description: Whether the guest has reviewed the host
+        host_review_guest:
+          type: boolean
+          description: Whether the host has reviewed the guest
+      required:
+        - id
+        - author
+        - target
+        - type
+        - metrics
+        - created_at
+        - updated_at
+        - status
+        - version
+        - edit_history
+    GuestReviewSpaceMetrics:
+      type: object
+      required:
+        - cleanliness
+        - check_in
+        - accuracy
+        - location
+        - value
+      properties:
+        cleanliness:
+          type: number
+        check_in:
+          type: number
+        accuracy:
+          type: number
+        location:
+          type: number
+        value:
+          type: number
+    GuestReviewHostMetrics:
+      type: object
+      required:
+        - hospitality
+        - communication
+        - cleanliness
+        - respectfulness
+        - would_visit_again
+      properties:
+        hospitality:
+          type: number
+        communication:
+          type: number
+        cleanliness:
+          type: number
+        respectfulness:
+          type: number
+        would_visit_again:
+          type: boolean
+    HostReviewGuestMetrics:
+      type: object
+      required:
+        - communication
+        - cleanliness
+        - respectfulness
+        - would_host_again
+      properties:
+        communication:
+          type: number
+        cleanliness:
+          type: number
+        respectfulness:
+          type: number
+        would_host_again:
+          type: boolean
+    ReviewRequest:
+      type: object
+      required:
+        - booking_id
+        - type
+        - metrics
+      properties:
+        booking_id:
+          type: string
+          description: Associated booking ID (server will use this to infer author/target/context)
+        type:
+          type: string
+          enum: [user, listing]
+          description: Type of entity being reviewed (guest_to_host is represented by 'user', guest_to_listing by 'listing')
+        comment:
+          type: string
+          maxLength: 1000
+          description: Optional textual comment for the review
+        emoji_sentiment:
+          type: string
+          enum: ["👍", "👍👍", "👎"]
+          description: Optional emoji sentiment for the review
+        metrics:
+          description: Category-specific numeric metrics (server will validate based on inferred context)
+          oneOf:
+            - $ref: "#/components/schemas/GuestReviewSpaceMetrics"
+            - $ref: "#/components/schemas/GuestReviewHostMetrics"
+            - $ref: "#/components/schemas/HostReviewGuestMetrics"
+    ReviewUpdateRequest:
+      type: object
+      properties:
+        comment:
+          type: string
+          maxLength: 1000
+        emoji_sentiment:
+          type: string
+          enum: ["👍", "👍👍", "👎"]
+        metrics:
+          type: object
+          description: Category-specific metrics (flexible)
+          additionalProperties: true
+    ReviewEdit:
+      type: object
+      properties:
+        version:
+          type: integer
+        updated_at:
+          type: string
+          format: date-time
+        changes:
+          type: object
+          additionalProperties: true
+      required:
+        - version
+        - updated_at
+        - changes
+    ReportReviewRequest:
+      type: object
+      required:
+        - reason
+        - reported_by
+      properties:
+        reason:
+          type: string
+          enum:
+            - INAPPROPRIATE
+            - MISLEADING
+            - SPAM
+            - OFFENSIVE
+            - OTHER
+        details:
+          type: string
+          maxLength: 500
+          description: Additional details about the report
+        reported_by:
+          type: string
+          description: User ID of the person reporting the review
+    ReviewResponseRequest:
+      type: object
+      required:
+        - comment
+      properties:
+        comment:
+          type: string
+          maxLength: 1000
+          description: The response text
+    ReviewCreatedResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        error:
+          type: string
+        toast:
+          type: string
+        data:
+          type: object
+          properties:
+            id:
+              type: string
+              description: The unique ID of the created review
+            status:
+              type: string
+              enum: [pending]
+              description: Review status (always pending for new reviews)
+            booking_id:
+              type: string
+              description: Associated booking ID
+          required:
+            - id
+            - status
+            - booking_id
+      required:
+        - success
+        - toast
+      example:
+        success: true
+        toast: "Review submitted and pending approval"
+        data:
+          id: "PCNpbQVwyxMiQQpqDz6v"
+          status: "pending"
+          booking_id: "E41MrpBF295EmoYdkIiF"
+    APIResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        error:
+          type: string
+        toast:
+          type: string
+        data:
+          oneOf:
+            - $ref: "#/components/schemas/PublicReview"
+            - type: array
+              items:
+                $ref: "#/components/schemas/PublicReview"
+      required:
+        - success
+        - toast
+      example:
+        success: true
+        toast: "Operation successful."
+        error: ""
+        data:
+          - id: "rvw_123"
+            comment: "Great place! Very clean and exactly as described."
+            emoji_sentiment: "👍👍"
+            overall_rating: 4.5
+            metrics:
+              cleanliness: 5.0
+              check_in: 4.0
+              accuracy: 4.5
+              location: 5.0
+              value: 4.5
+            created_at: "2025-09-26T12:00:00Z"
+            edit_deadline: "2025-09-28T12:00:00Z"
+            reviewer:
+              id: "user_abc"
+              name: "Alice"
+              avatar: "https://example.com/alice.jpg"
+            listing:
+              id: "listing_123"
+              title: "Cozy Downtown Apartment"
+              thumbnail: "https://example.com/thumb.jpg"
+    DefaultResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        error:
+          type: string
+        toast:
+          type: string
+          maxLength: 255
+      required:
+        - success
+        - toast
+      example:
+        success: true
+        toast: "Operation successful."
+        error: ""
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

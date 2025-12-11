@@ -1,0 +1,199 @@
+name: Deploy All Staging API Gateways
+# Descr: Deploys all staging API Gateways from gateway/config.json; queues runs for the same group
+run-name: "Staging Gateway Deploy • ${{ github.ref_name }} • ${{ github.sha }}"
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'services/*.yaml'
+      - 'services/*.yml'
+      - 'gateway/*.yaml'
+      - 'gateway/*.yml'
+      - 'gateway/config.json'
+      - 'scripts/**'
+  workflow_dispatch:
+    inputs:
+      target_branch:
+        description: 'Branch to deploy from'
+        required: false
+        default: 'main'
+  repository_dispatch:
+    types:
+      - deploy-staging-gateway
+
+concurrency:
+  group: staging-gateway-deploy
+  # Queue newer runs instead of canceling in-progress ones for this group
+  cancel-in-progress: false
+
+jobs:
+  deploy-staging-gateways:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: read
+      id-token: write
+    env:
+      LOCATION: "us-central1"
+      PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+      WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+      SERVICE_ACCOUNT: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+      BACKEND_AUTH_SERVICE_ACCOUNT: ${{ secrets.GCP_BACKEND_AUTH_SERVICE_ACCOUNT }}
+      NODE_VERSION: "18"
+    steps:
+      # - name: Set target branch
+      #   run: |
+      #     # Priority: workflow_dispatch input > repository_dispatch payload > push event > default
+      #     if [[ "${{ github.event_name }}" == "workflow_dispatch" ]] && [[ -n "${{ github.event.inputs.target_branch }}" ]]; then
+      #       TARGET_BRANCH="${{ github.event.inputs.target_branch }}"
+      #     elif [[ "${{ github.event_name }}" == "repository_dispatch" ]]; then
+      #       TARGET_BRANCH="${{ github.event.client_payload.branch || 'main' }}"
+      #     elif [[ "${{ github.event_name }}" == "push" ]]; then
+      #       TARGET_BRANCH="${{ github.ref_name }}"
+      #     else
+      #       TARGET_BRANCH="main"
+      #     fi
+          
+      #     echo "TARGET_BRANCH=$TARGET_BRANCH" >> $GITHUB_ENV
+      #     echo "Deploying from branch: $TARGET_BRANCH"
+      - name: Set target branch
+        run: |
+          if [ "${GITHUB_EVENT_NAME}" = "repository_dispatch" ]; then
+            TARGET_BRANCH="${{ github.event.client_payload.branch }}"
+          elif [ -n "${{ github.event.inputs.target_branch }}" ]; then
+            TARGET_BRANCH="${{ github.event.inputs.target_branch }}"
+          else
+            TARGET_BRANCH="${{ github.ref_name }}"
+          fi
+
+          echo "TARGET_BRANCH=$TARGET_BRANCH" >> $GITHUB_ENV
+          echo "Deploying from branch: $TARGET_BRANCH"
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TARGET_BRANCH }}
+          fetch-depth: 1
+          token: ${{ secrets.OPENAPI_CICD_WORKFLOW_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm ci
+      - name: Build and convert OpenAPI specs to Swagger 2.0
+        run: npm run swagger
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ env.SERVICE_ACCOUNT }}
+          token_format: 'access_token'
+      - name: Set up Google Cloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+
+      - name: Deploy all staging gateways from config.json
+        run: |
+          CONFIG_PATH="gateway/config.json"
+          API_NAME=$(jq -r '.apiName' $CONFIG_PATH)
+          for gw in $(jq -r '.gateways | keys[]' $CONFIG_PATH); do
+            # Use the Swagger 2.0 version of the spec (generated during the gateway build)
+            GW_SPEC="gateway/${gw}-swagger.yaml"
+            STAGING_GW_NAME="${gw}-staging-gateway"
+            SHORT_SHA=$(git rev-parse --short HEAD)
+            TIMESTAMP=$(date +'%Y%m%d%H%M%S')
+            NEW_API_CONFIG_NAME="${API_NAME}-${gw}-staging-${SHORT_SHA}-${TIMESTAMP}"
+            echo "Deploying $GW_SPEC to $STAGING_GW_NAME as $NEW_API_CONFIG_NAME"
+            gcloud api-gateway api-configs create "$NEW_API_CONFIG_NAME" \
+              --api="$API_NAME" \
+              --openapi-spec="$GW_SPEC" \
+              --project="${PROJECT_ID}" \
+              --backend-auth-service-account="${BACKEND_AUTH_SERVICE_ACCOUNT}"
+            if gcloud api-gateway gateways describe "$STAGING_GW_NAME" --location="${LOCATION}" --project="${PROJECT_ID}" &>/dev/null; then
+              gcloud api-gateway gateways update "$STAGING_GW_NAME" \
+                --api="$API_NAME" \
+                --api-config="$NEW_API_CONFIG_NAME" \
+                --location="${LOCATION}" \
+                --project="${PROJECT_ID}"
+            else
+              gcloud api-gateway gateways create "$STAGING_GW_NAME" \
+                --api="$API_NAME" \
+                --api-config="$NEW_API_CONFIG_NAME" \
+                --location="${LOCATION}" \
+                --project="${PROJECT_ID}"
+            fi
+            GW_URL=$(gcloud api-gateway gateways describe "$STAGING_GW_NAME" --location="${LOCATION}" --project="${PROJECT_ID}" --format="value(defaultHostname)")
+            echo "Staging Gateway $STAGING_GW_NAME URL: https://$GW_URL"
+          done
+      - name: Generate and update Postman collections
+        run: |
+          echo "🚀 Generating Postman collections from existing Swagger specs..."
+          cd scripts
+          npm install openapi-to-postmanv2
+          # Create postman-collections directory
+          mkdir -p ../postman-collections
+          # Use the Swagger specs already generated by the workflow
+          CONFIG_PATH="../gateway/config.json"
+          API_NAME=$(jq -r '.apiName' $CONFIG_PATH)
+          for gw in $(jq -r '.gateways | keys[]' $CONFIG_PATH); do
+            SWAGGER_SPEC="../gateway/${gw}-swagger.yaml"
+            if [ -f "$SWAGGER_SPEC" ]; then
+              echo "Generating Postman collection from $SWAGGER_SPEC..."
+              npx openapi-to-postmanv2 -s "$SWAGGER_SPEC" -o "../postman-collections/${gw}-gateway.postman_collection.json" -p -O 'folderStrategy=Tags'
+            else
+              echo "⚠️  Swagger spec not found: $SWAGGER_SPEC"
+            fi
+          done
+          
+          # Try to preserve and merge scripts
+          echo "🔄 Attempting script preservation..."
+          if node preserve-and-merge-scripts.js; then
+            echo "✅ Script preservation successful - pushing to Postman..."
+            node push-to-postman.js
+          else
+            echo "❌ Script preservation failed - skipping Postman push"
+            echo "⚠️  Collections generated but not pushed due to script preservation failure"
+            echo "🔄 Gateway deployment completed successfully"
+            echo "📝 Postman collections will be updated on next successful run"
+            exit 0  # Exit successfully to not fail the workflow
+          fi
+        env:
+          POSTMAN_API_KEY: ${{ secrets.POSTMAN_API_KEY }}
+        continue-on-error: true
+      - name: Postman collection status
+        if: failure()
+        run: |
+          echo "⚠️  Postman collection generation/update failed"
+          echo "🔄 Gateway deployment completed successfully"
+          echo "📝 Postman collections will be updated on next successful run"
+      - name: Commit and push changes to staging branch
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin
+          # Force checkout, discarding local changes - generated specs are source of truth
+          git checkout -B staging origin/staging --force
+          git add .
+          git commit -m "chore: update generated gateway specs [skip ci]" || echo "No changes to commit"
+          git push origin staging
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.OPENAPI_CICD_WORKFLOW_TOKEN }}
+      - name: Debug workflow dispatch context
+        run: |
+          echo "github.ref: ${{ github.ref }}"
+          echo "github.ref_name: ${{ github.ref_name }}"
+          echo "github.ref_type: ${{ github.ref_type }}"
+          echo "GITHUB_REF: $GITHUB_REF"
+          echo "GITHUB_REF_NAME: $GITHUB_REF_NAME"
+          echo "GITHUB_REF_TYPE: $GITHUB_REF_TYPE"
+          echo "GITHUB_SHA: $GITHUB_SHA"
+          echo "GITHUB_HEAD_REF: $GITHUB_HEAD_REF"
+          echo "GITHUB_BASE_REF: $GITHUB_BASE_REF"
+      # The SDK Release Workflow trigger has been removed to decouple SDK workflow execution.

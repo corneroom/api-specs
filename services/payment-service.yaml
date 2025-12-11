@@ -1,0 +1,1269 @@
+openapi: 3.0.3
+info:
+  title: Payment Service API
+  description: |
+    A comprehensive payment service API that handles core business logic with support for multiple payment providers.
+
+    ## Features
+    - Provider-agnostic payment operations
+    - CRUD operations for payment methods and transactions
+    - Health monitoring
+    - Comprehensive error handling
+    - Input validation
+
+    ## Supported Providers
+    - Stripe
+    - PayPal (future)
+    - Apple Pay (future)
+
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: api-support@example.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://project-x-staging-gateway-8ua0taf7.uc.gateway.dev/api/v1
+
+tags:
+  - name: payment
+    description: Payment service operations
+  - name: health
+    description: Health check operations
+  - name: webhook
+    description: Webhook operations
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      description: Returns the health status of the payment service
+      tags:
+        - health
+      operationId: getHealth
+      x-google-backend:
+        address: https://payment-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security: []
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "503":
+          description: Service is unhealthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /payments/heartbeat:
+    get:
+      summary: Heartbeat
+      description: Returns a simple heartbeat response to verify the Payment service is running.
+      tags:
+        - payment
+      operationId: paymentHeartbeat
+      x-google-backend:
+        address: https://payment-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security: [{ jwtAuth: [] }]
+      parameters:
+        - name: X-Payment-Provider
+          in: header
+          required: false
+          description: Payment provider (optional, defaults to user's preferred provider)
+          schema:
+            type: string
+            enum: [stripe, paypal, apple_pay]
+            default: stripe
+      responses:
+        "200":
+          description: Heartbeat response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HeartbeatResponse'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /payments/earnings:
+    get:
+      summary: Get user earnings
+      description: Retrieves earnings data for the authenticated user
+      tags:
+        - payment
+      operationId: getEarnings
+      x-google-backend:
+        address: https://payment-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security: [{ jwtAuth: [] }]
+      parameters:
+        - name: X-Payment-Provider
+          in: header
+          required: false
+          description: Payment provider (optional, defaults to user's preferred provider)
+          schema:
+            type: string
+            enum: [stripe, paypal, apple_pay]
+            default: stripe
+      responses:
+        "200":
+          description: Earnings data retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EarningsResponse'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /payments/history:
+    get:
+      summary: Get transaction history
+      description: Retrieves transaction history for the authenticated user
+      tags:
+        - payment
+      operationId: getTransactionHistory
+      x-google-backend:
+        address: https://payment-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security: [{ jwtAuth: [] }]
+      parameters:
+        - name: X-Payment-Provider
+          in: header
+          required: false
+          description: Payment provider (optional, defaults to user's preferred provider)
+          schema:
+            type: string
+            enum: [stripe, paypal, apple_pay]
+            default: stripe
+        - name: page
+          in: query
+          description: Page number for pagination
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: Number of items per page
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+      responses:
+        "200":
+          description: Transaction history retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionHistoryResponse'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /payments/intents:
+    post:
+      summary: Create payment intent
+      description: Creates a new payment intent for a booking
+      tags:
+        - payment
+      operationId: createPaymentIntent
+      x-google-backend:
+        address: https://payment-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security: [{ jwtAuth: [] }]
+      parameters:
+        - name: X-Payment-Provider
+          in: header
+          required: false
+          description: Payment provider (optional, defaults to user's preferred provider)
+          schema:
+            type: string
+            enum: [stripe, paypal, apple_pay]
+            default: stripe
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePaymentIntentRequest'
+      responses:
+        "201":
+          description: Payment intent created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentIntentResponse'
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /payments/intents/{id}:
+    get:
+      summary: Get payment intent
+      description: Retrieves a payment intent by ID
+      tags:
+        - payment
+      operationId: getPaymentIntent
+      x-google-backend:
+        address: https://payment-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security: [{ jwtAuth: [] }]
+      parameters:
+        - name: X-Payment-Provider
+          in: header
+          required: false
+          description: Payment provider (optional, defaults to user's preferred provider)
+          schema:
+            type: string
+            enum: [stripe, paypal, apple_pay]
+            default: stripe
+        - name: id
+          in: path
+          required: true
+          description: Payment intent ID
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Payment intent retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentIntentResponse'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "404":
+          description: Payment intent not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /payments/intents/{id}/use-payment-method:
+    post:
+      summary: Use payment method
+      description: Attaches a payment method to a payment intent and confirms it automatically. This is the simplified flow for when users select a saved payment method - one call does everything.
+      tags:
+        - payment
+      operationId: usePaymentMethod
+      x-google-backend:
+        address: https://payment-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security: [{ jwtAuth: [] }]
+      parameters:
+        - name: X-Payment-Provider
+          in: header
+          required: false
+          description: Payment provider (optional, defaults to user's preferred provider)
+          schema:
+            type: string
+            enum: [stripe, paypal, apple_pay]
+            default: stripe
+        - name: id
+          in: path
+          required: true
+          description: Payment intent ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - payment_method_id
+              properties:
+                payment_method_id:
+                  type: string
+                  description: Payment method ID to attach and confirm
+      responses:
+        "200":
+          description: Payment method attached and confirmed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentIntentResponse'
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /payments/refunds:
+    post:
+      summary: Create refund
+      description: Creates a refund for a payment intent
+      tags:
+        - payment
+      operationId: createRefund
+      x-google-backend:
+        address: https://payment-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security: [{ jwtAuth: [] }]
+      parameters:
+        - name: X-Payment-Provider
+          in: header
+          required: false
+          description: Payment provider (optional, defaults to user's preferred provider)
+          schema:
+            type: string
+            enum: [stripe, paypal, apple_pay]
+            default: stripe
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRefundRequest'
+      responses:
+        "201":
+          description: Refund created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefundResponse'
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /payments/methods/{id}/attach:
+    post:
+      summary: Attach payment method
+      description: Attaches a payment method to a customer
+      tags:
+        - payment
+      operationId: attachPaymentMethod
+      x-google-backend:
+        address: https://payment-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security: [{ jwtAuth: [] }]
+      parameters:
+        - name: X-Payment-Provider
+          in: header
+          required: false
+          description: Payment provider (optional, defaults to user's preferred provider)
+          schema:
+            type: string
+            enum: [stripe, paypal, apple_pay]
+            default: stripe
+        - name: id
+          in: path
+          required: true
+          description: Payment method ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                customer_id:
+                  type: string
+                  description: Customer ID
+              required:
+                - customer_id
+      responses:
+        "200":
+          description: Payment method attached successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      status:
+                        type: string
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /payments/methods:
+    get:
+      summary: Get user payment methods
+      description: Retrieves saved payment methods for the authenticated user
+      tags:
+        - payment
+      operationId: getPaymentMethods
+      x-google-backend:
+        address: https://payment-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security: [{ jwtAuth: [] }]
+      parameters:
+        - name: X-Payment-Provider
+          in: header
+          required: false
+          description: Payment provider (optional, defaults to user's preferred provider)
+          schema:
+            type: string
+            enum: [stripe, paypal, apple_pay]
+            default: stripe
+      responses:
+        "200":
+          description: Payment methods retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentMethodsResponse'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      summary: Save payment method
+      description: Saves a payment method for the authenticated user
+      tags:
+        - payment
+      operationId: savePaymentMethod
+      x-google-backend:
+        address: https://payment-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security: [{ jwtAuth: [] }]
+      parameters:
+        - name: X-Payment-Provider
+          in: header
+          required: false
+          description: Payment provider (optional, defaults to user's preferred provider)
+          schema:
+            type: string
+            enum: [stripe, paypal, apple_pay]
+            default: stripe
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                payment_method_id:
+                  type: string
+                  description: Stripe payment method ID
+              required:
+                - payment_method_id
+      responses:
+        "201":
+          description: Payment method saved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      status:
+                        type: string
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /payments/methods/{id}:
+    delete:
+      summary: Remove payment method
+      description: Removes a saved payment method for the authenticated user
+      tags:
+        - payment
+      operationId: removePaymentMethod
+      x-google-backend:
+        address: https://payment-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security: [{ jwtAuth: [] }]
+      parameters:
+        - name: X-Payment-Provider
+          in: header
+          required: false
+          description: Payment provider (optional, defaults to user's preferred provider)
+          schema:
+            type: string
+            enum: [stripe, paypal, apple_pay]
+            default: stripe
+        - name: id
+          in: path
+          required: true
+          description: Payment method ID
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Payment method removed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      status:
+                        type: string
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "404":
+          description: Payment method not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    patch:
+      summary: Set default payment method
+      description: Sets a payment method as the default for the authenticated user
+      tags:
+        - payment
+      operationId: setDefaultPaymentMethod
+      x-google-backend:
+        address: https://payment-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security: [{ jwtAuth: [] }]
+      parameters:
+        - name: X-Payment-Provider
+          in: header
+          required: false
+          description: Payment provider (optional, defaults to user's preferred provider)
+          schema:
+            type: string
+            enum: [stripe, paypal, apple_pay]
+            default: stripe
+        - name: id
+          in: path
+          required: true
+          description: Payment method ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                default:
+                  type: boolean
+                  description: Set as default payment method
+                  default: true
+              required:
+                - default
+      responses:
+        "200":
+          description: Default payment method updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      status:
+                        type: string
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "404":
+          description: Payment method not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /payments/setup-intents:
+    post:
+      summary: Create setup intent
+      description: Creates a SetupIntent for saving payment methods without charging. This is used when users want to add a new payment method from the settings page.
+      tags:
+        - payment
+      operationId: createSetupIntent
+      x-google-backend:
+        address: https://payment-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security: [{ jwtAuth: [] }]
+      parameters:
+        - name: X-Payment-Provider
+          in: header
+          required: false
+          description: Payment provider (optional, defaults to user's preferred provider)
+          schema:
+            type: string
+            enum: [stripe, paypal, apple_pay]
+            default: stripe
+      responses:
+        "201":
+          description: Setup intent created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SetupIntentResponse'
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /payments/setup-intents/{id}:
+    get:
+      summary: Get setup intent
+      description: Retrieves a SetupIntent by ID
+      tags:
+        - payment
+      operationId: getSetupIntent
+      x-google-backend:
+        address: https://payment-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security: [{ jwtAuth: [] }]
+      parameters:
+        - name: X-Payment-Provider
+          in: header
+          required: false
+          description: Payment provider (optional, defaults to user's preferred provider)
+          schema:
+            type: string
+            enum: [stripe, paypal, apple_pay]
+            default: stripe
+        - name: id
+          in: path
+          required: true
+          description: Setup intent ID
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Setup intent retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SetupIntentResponse'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "404":
+          description: Setup intent not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+
+  /webhooks/{provider}:
+    post:
+      summary: Payment provider webhook
+      description: Handles webhook events from payment providers
+      tags:
+        - webhook
+      operationId: handleProviderWebhook
+      x-google-backend:
+        address: https://payment-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security: []
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          description: Payment provider (stripe, paypal, apple_pay)
+          schema:
+            type: string
+            enum: [stripe, paypal, apple_pay]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Provider-specific webhook payload
+      responses:
+        "200":
+          description: Webhook processed successfully
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "Webhook processed successfully"
+        "400":
+          description: Bad request
+          content:
+            text/plain:
+              schema:
+                type: string
+        "500":
+          description: Internal server error
+          content:
+            text/plain:
+              schema:
+                type: string
+
+components:
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    HealthResponse:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum: [healthy, unhealthy]
+          description: Service health status
+        timestamp:
+          type: string
+          format: date-time
+          description: Health check timestamp
+
+    HeartbeatResponse:
+      type: object
+      required:
+        - status
+        - timestamp
+        - version
+      properties:
+        status:
+          type: string
+          enum: [healthy]
+          description: Service status
+        timestamp:
+          type: string
+          format: date-time
+          description: Heartbeat timestamp
+        version:
+          type: string
+          description: Service version
+
+    EarningsResponse:
+      type: object
+      required:
+        - success
+        - data
+      properties:
+        success:
+          type: boolean
+          description: Request success status
+        toast:
+          type: string
+          description: Optional toast message for the client UI
+        data:
+          type: object
+          description: Earnings data
+          properties:
+            total_earnings:
+              type: number
+              format: float
+              description: Total earnings amount
+            currency:
+              type: string
+              description: Currency code
+            period:
+              type: string
+              description: Earnings period
+
+    TransactionHistoryResponse:
+      type: object
+      required:
+        - success
+        - data
+      properties:
+        success:
+          type: boolean
+          description: Request success status
+        toast:
+          type: string
+          description: Optional toast message for the client UI
+        data:
+          type: object
+          description: Transaction history data
+          properties:
+            transactions:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: Transaction ID
+                  amount:
+                    type: number
+                    format: float
+                    description: Transaction amount
+                  currency:
+                    type: string
+                    description: Currency code
+                  type:
+                    type: string
+                    description: Transaction type
+                  status:
+                    type: string
+                    description: Transaction status
+                  created_at:
+                    type: string
+                    format: date-time
+                    description: Transaction creation timestamp
+            page:
+              type: object
+              properties:
+                limit:
+                  type: integer
+                  description: Items per page
+                page:
+                  type: integer
+                  description: Current page number
+                total:
+                  type: integer
+                  description: Total number of transactions
+                totalPages:
+                  type: integer
+                  description: Total number of pages
+
+    CreatePaymentIntentRequest:
+      type: object
+      required:
+        - booking_id
+        - guest_id
+        - host_id
+        - listing_id
+        - amount
+        - currency
+      properties:
+        booking_id:
+          type: string
+          description: Booking ID
+          example: "booking_123"
+        guest_id:
+          type: string
+          description: Guest user ID
+          example: "user_123"
+        host_id:
+          type: string
+          description: Host user ID
+          example: "host_456"
+        listing_id:
+          type: string
+          description: Listing ID
+          example: "listing_789"
+        amount:
+          type: number
+          format: float
+          description: Payment amount
+          example: 150.00
+        currency:
+          type: string
+          description: Currency code
+          example: "CAD"
+        customer_id:
+          type: string
+          description: Stripe customer ID (optional)
+          example: "cus_123"
+        description:
+          type: string
+          description: Payment description (optional)
+          example: "Booking payment for Downtown Apartment"
+
+    PaymentIntentResponse:
+      type: object
+      required:
+        - id
+        - client_secret
+        - amount
+        - currency
+        - status
+      properties:
+        id:
+          type: string
+          description: Payment intent ID
+          example: "pi_1234567890"
+        client_secret:
+          type: string
+          description: Client secret for frontend
+          example: "pi_1234567890_secret_abc123"
+        amount:
+          type: number
+          format: float
+          description: Payment amount
+          example: 150.00
+        currency:
+          type: string
+          description: Currency code
+          example: "CAD"
+        status:
+          type: string
+          description: Payment intent status
+          enum: [requires_payment_method, requires_confirmation, requires_action, processing, succeeded, requires_capture, canceled]
+          example: "requires_payment_method"
+        booking_id:
+          type: string
+          description: Associated booking ID
+          example: "booking_123"
+        created_at:
+          type: string
+          format: date-time
+          description: Creation timestamp
+          example: "2024-01-15T10:30:00Z"
+
+    CreateRefundRequest:
+      type: object
+      required:
+        - payment_intent_id
+        - booking_id
+      properties:
+        payment_intent_id:
+          type: string
+          description: Payment intent ID to refund
+          example: "pi_1234567890"
+        booking_id:
+          type: string
+          description: Booking ID
+          example: "booking_123"
+        amount:
+          type: number
+          format: float
+          description: Refund amount (optional, defaults to full refund)
+          example: 150.00
+        reason:
+          type: string
+          description: Refund reason (optional)
+          example: "customer_request"
+
+    RefundResponse:
+      type: object
+      required:
+        - id
+        - payment_intent_id
+        - amount
+        - currency
+        - status
+      properties:
+        id:
+          type: string
+          description: Refund ID
+          example: "re_1234567890"
+        payment_intent_id:
+          type: string
+          description: Original payment intent ID
+          example: "pi_1234567890"
+        amount:
+          type: number
+          format: float
+          description: Refund amount
+          example: 150.00
+        currency:
+          type: string
+          description: Currency code
+          example: "CAD"
+        status:
+          type: string
+          description: Refund status
+          enum: [pending, succeeded, failed, canceled]
+          example: "succeeded"
+        reason:
+          type: string
+          description: Refund reason
+          example: "customer_request"
+        booking_id:
+          type: string
+          description: Associated booking ID
+          example: "booking_123"
+        created_at:
+          type: string
+          format: date-time
+          description: Creation timestamp
+          example: "2024-01-15T10:30:00Z"
+
+    PaymentMethodsResponse:
+      type: object
+      required:
+        - success
+        - data
+      properties:
+        success:
+          type: boolean
+          description: Request success status
+        toast:
+          type: string
+          description: Optional toast message for the client UI
+        data:
+          type: object
+          description: Payment methods data
+          properties:
+            payment_methods:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: Payment method ID
+                  type:
+                    type: string
+                    description: Payment method type (e.g., card)
+                  card:
+                    type: object
+                    properties:
+                      brand:
+                        type: string
+                        description: Card brand (e.g., visa, mastercard)
+                      last4:
+                        type: string
+                        description: Last 4 digits of card
+                      expiry_month:
+                        type: integer
+                        description: Expiry month
+                      expiry_year:
+                        type: integer
+                        description: Expiry year
+                  is_default:
+                    type: boolean
+                    description: Whether this is the default payment method
+                  created_at:
+                    type: string
+                    format: date-time
+                    description: When the payment method was added
+            default_method:
+              type: string
+              description: ID of the default payment method
+
+    SetupIntentResponse:
+      type: object
+      required:
+        - id
+        - client_secret
+        - status
+      properties:
+        id:
+          type: string
+          description: Setup intent ID
+          example: "seti_1234567890"
+        client_secret:
+          type: string
+          description: Client secret for frontend
+          example: "seti_1234567890_secret_abc123"
+        status:
+          type: string
+          description: Setup intent status
+          enum: [requires_payment_method, requires_confirmation, requires_action, processing, succeeded, canceled]
+          example: "requires_payment_method"
+        payment_method_id:
+          type: string
+          description: Payment method ID (available after confirmation)
+          example: "pm_1234567890"
+
+    ErrorResponse:
+      type: object
+      description: Standard error response model for failed requests.
+      properties:
+        success:
+          type: boolean
+          description: Indicates if the request was successful.
+          example: false
+        error:
+          type: string
+          description: Error message describing the failure.
+          example: Invalid request parameters.
+        toast:
+          type: string
+          description: Optional toast message for the client UI.
+          example: Please check your input and try again.
+      required:
+        - success
+        - error

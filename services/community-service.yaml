@@ -1,0 +1,2330 @@
+openapi: 3.0.0
+info:
+  title: Project X Community Service API
+  version: 1.0.0
+  description: |
+    API for managing community content like stories, reels, experiences, events, and interactions on a travel platform.
+    
+    ## Internationalization
+    This API supports internationalization with localized toast messages. Supported languages:
+    - English (en) - Default
+    - French (fr)
+    - Spanish (es)
+    
+    Language is detected from the `Accept-Language` header. All responses include a `toast` field with user-friendly messages in the requested language.
+  contact:
+    name: Project X Team
+    email: support@projectx.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+servers:
+  - url: /api/v1
+    description: Base path for API endpoints
+security:
+  - jwtAuth: []
+
+tags:
+  - name: content
+    description: Operations related to user-generated stories and reels
+  - name: experiences
+    description: Operations related to local experiences and tours
+  - name: events
+    description: Operations related to community events
+  - name: guides
+    description: Operations related to local guides
+  - name: travel-plans
+    description: Operations related to travel plans and connections
+  - name: engagement
+    description: Operations related to likes, views, and comments
+  - name: bookings
+    description: Operations related to experience and event bookings
+paths:
+  /community/stories:
+    post:
+      operationId: createStory
+      summary: Create a new story
+      description: Create a new community story with image and location details
+      tags:
+        - content
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateStoryRequest'
+      responses:
+        '201':
+          description: Story created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoryResponse'
+        '400':
+          description: Invalid request
+        '401':
+          description: Unauthorized
+  /community/stories/my:
+    get:
+      operationId: getUserStories
+      summary: Get current user's stories
+      description: Retrieve stories created by the authenticated user
+      tags:
+        - content
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      responses:
+        '200':
+          description: List of current user's stories
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoryListResponse'
+        '401':
+          description: Unauthorized
+  /community/stories/{id}:
+    delete:
+      operationId: deleteStory
+      summary: Delete a story
+      description: Delete a story by ID (only by the story owner)
+      tags:
+        - content
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Story deleted successfully
+        '404':
+          description: Story not found
+  /community/stories/{id}/view:
+    put:
+      operationId: incrementStoryViews
+      summary: Increment view count for a story
+      description: Increment the view count for a specific story
+      tags:
+        - engagement
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: View count incremented
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ViewCountResponse'
+        '404':
+          description: Story not found
+  /community/stories/{id}/like:
+    put:
+      operationId: likeStory
+      summary: Like a story
+      description: Like a specific story
+      tags:
+        - engagement
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Story liked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LikeResponse'
+        '404':
+          description: Story not found
+    delete:
+      operationId: unlikeStory
+      summary: Unlike a story
+      description: Remove like from a specific story
+      tags:
+        - engagement
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Story unliked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LikeResponse'
+        '404':
+          description: Story not found
+  /community/stories/{id}/comments:
+    post:
+      operationId: addStoryComment
+      summary: Add a comment to a story
+      description: Add a comment to a specific story
+      tags:
+        - engagement
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommentRequest'
+      responses:
+        '201':
+          description: Comment added successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentResponse'
+        '400':
+          description: Invalid request
+    get:
+      operationId: getStoryComments
+      summary: Get comments for a story
+      description: Retrieve comments for a specific story
+      tags:
+        - engagement
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: List of comments
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentListResponse'
+        '404':
+          description: Story not found
+  /community/reels:
+    post:
+      operationId: createReel
+      summary: Create a new reel
+      description: Create a new community reel with video and location details
+      tags:
+        - content
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateReelRequest'
+      responses:
+        '201':
+          description: Reel created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReelResponse'
+        '400':
+          description: Invalid request
+        '401':
+          description: Unauthorized
+  /community/reels/my:
+    get:
+      operationId: getUserReels
+      summary: Get current user's reels
+      description: Retrieve reels created by the authenticated user
+      tags:
+        - content
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      responses:
+        '200':
+          description: List of current user's reels
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReelListResponse'
+        '401':
+          description: Unauthorized
+  /community/reels/{id}:
+    delete:
+      operationId: deleteReel
+      summary: Delete a reel
+      description: Delete a reel by ID (only by the reel owner)
+      tags:
+        - content
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Reel deleted successfully
+        '404':
+          description: Reel not found
+  /community/reels/{id}/like:
+    put:
+      operationId: likeReel
+      summary: Like a reel
+      description: Like a specific reel
+      tags:
+        - engagement
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Reel liked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LikeResponse'
+        '404':
+          description: Reel not found
+    delete:
+      operationId: unlikeReel
+      summary: Unlike a reel
+      description: Remove like from a specific reel
+      tags:
+        - engagement
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Reel unliked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LikeResponse'
+        '404':
+          description: Reel not found
+  /community/reels/{id}/comments:
+    post:
+      operationId: addReelComment
+      summary: Add a comment to a reel
+      description: Add a comment to a specific reel
+      tags:
+        - engagement
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommentRequest'
+      responses:
+        '201':
+          description: Comment added successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentResponse'
+        '400':
+          description: Invalid request
+    get:
+      operationId: getReelComments
+      summary: Get comments for a reel
+      description: Retrieve comments for a specific reel
+      tags:
+        - engagement
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: List of comments
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentListResponse'
+        '404':
+          description: Reel not found
+  /community/feed:
+    get:
+      operationId: getFeed
+      summary: Get authenticated community feed
+      description: Retrieve a personalized feed of community content for authenticated users
+      tags:
+        - content
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+            maximum: 100
+        - in: query
+          name: type
+          schema:
+            type: string
+            enum: [story, reel]
+        - in: query
+          name: featured
+          schema:
+            type: boolean
+            default: false
+        - in: query
+          name: country
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Authenticated community feed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeedResponse'
+        '401':
+          description: Unauthorized
+        '400':
+          description: Invalid request parameters
+  /community/public/feed:
+    get:
+      operationId: getPublicFeed
+      summary: Get public community feed
+      description: Retrieve a public feed of community content for anonymous users
+      tags:
+        - content
+      security: []
+      x-google-backend:
+        address: https://community-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+            maximum: 100
+        - in: query
+          name: type
+          schema:
+            type: string
+            enum: [story, reel]
+        - in: query
+          name: featured
+          schema:
+            type: boolean
+            default: false
+        - in: query
+          name: country
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Public community feed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeedResponse'
+        '400':
+          description: Invalid request parameters
+  /community/experiences:
+    post:
+      operationId: createExperience
+      summary: Create a new experience
+      description: Create a new local experience or tour
+      tags:
+        - experiences
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateExperienceRequest'
+      responses:
+        '201':
+          description: Experience created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperienceResponse'
+        '400':
+          description: Invalid request
+        '401':
+          description: Unauthorized
+    get:
+      operationId: getExperiences
+      summary: List experiences
+      description: Retrieve a paginated list of available experiences
+      tags:
+        - experiences
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+        - in: query
+          name: country
+          schema:
+            type: string
+        - in: query
+          name: max_price
+          schema:
+            type: number
+      responses:
+        '200':
+          description: List of experiences
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperienceListResponse'
+        '400':
+          description: Invalid request parameters
+  /experiences/{id}:
+    get:
+      operationId: getExperience
+      summary: Get experience details
+      description: Retrieve details for a specific experience
+      tags:
+        - experiences
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Experience details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperienceResponse'
+        '404':
+          description: Experience not found
+    put:
+      operationId: updateExperience
+      summary: Update experience
+      description: Update an existing experience (only by the experience owner)
+      tags:
+        - experiences
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateExperienceRequest'
+      responses:
+        '200':
+          description: Experience updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperienceResponse'
+        '404':
+          description: Experience not found
+    delete:
+      operationId: deleteExperience
+      summary: Delete experience
+      description: Delete an experience (only by the experience owner)
+      tags:
+        - experiences
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Experience deleted successfully
+        '404':
+          description: Experience not found
+  /community/experiences/{id}/book:
+    post:
+      operationId: bookExperience
+      summary: Book an experience
+      description: Book a specific experience
+      tags:
+        - bookings
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookExperienceRequest'
+      responses:
+        '201':
+          description: Experience booked successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingResponse'
+        '400':
+          description: Invalid request
+        '404':
+          description: Experience not found
+  /events:
+    post:
+      operationId: createEvent
+      summary: Create a new event
+      description: Create a new community event
+      tags:
+        - events
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEventRequest'
+      responses:
+        '201':
+          description: Event created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventResponse'
+        '400':
+          description: Invalid request
+        '401':
+          description: Unauthorized
+    get:
+      operationId: getEvents
+      summary: List events
+      description: Retrieve a paginated list of available events
+      tags:
+        - events
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+        - in: query
+          name: country
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of events
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventListResponse'
+        '400':
+          description: Invalid request parameters
+  /community/events/{id}:
+    get:
+      operationId: getEvent
+      summary: Get event details
+      description: Retrieve details for a specific event
+      tags:
+        - events
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Event details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventResponse'
+        '404':
+          description: Event not found
+  /events/{id}/join:
+    post:
+      operationId: joinEvent
+      summary: Join an event
+      description: Join a specific event
+      tags:
+        - events
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: Successfully joined event
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventJoinResponse'
+        '400':
+          description: Invalid request
+        '404':
+          description: Event not found
+  /community/guides:
+    post:
+      operationId: createGuide
+      summary: Become a guide
+      description: Create a guide profile
+      tags:
+        - guides
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateGuideRequest'
+      responses:
+        '201':
+          description: Guide profile created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GuideResponse'
+        '400':
+          description: Invalid request
+        '401':
+          description: Unauthorized
+    get:
+      operationId: getGuides
+      summary: List guides
+      description: Retrieve a paginated list of available guides
+      tags:
+        - guides
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+        - in: query
+          name: country
+          schema:
+            type: string
+        - in: query
+          name: verified
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: List of guides
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GuideListResponse'
+        '400':
+          description: Invalid request parameters
+  /guides/{id}:
+    get:
+      operationId: getGuide
+      summary: Get guide profile
+      description: Retrieve details for a specific guide
+      tags:
+        - guides
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Guide profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GuideResponse'
+        '404':
+          description: Guide not found
+  /community/travel-plans:
+    post:
+      operationId: createTravelPlan
+      summary: Create a travel plan
+      description: Create a new travel plan (draft or published)
+      tags:
+        - travel-plans
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTravelPlanRequest'
+      responses:
+        '201':
+          description: Travel plan created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TravelPlanResponse'
+        '400':
+          description: Invalid request
+        '401':
+          description: Unauthorized
+    get:
+      operationId: getTravelPlans
+      summary: Get user's travel plans
+      description: Retrieve travel plans for the authenticated user
+      tags:
+        - travel-plans
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+        - in: query
+          name: is_draft
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: List of travel plans
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TravelPlanListResponse'
+        '400':
+          description: Invalid request parameters
+  /community/travel-plans/discover:
+    get:
+      operationId: getDiscoverablePlans
+      summary: Discover travel plans
+      description: Retrieve discoverable (published) travel plans from all users
+      tags:
+        - travel-plans
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+        - in: query
+          name: location
+          schema:
+            type: string
+        - in: query
+          name: is_confirmed
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: List of discoverable travel plans
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TravelPlanListResponse'
+        '400':
+          description: Invalid request parameters
+  /community/travel-plans/{id}:
+    get:
+      operationId: getTravelPlan
+      summary: Get travel plan details
+      description: Retrieve details for a specific travel plan
+      tags:
+        - travel-plans
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Travel plan details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TravelPlanResponse'
+        '404':
+          description: Travel plan not found
+    put:
+      operationId: updateTravelPlan
+      summary: Update travel plan
+      description: Update an existing travel plan (only by the plan owner)
+      tags:
+        - travel-plans
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTravelPlanRequest'
+      responses:
+        '200':
+          description: Travel plan updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TravelPlanResponse'
+        '404':
+          description: Travel plan not found
+        '403':
+          description: Unauthorized
+    delete:
+      operationId: deleteTravelPlan
+      summary: Delete travel plan
+      description: Delete a travel plan (only by the plan owner)
+      tags:
+        - travel-plans
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Travel plan deleted successfully
+        '404':
+          description: Travel plan not found
+        '403':
+          description: Unauthorized
+  /community/travel-plans/{id}/publish:
+    post:
+      operationId: publishTravelPlan
+      summary: Publish travel plan
+      description: Publish a draft travel plan (make it discoverable)
+      tags:
+        - travel-plans
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Travel plan published successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TravelPlanResponse'
+        '404':
+          description: Travel plan not found
+        '403':
+          description: Unauthorized
+  /community/travel-plans/{id}/connect:
+    post:
+      operationId: connectToTravelPlan
+      summary: Connect to travel plan
+      description: Reach out to a travel plan (express interest)
+      tags:
+        - travel-plans
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConnectToPlanRequest'
+      responses:
+        '201':
+          description: Connection created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectionResponse'
+        '400':
+          description: Invalid request
+        '404':
+          description: Travel plan not found
+  /community/travel-plans/{id}/connections:
+    get:
+      operationId: getPlanConnections
+      summary: Get plan connections
+      description: Retrieve connections (interests) for a travel plan
+      tags:
+        - travel-plans
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: List of connections
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectionListResponse'
+        '404':
+          description: Travel plan not found
+  /community/travel-plans/{id}/connections/{connectionId}:
+    delete:
+      operationId: removeConnection
+      summary: Remove connection
+      description: Remove a connection from a travel plan (by plan owner or connection owner)
+      tags:
+        - travel-plans
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: connectionId
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Connection removed successfully
+        '404':
+          description: Travel plan or connection not found
+        '403':
+          description: Unauthorized
+  /community/bookings/my:
+    get:
+      operationId: getUserBookings
+      summary: Get user's bookings
+      description: Retrieve bookings for the authenticated user
+      tags:
+        - bookings
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: List of user's bookings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingListResponse'
+        '401':
+          description: Unauthorized
+  /bookings/{id}/cancel:
+    put:
+      operationId: cancelBooking
+      summary: Cancel a booking
+      description: Cancel a specific booking
+      tags:
+        - bookings
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Booking cancelled successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingResponse'
+        '404':
+          description: Booking not found
+  /community/comments/{id}:
+    put:
+      operationId: updateComment
+      summary: Update a comment
+      description: Update a specific comment (only by the comment author)
+      tags:
+        - engagement
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommentRequest'
+      responses:
+        '200':
+          description: Comment updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentResponse'
+        '400':
+          description: Invalid request
+        '404':
+          description: Comment not found
+    delete:
+      operationId: deleteComment
+      summary: Delete a comment
+      description: Delete a specific comment (only by the comment author)
+      tags:
+        - engagement
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Comment deleted successfully
+        '404':
+          description: Comment not found
+components:
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ApiResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+        toast:
+          type: string
+          description: Localized user-facing message
+        error:
+          type: string
+      required:
+        - success
+        - toast
+    CreateStoryRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 200
+        location:
+          type: string
+          maxLength: 100
+        image_url:
+          type: string
+          format: uri
+        country_code:
+          type: string
+          minLength: 2
+          maxLength: 2
+        content:
+          type: string
+          maxLength: 2000
+        author:
+          type: string
+          maxLength: 100
+        author_avatar:
+          type: string
+          format: uri
+      required:
+        - title
+        - location
+        - image_url
+        - country_code
+        - content
+        - author
+        - author_avatar
+    CreateReelRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 200
+        location:
+          type: string
+          maxLength: 100
+        video_url:
+          type: string
+          format: uri
+        image_url:
+          type: string
+          format: uri
+        country_code:
+          type: string
+          minLength: 2
+          maxLength: 2
+        content:
+          type: string
+          maxLength: 2000
+        author:
+          type: string
+          maxLength: 100
+        author_avatar:
+          type: string
+          format: uri
+      required:
+        - title
+        - location
+        - video_url
+        - image_url
+        - country_code
+        - content
+        - author
+        - author_avatar
+    CreateExperienceRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        location:
+          $ref: '#/components/schemas/Location'
+        price:
+          type: number
+          minimum: 0
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+        duration_hours:
+          type: integer
+          minimum: 1
+        max_group_size:
+          type: integer
+          minimum: 1
+      required:
+        - title
+        - description
+        - location
+        - price
+        - currency
+        - duration_hours
+        - max_group_size
+    CreateEventRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        location:
+          $ref: '#/components/schemas/Location'
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+        max_attendees:
+          type: integer
+          minimum: 1
+        price:
+          type: number
+          minimum: 0
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+      required:
+        - title
+        - description
+        - location
+        - start_time
+        - end_time
+        - max_attendees
+        - price
+        - currency
+    CreateGuideRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        bio:
+          type: string
+          maxLength: 500
+        avatar:
+          type: string
+          format: uri
+        location:
+          $ref: '#/components/schemas/Location'
+        languages:
+          type: array
+          items:
+            type: string
+        specialties:
+          type: array
+          items:
+            type: string
+      required:
+        - name
+        - bio
+        - location
+        - languages
+        - specialties
+    UpdateExperienceRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        price:
+          type: number
+          minimum: 0
+        duration_hours:
+          type: integer
+          minimum: 1
+        max_group_size:
+          type: integer
+          minimum: 1
+        available:
+          type: boolean
+    BookExperienceRequest:
+      type: object
+      properties:
+        booking_date:
+          type: string
+          format: date-time
+        participants:
+          type: integer
+          minimum: 1
+        payment_method:
+          type: string
+      required:
+        - booking_date
+        - participants
+        - payment_method
+    CommentRequest:
+      type: object
+      properties:
+        content:
+          type: string
+          maxLength: 1000
+      required:
+        - content
+    Location:
+      type: object
+      properties:
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+        city:
+          type: string
+        country:
+          type: string
+        place_id:
+          type: string
+        address:
+          type: string
+      required:
+        - latitude
+        - longitude
+        - city
+        - country
+    StoryResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                id:
+                  type: string
+                title:
+                  type: string
+                location:
+                  type: string
+                image_url:
+                  type: string
+                country_code:
+                  type: string
+                content:
+                  type: string
+                likes:
+                  type: integer
+                views:
+                  type: integer
+                comments:
+                  type: integer
+                created_at:
+                  type: string
+                  format: date-time
+                expires_at:
+                  type: string
+                  format: date-time
+                featured:
+                  type: boolean
+                  default: false
+                featured_at:
+                  type: string
+                  format: date-time
+                  nullable: true
+                priority:
+                  type: integer
+                  default: 0
+                category:
+                  type: string
+                  default: "travel"
+                tags:
+                  type: array
+                  items:
+                    type: string
+                  default: []
+                trending:
+                  type: boolean
+                  default: false
+                author:
+                  type: string
+                author_avatar:
+                  type: string
+                public:
+                  type: boolean
+                  default: false
+              required:
+                - id
+                - title
+                - location
+                - image_url
+                - content
+                - country_code
+                - likes
+                - views
+                - comments
+                - created_at
+                - expires_at
+                - featured
+                - priority
+                - category
+                - tags
+                - trending
+                - author
+                - author_avatar
+                - public
+    ReelResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                id:
+                  type: string
+                title:
+                  type: string
+                location:
+                  type: string
+                image_url:
+                  type: string
+                video_url:
+                  type: string
+                country_code:
+                  type: string
+                content:
+                  type: string
+                likes:
+                  type: integer
+                views:
+                  type: integer
+                comments:
+                  type: integer
+                created_at:
+                  type: string
+                  format: date-time
+                featured:
+                  type: boolean
+                  default: false
+                featured_at:
+                  type: string
+                  format: date-time
+                  nullable: true
+                priority:
+                  type: integer
+                  default: 0
+                category:
+                  type: string
+                  default: "travel"
+                tags:
+                  type: array
+                  items:
+                    type: string
+                  default: []
+                trending:
+                  type: boolean
+                  default: false
+                author:
+                  type: string
+                author_avatar:
+                  type: string
+                public:
+                  type: boolean
+                  default: false
+              required:
+                - id
+                - title
+                - location
+                - image_url
+                - video_url
+                - content
+                - country_code
+                - likes
+                - views
+                - comments
+                - created_at
+                - featured
+                - priority
+                - category
+                - tags
+                - trending
+                - author
+                - author_avatar
+                - public
+    ExperienceResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        location:
+          $ref: '#/components/schemas/Location'
+        price:
+          type: number
+        currency:
+          type: string
+        duration_hours:
+          type: integer
+        max_group_size:
+          type: integer
+        available:
+          type: boolean
+        likes:
+          type: integer
+        views:
+          type: integer
+        bookings:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - description
+        - location
+        - price
+        - currency
+        - duration_hours
+        - max_group_size
+        - available
+        - likes
+        - views
+        - bookings
+        - created_at
+    EventResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        location:
+          $ref: '#/components/schemas/Location'
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+        max_attendees:
+          type: integer
+        attendees:
+          type: integer
+        price:
+          type: number
+        currency:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - description
+        - location
+        - start_time
+        - end_time
+        - max_attendees
+        - attendees
+        - price
+        - currency
+        - created_at
+    GuideResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        bio:
+          type: string
+        avatar:
+          type: string
+        location:
+          $ref: '#/components/schemas/Location'
+        languages:
+          type: array
+          items:
+            type: string
+        specialties:
+          type: array
+          items:
+            type: string
+        rating:
+          type: number
+          format: float
+        review_count:
+          type: integer
+        verified:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - bio
+        - location
+        - languages
+        - specialties
+        - rating
+        - review_count
+        - verified
+        - created_at
+    BookingResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        content_id:
+          type: string
+        status:
+          type: string
+        booking_date:
+          type: string
+          format: date-time
+        participants:
+          type: integer
+        total_amount:
+          type: number
+        currency:
+          type: string
+        payment_status:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - type
+        - content_id
+        - status
+        - booking_date
+        - participants
+        - total_amount
+        - currency
+        - payment_status
+        - created_at
+    CommentResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        content:
+          type: string
+        user_name:
+          type: string
+        user_avatar:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - content
+        - user_name
+        - user_avatar
+        - created_at
+        - updated_at
+    StoryListResponse:
+      type: object
+      properties:
+        stories:
+          type: array
+          items:
+            $ref: '#/components/schemas/StoryResponse'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+      required:
+        - stories
+        - pagination
+    ReelListResponse:
+      type: object
+      properties:
+        reels:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReelResponse'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+      required:
+        - reels
+        - pagination
+    ExperienceListResponse:
+      type: object
+      properties:
+        experiences:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExperienceResponse'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+      required:
+        - experiences
+        - pagination
+    EventListResponse:
+      type: object
+      properties:
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventResponse'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+      required:
+        - events
+        - pagination
+    GuideListResponse:
+      type: object
+      properties:
+        guides:
+          type: array
+          items:
+            $ref: '#/components/schemas/GuideResponse'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+      required:
+        - guides
+        - pagination
+    BookingListResponse:
+      type: object
+      properties:
+        bookings:
+          type: array
+          items:
+            $ref: '#/components/schemas/BookingResponse'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+      required:
+        - bookings
+        - pagination
+    CommentListResponse:
+      type: object
+      properties:
+        comments:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommentResponse'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+      required:
+        - comments
+        - pagination
+    FeedResponse:
+      type: object
+      properties:
+        feed:
+          type: array
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/StoryResponse'
+              - $ref: '#/components/schemas/ReelResponse'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+      required:
+        - feed
+        - pagination
+    EventJoinResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        attendees:
+          type: integer
+      required:
+        - success
+        - message
+        - attendees
+    ViewCountResponse:
+      type: object
+      properties:
+        views:
+          type: integer
+      required:
+        - views
+    LikeResponse:
+      type: object
+      properties:
+        liked:
+          type: boolean
+        likes:
+          type: integer
+      required:
+        - liked
+        - likes
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+        total_pages:
+          type: integer
+        has_next:
+          type: boolean
+        has_prev:
+          type: boolean
+      required:
+        - page
+        - limit
+        - total
+        - total_pages
+        - has_next
+        - has_prev
+    CreateTravelPlanRequest:
+      type: object
+      properties:
+        location:
+          type: string
+          maxLength: 200
+        notes:
+          type: string
+          maxLength: 2000
+        planned_date:
+          type: string
+          format: date-time
+        start_date:
+          type: string
+          format: date-time
+        end_date:
+          type: string
+          format: date-time
+        is_confirmed:
+          type: boolean
+          default: false
+        is_draft:
+          type: boolean
+          default: true
+        organizer_name:
+          type: string
+          maxLength: 100
+        organizer_avatar:
+          type: string
+          format: uri
+      required:
+        - location
+    UpdateTravelPlanRequest:
+      type: object
+      properties:
+        location:
+          type: string
+          maxLength: 200
+        notes:
+          type: string
+          maxLength: 2000
+        planned_date:
+          type: string
+          format: date-time
+        start_date:
+          type: string
+          format: date-time
+        end_date:
+          type: string
+          format: date-time
+        is_confirmed:
+          type: boolean
+        is_draft:
+          type: boolean
+        organizer_name:
+          type: string
+          maxLength: 100
+        organizer_avatar:
+          type: string
+          format: uri
+    ConnectToPlanRequest:
+      type: object
+      properties:
+        message:
+          type: string
+          maxLength: 1000
+        user_start_date:
+          type: string
+          format: date-time
+        user_end_date:
+          type: string
+          format: date-time
+        user_name:
+          type: string
+          maxLength: 100
+        user_avatar:
+          type: string
+          format: uri
+      required:
+        - user_name
+    TravelPlanResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                id:
+                  type: string
+                location:
+                  type: string
+                notes:
+                  type: string
+                planned_date:
+                  type: string
+                  format: date-time
+                  nullable: true
+                start_date:
+                  type: string
+                  format: date-time
+                  nullable: true
+                end_date:
+                  type: string
+                  format: date-time
+                  nullable: true
+                is_confirmed:
+                  type: boolean
+                is_draft:
+                  type: boolean
+                connections:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/ConnectionResponse'
+                organizer_id:
+                  type: string
+                organizer_name:
+                  type: string
+                organizer_avatar:
+                  type: string
+                created_at:
+                  type: string
+                  format: date-time
+                updated_at:
+                  type: string
+                  format: date-time
+              required:
+                - id
+                - location
+                - is_confirmed
+                - is_draft
+                - connections
+                - organizer_id
+                - created_at
+                - updated_at
+    ConnectionResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        user_id:
+          type: string
+        user_name:
+          type: string
+        user_avatar:
+          type: string
+        message:
+          type: string
+        user_start_date:
+          type: string
+          format: date-time
+        user_end_date:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - user_id
+        - user_name
+        - created_at
+    TravelPlanListResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                plans:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/TravelPlanResponse'
+                pagination:
+                  $ref: '#/components/schemas/Pagination'
+              required:
+                - plans
+                - pagination
+    ConnectionListResponse:
+      allOf:
+        - $ref: '#/components/schemas/ApiResponse'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                connections:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/ConnectionResponse'
+                pagination:
+                  $ref: '#/components/schemas/Pagination'
+              required:
+                - connections
+                - pagination

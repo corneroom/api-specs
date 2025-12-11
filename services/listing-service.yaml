@@ -1,0 +1,3978 @@
+openapi: 3.0.0
+info:
+  title: Project X - Listing Service API
+  description: API specification for the Listing service of Project X
+  version: 1.0.0
+  contact:
+    name: project-x-api
+    url: https://www.inspiredtech.ca
+    email: info@aircouch.com
+  termsOfService: https://www.inspiredtech.ca/terms
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+tags:
+  - name: listing
+    description: Listing operations
+paths:
+  /listings/heartbeat:
+    get:
+      summary: Heartbeat
+      description: Returns a simple heartbeat response to verify the Listing service is running.
+      tags:
+        - listing
+      operationId: listingsHeartbeat
+      x-google-backend:
+        address: https://listing-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security: []
+      responses:
+        "200":
+          description: Heartbeat
+          content:
+            application/json:
+              schema:
+                type: string
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Invalid booking ID.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        "401":
+          description: Unauthorized (missing or invalid token)
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Invalid booking ID.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Invalid booking ID.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Invalid booking ID.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+  /listings:
+    post:
+      description: Create a new listing with full validation. This endpoint is used for publishing final listings and can also be called automatically when a draft listing status changes from 'pending' to 'active' after review approval.
+      summary: Create a new listing (publish)
+      tags:
+        - listing
+      operationId: listingsCreateListing
+      x-google-backend:
+        address: https://listing-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                price:
+                  type: number
+                  format: double
+                thumbnail:
+                  type: string
+                  format: uri
+                max_guests:
+                  type: integer
+                  format: int32
+                instant_book:
+                  type: boolean
+                photos:
+                  type: array
+                  items:
+                    type: string
+                    format: uri
+                    minimum: 3
+                  maxItems: 10
+                host:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                amenities:
+                  type: array
+                  items:
+                    type: string
+                  maxLength: 20
+                house_rules:
+                  type: array
+                  items:
+                    type: string
+                  maxLength: 5
+                cancellation_policy:
+                  type: string
+                  enum:
+                    - no_refund
+                    - fifty_percent_24h
+                    - fifty_percent_48h
+                    - full_refund_24h
+                  description: Cancellation policy code. Default is fifty_percent_24h. Legacy values (No refunds, 50% - 50% refund, 100% - Full Refund) are still accepted for backward compatibility.
+                  default: fifty_percent_24h
+                address:
+                  type: object
+                  properties:
+                    street:
+                      type: string
+                    city:
+                      type: string
+                    country:
+                      type: string
+                    postal_code:
+                      type: string
+                    province:
+                      type: string
+                    unit_number:
+                      type: string
+                    flag:
+                      type: string
+                  required:
+                    - street
+                    - city
+                    - country
+                    - postal_code
+                baggage_drop:
+                  type: boolean
+                  description:
+                    Baggage drop allowed by host so guests can drop off their bags
+                    first while they explore the city.
+                  default: false
+                category_code:
+                  type: string
+                  description: Category code from CategoryMeta registry
+                  enum:
+                    - couchsurf # Sleep – For couches, rooms, or sleeping areas
+                    - workspace # Work – For desks, offices, or creative spaces
+                    - storage # Store – For holding personal or business items temporarily
+                    - bike_rental # Bike Rental – For renting bikes
+                    - shower # Shower – For renting shower access
+                    - parking # Parking – For renting parking spots
+                    - nightlife # Nightlife – For joining tables at bars
+                    - meeting_room # Meeting Room – For group discussions or remote calls
+                    - kitchen # Kitchen – For cooking or shared meal prep
+                    - retail_space # Retail Space – For pop-up shops or selling products
+                    - classroom # Classroom – For tutoring or small workshops
+                    - lounge # Lounge – For relaxation or informal hangouts
+                    - studio # Studio – For creating, filming, or recording
+                    - playroom # Playroom – For kids or family-friendly use
+                    - charging_station # Charging Station – For power, internet, or work breaks
+                    - ride_share # Ride Share – For carpooling or shared rides
+                    - cleaning # Cleaning – For cleaning services or supplies
+                    - bike_rentals # Bike Rentals – For renting bicycles
+                  example: couchsurf
+
+              required:
+                - title
+                - description
+                - price
+                - thumbnail
+                - max_guests
+                - instant_book
+                - photos
+                - host
+                - amenities
+                - house_rules
+                - cancellation_policy
+                - address
+                - category_code
+        description: The listing to create
+        required: true
+      responses:
+        "201":
+          description: The created listing
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  toast:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      title:
+                        type: string
+                        maxLength: 64
+                      description:
+                        type: string
+                      verified:
+                        type: boolean
+                        description: Indicates if the listing has been verified
+                      deleted_at:
+                        type: string
+                        format: date-time
+                        nullable: true
+                        description: Timestamp when listing was soft deleted
+                      status:
+                        type: string
+                        description: Current status of the listing
+                        enum:
+                          [draft, pending, active, paused, archived, deleted]
+                      location:
+                        type: object
+                        properties:
+                          latitude:
+                            type: number
+                            format: double
+                          longitude:
+                            type: number
+                            format: double
+                      price:
+                        type: number
+                        format: double
+                        minimum: 10
+                      available:
+                        type: boolean
+                      thumbnail:
+                        type: string
+                        format: uri
+                      distance:
+                        type: number
+                        format: double
+                      created_at:
+                        type: string
+                        format: date-time
+                      max_guests:
+                        type: integer
+                        format: int32
+                      rating:
+                        type: number
+                        format: double
+                      instant_book:
+                        type: boolean
+                      active:
+                        type: boolean
+                      amenities:
+                        type: array
+                        items:
+                          type: string
+                      cancellation_policy:
+                        type: string
+                      category:
+                        type: object
+                      photos:
+                        type: array
+                        items:
+                          type: string
+                          format: uri
+                      host:
+                        type: object
+                      house_rules:
+                        type: array
+                        items:
+                          type: string
+                      updated_at:
+                        type: string
+                        format: date-time
+                required:
+                  - success
+                  - data
+        "400":
+          description: Bad request (invalid listing data)
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Invalid booking ID.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        "401":
+          description: Unauthorized (missing or invalid token)
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Invalid booking ID.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Invalid booking ID.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Invalid booking ID.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+    get:
+      summary: Get all listings
+      description: Returns listings with optional filters. Supports keyword search, amenities (CSV up to 10), price range, dates, rating, gender, and pagination via limit/offset.
+      tags:
+        - listing
+      operationId: listingsGetAllListings
+      security: []
+      parameters:
+        - name: q
+          in: query
+          description: Keyword search (title/description)
+          required: false
+          schema:
+            type: string
+        - name: latitude
+          in: query
+          description: Latitude of the user's location
+          required: false
+          schema:
+            type: number
+            format: double
+        - name: longitude
+          in: query
+          description: Longitude of the user's location
+          required: false
+          schema:
+            type: number
+            format: double
+        - name: category
+          in: query
+          description: Category code from CategoryMeta registry. If provided, must be a valid category code; empty values are rejected with 400.
+          required: false
+          schema:
+            type: string
+        - name: country
+          in: query
+          description: ISO2 country code to filter listings (e.g., CA)
+          required: false
+          schema:
+            type: string
+        - name: city
+          in: query
+          description: City name to filter listings (exact match)
+          required: false
+          schema:
+            type: string
+        - name: start_date
+          in: query
+          description: Start date for availability check (ISO 8601)
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: end_date
+          in: query
+          description: End date for availability check (ISO 8601)
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: price_min
+          in: query
+          description: Minimum price filter
+          required: false
+          schema:
+            type: number
+            format: double
+        - name: price_max
+          in: query
+          description: Maximum price filter
+          required: false
+          schema:
+            type: number
+            format: double
+        - name: gender
+          in: query
+          description: Filter by host gender
+          required: false
+          schema:
+            type: string
+        - name: page
+          in: query
+          description: Page number (starts at 1)
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: Number of items per page
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+        - name: offset
+          in: query
+          description: Offset for pagination (alternative to page)
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+      x-google-backend:
+        address: https://listing-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      responses:
+        "200":
+          description: All listings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  toast:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        title:
+                          type: string
+                        description:
+                          type: string
+                        verified:
+                          type: boolean
+                          description: Indicates if the listing has been verified
+                        deleted_at:
+                          type: string
+                          format: date-time
+                          nullable: true
+                          description: Timestamp when listing was soft deleted
+                        status:
+                          type: string
+                          description: Current status of the listing
+                          enum:
+                            [draft, pending, active, paused, archived, deleted]
+                        location:
+                          type: object
+                          properties:
+                            latitude:
+                              type: number
+                              format: double
+                            longitude:
+                              type: number
+                              format: double
+                        price:
+                          type: number
+                          format: double
+                        available:
+                          type: boolean
+                        thumbnail:
+                          type: string
+                          format: uri
+                        distance:
+                          type: number
+                          format: double
+                        created_at:
+                          type: string
+                          format: date-time
+                        max_guests:
+                          type: integer
+                          format: int32
+                        rating:
+                          type: number
+                          format: double
+                        instant_book:
+                          type: boolean
+                        active:
+                          type: boolean
+                        amenities:
+                          type: array
+                          items:
+                            type: string
+                        cancellation_policy:
+                          type: string
+                        category:
+                          type: object
+                          properties:
+                            name:
+                              type: string
+                            code:
+                              type: string
+                            description:
+                              type: string
+                  page:
+                    type: object
+                    properties:
+                      page:
+                        type: integer
+                        description: Current page number
+                      limit:
+                        type: integer
+                        description: Number of items per page
+                      total:
+                        type: integer
+                        description: Total number of items
+                      totalPages:
+                        type: integer
+                        description: Total number of pages
+                    required:
+                      - page
+                      - limit
+                      - total
+                      - totalPages
+                required:
+                  - success
+                  - data
+                  - page
+        "400":
+          description: Bad request (invalid parameters)
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Invalid booking ID.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        "401":
+          description: Unauthorized (missing or invalid token)
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Invalid booking ID.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Invalid booking ID.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Invalid booking ID.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+  /listings/grouped:
+    get:
+      summary: Get grouped listings (sample for all groups)
+      description: "Returns up to 10 listings for each group: trending, new, nearme, hot, free."
+      tags:
+        - listing
+      operationId: listingsGetGroupedListings
+      security: []
+      x-google-backend:
+        address: https://listing-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: latitude
+          in: query
+          required: false
+          schema:
+            type: number
+            format: double
+        - name: longitude
+          in: query
+          required: false
+          schema:
+            type: number
+            format: double
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+      responses:
+        "200":
+          description: Grouped listings sample
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      trending:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Listing"
+                      new:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Listing"
+                      nearme:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Listing"
+                      hot:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Listing"
+                      free:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Listing"
+                      lgbtq_friendly:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Listing"
+                      top_rated:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Listing"
+                      instant_book:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Listing"
+                      summary:
+                        type: object
+                        properties:
+                          TrendingCount:
+                            type: integer
+                          NewCount:
+                            type: integer
+                          NearMeCount:
+                            type: integer
+                          HotCount:
+                            type: integer
+                          FreeCount:
+                            type: integer
+                          LgbtqFriendlyCount:
+                            type: integer
+                          TopRatedCount:
+                            type: integer
+                          InstantBookCount:
+                            type: integer
+                          groups:
+                            type: array
+                            items:
+                              type: string
+                              description: Name of the group (e.g., trending, new, nearme, hot, free, uncategorized)
+                            description: List of supported group names for individual fetches (e.g., trending, new, nearme, hot, free, uncategorized)
+        "400":
+          description: Bad request (invalid parameters)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  error:
+                    type: string
+
+  /listings/categories:
+    get:
+      summary: Get all available categories
+      description: Returns a list of all available listing categories and their metadata (code, name, description, verb, icon).
+      tags:
+        - listing
+      operationId: categoriesGetAllCategories
+      x-google-backend:
+        address: https://listing-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      responses:
+        "200":
+          description: All available categories
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        code:
+                          type: string
+                        name:
+                          type: string
+                        description:
+                          type: string
+                        verb:
+                          type: string
+                        icon:
+                          type: string
+                  meta:
+                    type: object
+                required:
+                  - success
+                  - data
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  error:
+                    type: string
+                required:
+                  - success
+                  - error
+  /listings/address:
+    get:
+      summary: Address auto complete
+      description: >
+        Returns a list of address suggestions based on the user's query and
+        location. Useful for implementing address autocomplete features in the
+        UI.
+      tags:
+        - listing
+      operationId: listingsAddressAutoComplete
+      security:
+        - jwtAuth: []
+      parameters:
+        - name: q
+          in: query
+          description: Address to search for (partial or full address string)
+          required: true
+          schema:
+            type: string
+        - name: lat
+          in: query
+          description: Latitude of the user's location (for proximity ranking)
+          required: true
+          schema:
+            type: number
+            format: double
+        - name: lon
+          in: query
+          description: Longitude of the user's location (for proximity ranking)
+          required: true
+          schema:
+            type: number
+            format: double
+      x-google-backend:
+        address: https://listing-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      responses:
+        "200":
+          description: Address suggestions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        address:
+                          type: object
+                          properties:
+                            street:
+                              type: string
+                            city:
+                              type: string
+                            country:
+                              type: string
+                            postal_code:
+                              type: string
+                            province:
+                              type: string
+                            unit_number:
+                              type: string
+                            flag:
+                              type: string
+                          required:
+                            - street
+                            - city
+                            - country
+                            - postal_code
+                        description:
+                          type: string
+                        place_id:
+                          type: string
+                      required:
+                        - address
+                        - description
+                        - place_id
+                  meta:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                        description: Total number of suggestions
+                    required:
+                      - total
+                required:
+                  - success
+                  - data
+                  - meta
+        "400":
+          description: Bad request (invalid query)
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Invalid booking ID.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        "401":
+          description: Unauthorized (missing or invalid token)
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Invalid booking ID.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Invalid booking ID.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Invalid booking ID.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+  /listings/drafts:
+    post:
+      summary: Save listing draft
+      description: Save a listing draft with minimal validation. Allows users to save incomplete listing data that can be completed later. The status will be automatically set to 'draft'.
+      tags:
+        - listing
+      operationId: listingsCreateDraft
+      x-google-backend:
+        address: https://listing-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: Title of the listing (required for drafts)
+                  maxLength: 64
+                description:
+                  type: string
+                  description: Description of the listing
+                price:
+                  type: number
+                  format: double
+                  minimum: 0
+                  description: Price per hour/day
+                thumbnail:
+                  type: string
+                  format: uri
+                  description: Main thumbnail image URL
+                max_guests:
+                  type: integer
+                  format: int32
+                  minimum: 1
+                  description: Maximum number of guests
+                instant_book:
+                  type: boolean
+                  description: Whether instant booking is enabled
+                photos:
+                  type: array
+                  items:
+                    type: string
+                    format: uri
+                  maxItems: 10
+                  description: Array of photo URLs (minimum 3 required for publishing)
+                host:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                  description: Host information
+                amenities:
+                  type: array
+                  items:
+                    type: string
+                  maxLength: 20
+                  description: List of available amenities
+                house_rules:
+                  type: array
+                  items:
+                    type: string
+                  maxLength: 5
+                  description: House rules for guests
+                cancellation_policy:
+                  type: string
+                  enum:
+                    - no_refund
+                    - fifty_percent_24h
+                    - fifty_percent_48h
+                    - full_refund_24h
+                  description: Cancellation policy code. Default is fifty_percent_24h. Legacy values (No refunds, 50% - 50% refund, 100% - Full Refund) are still accepted for backward compatibility.
+                  default: fifty_percent_24h
+                address:
+                  type: object
+                  properties:
+                    street:
+                      type: string
+                    city:
+                      type: string
+                    country:
+                      type: string
+                    postal_code:
+                      type: string
+                    province:
+                      type: string
+                    unit_number:
+                      type: string
+                    flag:
+                      type: string
+                  description: Address information (partial acceptable for drafts)
+                baggage_drop:
+                  type: boolean
+                  description: Baggage drop allowed by host so guests can drop off their bags first while they explore the city.
+                  default: false
+                category_code:
+                  type: string
+                  enum:
+                    - couch_surfing # Sleep – For couches, rooms, or sleeping areas
+                    - co_working # Workspace – For desks, offices, or creative spaces
+                    - storages # Storage – For holding personal or business items temporarily
+                    - meeting_room # Meeting Room – For group discussions or remote calls
+                    - kitchen # Kitchen – For cooking or shared meal prep
+                    - retail_space # Retail Space – For pop-up shops or selling products
+                    - classroom # Classroom – For tutoring or small workshops
+                    - lounge # Lounge – For relaxation or informal hangouts
+                    - shower # Shower – For freshening up on the go
+                    - studio # Studio – For creating, filming, or recording
+                    - playroom # Playroom – For kids or family-friendly use
+                    - charging_station # Charging Station – For power, internet, or work breaks
+                    - relax # Relax – Short breaks
+                    - nightlife # Nightlife – For bars, clubs, and entertainment
+                    - ride_share # Ride Share – For carpooling or shared rides
+                    - cleaning # Cleaning – For cleaning services or supplies
+                    - bike_rentals # Bike Rentals – For renting bicycles
+                  description: Category of the listing
+              required:
+                - title
+              additionalProperties: false
+        description: The listing draft data. Only title is required, all other fields are optional for drafts.
+        required: true
+      responses:
+        "201":
+          description: Draft saved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  toast:
+                    type: string
+                    example: "Draft saved successfully"
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        description: Unique identifier for the listing
+                      title:
+                        type: string
+                        maxLength: 64
+                      description:
+                        type: string
+                      verified:
+                        type: boolean
+                        description: Indicates if the listing has been verified
+                        default: false
+                      deleted_at:
+                        type: string
+                        format: date-time
+                        nullable: true
+                        description: Timestamp when listing was soft deleted
+                      status:
+                        type: string
+                        description: Current status of the listing (will always be 'draft' for this endpoint)
+                        enum: [draft]
+                        default: draft
+                      location:
+                        type: object
+                        properties:
+                          latitude:
+                            type: number
+                            format: double
+                          longitude:
+                            type: number
+                            format: double
+                        nullable: true
+                      price:
+                        type: number
+                        format: double
+                        minimum: 0
+                        nullable: true
+                      available:
+                        type: boolean
+                        default: true
+                      thumbnail:
+                        type: string
+                        format: uri
+                        nullable: true
+                      distance:
+                        type: number
+                        format: double
+                        nullable: true
+                      created_at:
+                        type: string
+                        format: date-time
+                      max_guests:
+                        type: integer
+                        format: int32
+                        nullable: true
+                      rating:
+                        type: number
+                        format: double
+                        default: 0
+                      instant_book:
+                        type: boolean
+                        nullable: true
+                      active:
+                        type: boolean
+                        default: false
+                      amenities:
+                        type: array
+                        items:
+                          type: string
+                        default: []
+                      cancellation_policy:
+                        type: string
+                        nullable: true
+                      category:
+                        type: object
+                        nullable: true
+                      photos:
+                        type: array
+                        items:
+                          type: string
+                          format: uri
+                        default: []
+                      host:
+                        type: object
+                        nullable: true
+                      house_rules:
+                        type: array
+                        items:
+                          type: string
+                        default: []
+                      updated_at:
+                        type: string
+                        format: date-time
+                    required:
+                      - id
+                      - title
+                      - status
+                      - created_at
+                      - updated_at
+                required:
+                  - success
+                  - data
+        "400":
+          description: Bad request (invalid draft data)
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: "Title is required for draft listings."
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: "Please provide a title for your listing."
+                required:
+                  - success
+                  - error
+        "401":
+          description: Unauthorized (missing or invalid token)
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Invalid or missing authentication token.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Please log in to continue.
+                required:
+                  - success
+                  - error
+        "422":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: "Validation failed: title must be at least 1 character long."
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: "Please check your input and try again."
+                required:
+                  - success
+                  - error
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: An unexpected error occurred.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Something went wrong. Please try again.
+                required:
+                  - success
+                  - error
+    put:
+      summary: Update listing draft
+      description: Update an existing draft listing. Only drafts can be updated through this endpoint. To publish a draft, use the main POST /listings endpoint.
+      tags:
+        - listing
+      operationId: listingsUpdateDraft
+      x-google-backend:
+        address: https://listing-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      parameters:
+        - name: id
+          in: query
+          description: Draft listing ID to update
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: Title of the listing
+                  maxLength: 64
+                description:
+                  type: string
+                  description: Description of the listing
+                price:
+                  type: number
+                  format: double
+                  minimum: 0
+                  description: Price per hour/day
+                thumbnail:
+                  type: string
+                  format: uri
+                  description: Main thumbnail image URL
+                max_guests:
+                  type: integer
+                  format: int32
+                  minimum: 1
+                  description: Maximum number of guests
+                instant_book:
+                  type: boolean
+                  description: Whether instant booking is enabled
+                photos:
+                  type: array
+                  items:
+                    type: string
+                    format: uri
+                  maxItems: 10
+                  description: Array of photo URLs
+                host:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                  description: Host information
+                amenities:
+                  type: array
+                  items:
+                    type: string
+                  maxLength: 20
+                  description: List of available amenities
+                house_rules:
+                  type: array
+                  items:
+                    type: string
+                  maxLength: 5
+                  description: House rules for guests
+                cancellation_policy:
+                  type: string
+                  enum:
+                    - no_refund
+                    - fifty_percent_24h
+                    - fifty_percent_48h
+                    - full_refund_24h
+                  description: Cancellation policy code. Default is fifty_percent_24h. Legacy values (No refunds, 50% - 50% refund, 100% - Full Refund) are still accepted for backward compatibility.
+                  default: fifty_percent_24h
+                address:
+                  type: object
+                  properties:
+                    street:
+                      type: string
+                    city:
+                      type: string
+                    country:
+                      type: string
+                    postal_code:
+                      type: string
+                    province:
+                      type: string
+                    unit_number:
+                      type: string
+                    flag:
+                      type: string
+                  description: Address information
+                baggage_drop:
+                  type: boolean
+                  description: Baggage drop allowed by host so guests can drop off their bags first while they explore the city.
+                  default: false
+                category_code:
+                  type: string
+                  enum:
+                    - couch_surfing
+                    - co_working
+                    - storages
+                    - meeting_room
+                    - kitchen
+                    - retail_space
+                    - classroom
+                    - lounge
+                    - shower
+                    - studio
+                    - playroom
+                    - charging_station
+                    - relax
+                    - nightlife
+                    - ride_share
+                    - cleaning
+                    - bike_rentals
+                  description: Category of the listing
+              additionalProperties: false
+        description: The updated listing draft data. All fields are optional.
+        required: true
+      responses:
+        "200":
+          description: Draft updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  toast:
+                    type: string
+                    example: "Draft updated successfully"
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      title:
+                        type: string
+                        maxLength: 64
+                      description:
+                        type: string
+                      verified:
+                        type: boolean
+                        description: Indicates if the listing has been verified
+                      deleted_at:
+                        type: string
+                        format: date-time
+                        nullable: true
+                        description: Timestamp when listing was soft deleted
+                      status:
+                        type: string
+                        description: Current status of the listing
+                        enum: [draft]
+                      location:
+                        type: object
+                        properties:
+                          latitude:
+                            type: number
+                            format: double
+                          longitude:
+                            type: number
+                            format: double
+                        nullable: true
+                      price:
+                        type: number
+                        format: double
+                        minimum: 0
+                        nullable: true
+                      available:
+                        type: boolean
+                      thumbnail:
+                        type: string
+                        format: uri
+                        nullable: true
+                      distance:
+                        type: number
+                        format: double
+                        nullable: true
+                      created_at:
+                        type: string
+                        format: date-time
+                      max_guests:
+                        type: integer
+                        format: int32
+                        nullable: true
+                      rating:
+                        type: number
+                        format: double
+                      instant_book:
+                        type: boolean
+                        nullable: true
+                      active:
+                        type: boolean
+                      amenities:
+                        type: array
+                        items:
+                          type: string
+                      cancellation_policy:
+                        type: string
+                        nullable: true
+                      category:
+                        type: object
+                        nullable: true
+                      photos:
+                        type: array
+                        items:
+                          type: string
+                          format: uri
+                      host:
+                        type: object
+                        nullable: true
+                      house_rules:
+                        type: array
+                        items:
+                          type: string
+                      updated_at:
+                        type: string
+                        format: date-time
+                    required:
+                      - id
+                      - status
+                      - created_at
+                      - updated_at
+                required:
+                  - success
+                  - data
+        "400":
+          description: Bad request (invalid data or listing is not a draft)
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: "Cannot update listing: not a draft or invalid data."
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: "Only draft listings can be updated through this endpoint."
+                required:
+                  - success
+                  - error
+        "401":
+          description: Unauthorized (missing or invalid token)
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Invalid or missing authentication token.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Please log in to continue.
+                required:
+                  - success
+                  - error
+        "404":
+          description: Draft listing not found or user doesn't have access
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: "Draft listing not found or access denied."
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: "Draft listing not found."
+                required:
+                  - success
+                  - error
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: An unexpected error occurred.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Something went wrong. Please try again.
+                required:
+                  - success
+                  - error
+  "/listings/{id}":
+    get:
+      summary: Get a listing
+      description: Returns the details of a single listing by its ID.
+      tags:
+        - listing
+      operationId: listingsGetListing
+      x-google-backend:
+        address: https://listing-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: Listing ID
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: The listing
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  toast:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      title:
+                        type: string
+                        maxLength: 64
+                      description:
+                        type: string
+                      location:
+                        type: object
+                        properties:
+                          latitude:
+                            type: number
+                            format: double
+                          longitude:
+                            type: number
+                            format: double
+                      price:
+                        type: number
+                        format: double
+                        minimum: 10
+                      available:
+                        type: boolean
+                      thumbnail:
+                        type: string
+                        format: uri
+                      distance:
+                        type: number
+                        format: double
+                      created_at:
+                        type: string
+                        format: date-time
+                      max_guests:
+                        type: integer
+                        format: int32
+                      rating:
+                        type: number
+                        format: double
+                      instant_book:
+                        type: boolean
+                      active:
+                        type: boolean
+                      amenities:
+                        type: array
+                        items:
+                          type: string
+                      cancellation_policy:
+                        type: string
+                      category:
+                        type: object
+                      photos:
+                        type: array
+                        items:
+                          type: string
+                          format: uri
+                      host:
+                        type: object
+                      house_rules:
+                        type: array
+                        items:
+                          type: string
+                      updated_at:
+                        type: string
+                        format: date-time
+                required:
+                  - success
+                  - data
+        "400":
+          description: Bad request (invalid ID)
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Invalid booking ID.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        "401":
+          description: Unauthorized (missing or invalid token)
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Invalid booking ID.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        "404":
+          description: Listing not found
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Invalid booking ID.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Invalid booking ID.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+    put:
+      summary: Update a listing
+      description: |
+        Updates the details of an existing listing by its ID. Supports partial/incremental updates.
+        Only the listing host can update their listing. All fields are optional - only include the fields you want to update.
+        When updating the address, the system will automatically geocode the new address and update coordinates.
+      tags:
+        - listing
+      operationId: listingsUpdateListing
+      x-google-backend:
+        address: https://listing-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: Listing ID
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Partial update request. All fields are optional. Only include fields you want to update.
+              properties:
+                title:
+                  type: string
+                  minLength: 10
+                  maxLength: 100
+                  description: Listing title
+                description:
+                  type: string
+                  minLength: 10
+                  maxLength: 255
+                  description: Listing description
+                price:
+                  type: number
+                  format: double
+                  minimum: 0
+                  maximum: 200
+                  description: Price per night
+                thumbnail:
+                  type: string
+                  format: uri
+                  description: Thumbnail image URL
+                max_guests:
+                  type: integer
+                  format: int32
+                  minimum: 1
+                  maximum: 3
+                  description: Maximum number of guests
+                instant_book:
+                  type: boolean
+                  description: Whether instant booking is enabled
+                photos:
+                  type: array
+                  items:
+                    type: string
+                    format: uri
+                  maxItems: 10
+                  minItems: 1
+                  description: Array of photo URLs
+                amenities:
+                  type: array
+                  items:
+                    type: string
+                  description: List of amenities
+                house_rules:
+                  type: array
+                  items:
+                    type: string
+                  description: List of house rules
+                cancellation_policy:
+                  type: string
+                  enum:
+                    - no_refund
+                    - fifty_percent_24h
+                    - fifty_percent_48h
+                    - full_refund_24h
+                  description: Cancellation policy code. Legacy values (No refunds, 50% - 50% refund, 100% - Full Refund) are still accepted for backward compatibility.
+                address:
+                  type: object
+                  description: Address object. When provided, the system will geocode the address and update coordinates automatically.
+                  properties:
+                    street:
+                      type: string
+                    city:
+                      type: string
+                    country:
+                      type: string
+                    postal_code:
+                      type: string
+                    province:
+                      type: string
+                    unit_number:
+                      type: string
+                    flag:
+                      type: string
+                baggage_drop:
+                  type: boolean
+                  description: Baggage drop allowed by host so guests can drop off their bags first while they explore the city.
+                category_code:
+                  type: string
+                  description: Category code (e.g., couchsurf, workspace, storage)
+                check_in_instructions:
+                  type: string
+                  maxLength: 1000
+                  description: Check-in instructions for guests
+                check_out_instructions:
+                  type: string
+                  maxLength: 500
+                  description: Check-out instructions for guests
+                wifi_details:
+                  type: object
+                  description: WiFi network details
+                  properties:
+                    network_name:
+                      type: string
+                      maxLength: 100
+                    password:
+                      type: string
+                      maxLength: 100
+                    notes:
+                      type: string
+                      maxLength: 200
+                emergency_contact:
+                  type: string
+                  maxLength: 200
+                  description: Emergency contact information
+                local_recommendations:
+                  type: string
+                  maxLength: 1000
+                  description: Local recommendations for guests
+                min_stay_days:
+                  type: integer
+                  format: int32
+                  minimum: 1
+                  maximum: 30
+                  description: Minimum stay duration in days
+                max_stay_days:
+                  type: integer
+                  format: int32
+                  minimum: 1
+                  maximum: 365
+                  description: Maximum stay duration in days
+                timezone:
+                  type: string
+                  description: Timezone (e.g., America/Toronto)
+        description: Partial update request. All fields are optional. Only include fields you want to update.
+        required: true
+      responses:
+        "200":
+          description: Listing updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  toast:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      title:
+                        type: string
+                        maxLength: 64
+                      description:
+                        type: string
+                      location:
+                        type: object
+                        properties:
+                          latitude:
+                            type: number
+                            format: double
+                          longitude:
+                            type: number
+                            format: double
+                      price:
+                        type: number
+                        format: double
+                        minimum: 10
+                      available:
+                        type: boolean
+                      thumbnail:
+                        type: string
+                        format: uri
+                      distance:
+                        type: number
+                        format: double
+                      created_at:
+                        type: string
+                        format: date-time
+                      max_guests:
+                        type: integer
+                        format: int32
+                      rating:
+                        type: number
+                        format: double
+                      instant_book:
+                        type: boolean
+                      active:
+                        type: boolean
+                      amenities:
+                        type: array
+                        items:
+                          type: string
+                      cancellation_policy:
+                        type: string
+                      category:
+                        type: object
+                      photos:
+                        type: array
+                        items:
+                          type: string
+                          format: uri
+                      host:
+                        type: object
+                      house_rules:
+                        type: array
+                        items:
+                          type: string
+                      updated_at:
+                        type: string
+                        format: date-time
+                required:
+                  - success
+                  - data
+        "400":
+          description: Bad request - Invalid request data, validation error, or no fields provided for update
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Invalid request data or no fields provided for update
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        "401":
+          description: Unauthorized - Missing or invalid authentication token
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Unauthorized
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Authentication required
+                required:
+                  - success
+                  - error
+        "403":
+          description: Forbidden - User is not authorized to update this listing (only listing host can update)
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Only listing host can update
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: You don't have permission to update this listing
+                required:
+                  - success
+                  - error
+        "404":
+          description: Not found - Listing not found
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Listing not found
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: The listing you're looking for doesn't exist
+                required:
+                  - success
+                  - error
+        "500":
+          description: Internal server error - Failed to update listing
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Failed to update listing
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request
+                required:
+                  - success
+                  - error
+    delete:
+      summary: Delete a listing
+      description: Deletes a listing by its ID.
+      tags:
+        - listing
+      operationId: listingsDeleteListing
+      x-google-backend:
+        address: https://listing-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: Listing ID
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Listing deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  toast:
+                    type: string
+                  id:
+                    type: string
+                    description: The ID of the deleted listing
+                required:
+                  - success
+                  - id
+        "400":
+          description: Bad request (invalid ID)
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Invalid booking ID.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        "401":
+          description: Unauthorized (missing or invalid token)
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Invalid booking ID.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        "404":
+          description: Listing not found
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Invalid booking ID.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Invalid booking ID.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+  "/listings/{id}/weather/forecast":
+    get:
+      summary: Get weather forecast for a listing
+      description: Returns the current weather and forecast for the specified listing location.
+      tags:
+        - listing
+      operationId: listingsGetListingWeather
+      x-google-backend:
+        address: https://listing-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: Listing ID
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Return the listing weather
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  toast:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        example: listing_123
+                      latitude:
+                        type: number
+                        format: float
+                        example: 40.7128
+                      longitude:
+                        type: number
+                        format: float
+                        example: -74.006
+                      timezone:
+                        type: string
+                        example: Toronto/Ontario
+                      current:
+                        type: object
+                        properties:
+                          date:
+                            type: integer
+                            format: int64
+                            example: 1721253600
+                          humidity:
+                            type: integer
+                            example: 65
+                            description: Percentage (%)
+                          wind_speed:
+                            type: number
+                            format: float
+                            example: 13
+                            description: km/h
+                          feels_like:
+                            type: number
+                            format: float
+                            example: 299.15
+                            description: Celsius
+                          temp:
+                            type: number
+                            format: float
+                            example: 297.15
+                            description: Celsius
+                          visibility:
+                            type: integer
+                            example: 10000
+                            description: Meters
+                          air_quality:
+                            type: integer
+                            example: 36
+                      weather-forecast:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            date:
+                              type: integer
+                              format: int64
+                              example: 1750128000
+                            temp:
+                              type: number
+                              format: float
+                              example: 297.15
+                required:
+                  - success
+                  - data
+        "400":
+          description: Bad request (invalid ID)
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Invalid booking ID.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        "401":
+          description: Unauthorized (missing or invalid token)
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Invalid booking ID.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        "404":
+          description: Listing not found
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Invalid booking ID.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Invalid booking ID.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+  /listings/user:
+    get:
+      summary: Get all listings for the authenticated user ("my listings")
+      description:
+        Returns all listings belonging to the currently authenticated user.
+        User ID is extracted from the JWT token. Use this endpoint for "my
+        listings" in the UI.
+      tags:
+        - listing
+      operationId: listingsGetAllListingsForCurrentUser
+      x-google-backend:
+        address: https://listing-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: Page number (starts at 1)
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: Number of items per page
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+        - name: status
+          in: query
+          description: Filter listings by status. If not provided, returns all statuses.
+          required: false
+          schema:
+            type: string
+            enum: [draft, pending, active, paused, archived, deleted]
+      responses:
+        "200":
+          description: All listings for the authenticated user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  toast:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        title:
+                          type: string
+                        description:
+                          type: string
+                        verified:
+                          type: boolean
+                          description: Indicates if the listing has been verified
+                        deleted_at:
+                          type: string
+                          format: date-time
+                          nullable: true
+                          description: Timestamp when listing was soft deleted
+                        status:
+                          type: string
+                          description: Current status of the listing
+                          enum:
+                            [draft, pending, active, paused, archived, deleted]
+                        location:
+                          type: object
+                          properties:
+                            latitude:
+                              type: number
+                              format: double
+                            longitude:
+                              type: number
+                              format: double
+                        price:
+                          type: number
+                          format: double
+                        available:
+                          type: boolean
+                        thumbnail:
+                          type: string
+                          format: uri
+                        distance:
+                          type: number
+                          format: double
+                        created_at:
+                          type: string
+                          format: date-time
+                        max_guests:
+                          type: integer
+                          format: int32
+                        rating:
+                          type: number
+                          format: double
+                        instant_book:
+                          type: boolean
+                        active:
+                          type: boolean
+                        amenities:
+                          type: array
+                          items:
+                            type: string
+                        cancellation_policy:
+                          type: string
+                        category:
+                          type: object
+                          properties:
+                            name:
+                              type: string
+                            code:
+                              type: string
+                            description:
+                              type: string
+                  meta:
+                    type: object
+                    properties:
+                      page:
+                        type: integer
+                        description: Current page number
+                      limit:
+                        type: integer
+                        description: Number of items per page
+                      total:
+                        type: integer
+                        description: Total number of items
+                      pages:
+                        type: integer
+                        description: Total number of pages
+                    required:
+                      - page
+                      - limit
+                      - total
+                      - pages
+                required:
+                  - success
+                  - data
+                  - meta
+        "400":
+          description: Bad request (invalid parameters)
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Invalid booking ID.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        "401":
+          description: Unauthorized (missing or invalid token)
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Invalid booking ID.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Invalid booking ID.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Invalid booking ID.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+  "/listings/{id}/report":
+    post:
+      summary: Report a listing
+      description: Allows a user to report a listing for inappropriate or incorrect content.
+      tags:
+        - listing
+      operationId: listingsReportListing
+      x-google-backend:
+        address: https://listing-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: Listing ID
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - reason
+                - reported_by
+              properties:
+                reason:
+                  type: string
+                  enum:
+                    - INAPPROPRIATE
+                    - MISLEADING
+                    - SPAM
+                    - OFFENSIVE
+                    - OTHER
+                details:
+                  type: string
+                  maxLength: 500
+                  description: Additional details about the report
+                reported_by:
+                  type: string
+                  description: User ID of the person reporting the listing
+        description: The report to create
+        required: true
+      responses:
+        "201":
+          description: Listing reported
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  toast:
+                    type: string
+                  report_id:
+                    type: string
+                    description: The ID of the created report
+                required:
+                  - success
+                  - report_id
+        "400":
+          description: Bad request (invalid ID or report)
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Invalid booking ID.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        "401":
+          description: Unauthorized (missing or invalid token)
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Invalid booking ID.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        "404":
+          description: Listing not found
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Invalid booking ID.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates if the request was successful.
+                    example: false
+                  error:
+                    type: string
+                    description: Error message describing the failure.
+                    example: Invalid booking ID.
+                  toast:
+                    type: string
+                    description: Optional toast message for the client UI.
+                    example: Unable to process your request.
+                required:
+                  - success
+                  - error
+
+  # ==== Blackout Date Management Endpoints ====
+
+  /listings/{id}/blackout:
+    post:
+      summary: Add blackout dates to a listing
+      description: Block specific date ranges for a listing to prevent bookings
+      tags:
+        - listing
+      operationId: listingsAddBlackoutDates
+      x-google-backend:
+        address: https://listing-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: Listing ID
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                blackout_dates:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      start_date:
+                        type: string
+                        format: date-time
+                        description: Start date and time of the blackout period
+                      end_date:
+                        type: string
+                        format: date-time
+                        description: End date and time of the blackout period
+                      reason:
+                        type: string
+                        enum: [maintenance, personal, blocked, vacation, other]
+                        description: Reason for the blackout period
+                        default: blocked
+                    required:
+                      - start_date
+                      - end_date
+                      - reason
+                  minItems: 1
+                  maxItems: 10
+              required:
+                - blackout_dates
+        description: Blackout dates to add to the listing
+      responses:
+        "201":
+          description: Blackout dates added successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  toast:
+                    type: string
+                    example: "Blackout dates added successfully"
+                  data:
+                    type: object
+                    properties:
+                      listing_id:
+                        type: string
+                      added_count:
+                        type: integer
+                        description: Number of blackout dates added
+                      blackout_dates:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                            start_date:
+                              type: string
+                              format: date-time
+                            end_date:
+                              type: string
+                              format: date-time
+                            reason:
+                              type: string
+                            created_at:
+                              type: string
+                              format: date-time
+                            is_active:
+                              type: boolean
+                required:
+                  - success
+                  - data
+        "400":
+          description: Bad request (invalid dates or listing not found)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized (missing or invalid token)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden (user is not the host of this listing)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Listing not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /listings/{id}/blackout/{blackout_id}:
+    delete:
+      summary: Remove a blackout date from a listing
+      description: Remove a specific blackout date by its ID
+      tags:
+        - listing
+      operationId: listingsRemoveBlackoutDate
+      x-google-backend:
+        address: https://listing-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: Listing ID
+          required: true
+          schema:
+            type: string
+        - name: blackout_id
+          in: path
+          description: Blackout date ID to remove
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Blackout date removed successfully
+        "400":
+          description: Bad request (invalid listing ID or blackout ID)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized (missing or invalid token)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden (user is not the host of this listing)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Listing or blackout date not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /listings/{id}/blackout-dates:
+    get:
+      summary: Get blackout dates for a listing
+      description: Retrieve all blackout dates for a specific listing
+      tags:
+        - listing
+      operationId: listingsGetBlackoutDates
+      x-google-backend:
+        address: https://listing-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: Listing ID
+          required: true
+          schema:
+            type: string
+        - name: active_only
+          in: query
+          description: Return only active blackout dates
+          required: false
+          schema:
+            type: boolean
+            default: true
+      responses:
+        "200":
+          description: Blackout dates retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      listing_id:
+                        type: string
+                      blackout_dates:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                            start_date:
+                              type: string
+                              format: date-time
+                            end_date:
+                              type: string
+                              format: date-time
+                            reason:
+                              type: string
+                            created_at:
+                              type: string
+                              format: date-time
+                            is_active:
+                              type: boolean
+                required:
+                  - success
+                  - data
+        "400":
+          description: Bad request (invalid listing ID)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized (missing or invalid token)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Listing not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /listings/{id}/availability:
+    get:
+      summary: Get listing availability
+      description: Returns available and unavailable dates for a listing including blackout dates
+      tags:
+        - listing
+      operationId: listingsGetAvailability
+      x-google-backend:
+        address: https://listing-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: Listing ID
+          required: true
+          schema:
+            type: string
+        - name: start_date
+          in: query
+          description: Start date for availability check (ISO 8601 format)
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: end_date
+          in: query
+          description: End date for availability check (ISO 8601 format)
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: months
+          in: query
+          description: Number of months to check from start_date (default 3)
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+            default: 3
+      responses:
+        "200":
+          description: Listing availability retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      listing_id:
+                        type: string
+                      available_dates:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            start_date:
+                              type: string
+                              format: date
+                            end_date:
+                              type: string
+                              format: date
+                      unavailable_dates:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            start_date:
+                              type: string
+                              format: date-time
+                            end_date:
+                              type: string
+                              format: date-time
+                            reason:
+                              type: string
+                              enum: [booked, blackout, maintenance, personal, blocked]
+                            blackout_id:
+                              type: string
+                              description: ID of the blackout date (if applicable)
+                      last_updated:
+                        type: string
+                        format: date-time
+                required:
+                  - success
+                  - data
+        "400":
+          description: Bad request (invalid listing ID or date parameters)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized (missing or invalid token)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Listing not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ==== Dashboard endpoints for adaptive home screen ====
+
+  /listings/dashboard/{section}:
+    get:
+      summary: Get dashboard section data
+      description: Returns data for a specific dashboard section (essential, sections-config, popular-destinations, free, near-me, lgbtq-friendly, top-rated, instant-book, recently-added, community-stories)
+      security: []
+      tags:
+        - listing
+      operationId: dashboardSection
+      x-google-backend:
+        address: https://listing-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: section
+          in: path
+          description: Dashboard section to retrieve
+          required: true
+          schema:
+            type: string
+            enum:
+              [
+                essential,
+                sections-config,
+                popular-destinations,
+                free,
+                near-me,
+                lgbtq-friendly,
+                top-rated,
+                instant-book,
+                recently-added,
+                community-stories,
+              ]
+        - name: limit
+          in: query
+          description: Maximum number of results (default varies by section)
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 8
+        - name: offset
+          in: query
+          description: Offset for pagination (default 0)
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 0
+        - name: country
+          in: query
+          description: Filter by country code (applicable to some sections)
+          required: false
+          schema:
+            type: string
+        - name: city
+          in: query
+          description: Filter by city name (applicable to some sections)
+          required: false
+          schema:
+            type: string
+        - name: lat
+          in: query
+          description: User's latitude (required for near-me section)
+          required: false
+          schema:
+            type: number
+            format: double
+        - name: lng
+          in: query
+          description: User's longitude (required for near-me section)
+          required: false
+          schema:
+            type: number
+            format: double
+        - name: radius
+          in: query
+          description: Search radius for near-me section (e.g., "25km", "10mi")
+          required: false
+          schema:
+            type: string
+            default: "25km"
+        - name: min_rating
+          in: query
+          description: Minimum rating filter for top-rated section (default 4.8)
+          required: false
+          schema:
+            type: number
+            format: double
+            default: 4.8
+      responses:
+        "200":
+          description: Successful dashboard section data retrieval
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    oneOf:
+                      - type: object
+                        description: Essential dashboard data with featured categories and previews
+                        properties:
+                          featured_categories:
+                            type: object
+                          popular_preview:
+                            type: array
+                            items:
+                              $ref: "#/components/schemas/Listing"
+                          recent_preview:
+                            type: array
+                            items:
+                              $ref: "#/components/schemas/Listing"
+                      - type: array
+                        description: Sections config or listing items
+                        items:
+                          oneOf:
+                            - $ref: "#/components/schemas/Listing"
+                            - type: object
+                      - type: object
+                        description: Wrapped listing items for most sections
+                        properties:
+                          items:
+                            type: array
+                            items:
+                              oneOf:
+                                - $ref: "#/components/schemas/Listing"
+                                - type: object
+                  meta:
+                    type: object
+                    properties:
+                      cache_key:
+                        type: string
+                      expires_in:
+                        type: integer
+                      timestamp:
+                        type: string
+                        format: date-time
+                      section:
+                        type: string
+                        description: The requested section name
+                required: [success, data, meta]
+        "400":
+          description: Bad request (invalid section or missing required parameters)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Section not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ==== Location endpoints for adaptive home screen ====
+
+  /listings/locations/search:
+    get:
+      summary: Location search and autocomplete
+      description: Searches for cities and countries based on a prefix query
+      security: []
+      tags:
+        - listing
+      operationId: locationsSearch
+      parameters:
+        - name: q
+          in: query
+          description: Search query (min 2 characters)
+          required: true
+          schema:
+            type: string
+            minLength: 2
+        - name: limit
+          in: query
+          description: Maximum number of results (default 10)
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 10
+        - name: type
+          in: query
+          description: Filter type (city|country|all)
+          required: false
+          schema:
+            type: string
+            enum: [city, country, all]
+            default: all
+      responses:
+        "200":
+          description: Successful location search
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      locations:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/LocationSearchResult"
+                  meta:
+                    type: object
+                    properties:
+                      query:
+                        type: string
+                      results_count:
+                        type: integer
+                      search_time_ms:
+                        type: integer
+                required: [success, data, meta]
+        "400":
+          description: Bad request (invalid query)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /listings/locations/popular:
+    get:
+      summary: Get popular locations and countries
+      description: Returns popular destinations and countries for location selector
+      security: []
+      tags:
+        - listing
+      operationId: locationsPopular
+      parameters:
+        - name: type
+          in: query
+          description: Filter type (destinations|countries|all)
+          required: false
+          schema:
+            type: string
+            enum: [destinations, countries, all]
+            default: all
+        - name: limit
+          in: query
+          description: Maximum number of results (default 20)
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 20
+      responses:
+        "200":
+          description: Successful popular locations retrieval
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: "#/components/schemas/PopularLocations"
+                  meta:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                      cache_duration:
+                        type: integer
+                required: [success, data, meta]
+        "400":
+          description: Bad request (invalid parameters)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /listings/locations/detect:
+    post:
+      summary: Reverse geocode detected user location
+      description: Detects user location via reverse geocoding with fallback
+      security: []
+      tags:
+        - listing
+      operationId: locationsDetect
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                latitude:
+                  type: number
+                  format: double
+                longitude:
+                  type: number
+                  format: double
+              required: [latitude, longitude]
+      responses:
+        "200":
+          description: Successful location detection
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      location:
+                        $ref: "#/components/schemas/DetectedLocation"
+                      fallback:
+                        $ref: "#/components/schemas/LocationSearchResult"
+                  meta:
+                    type: object
+                    properties:
+                      detection_method:
+                        type: string
+                      processing_time_ms:
+                        type: integer
+                required: [success, data, meta]
+        "400":
+          description: Bad request (invalid coordinates)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+servers:
+  - url: https://project-x-staging-gateway-8ua0taf7.uc.gateway.dev/api/v1
+components:
+  schemas:
+    Listing:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+          maxLength: 64
+        description:
+          type: string
+        verified:
+          type: boolean
+          description: Indicates if the listing has been verified
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Timestamp when listing was soft deleted
+        status:
+          type: string
+          description: Current status of the listing
+          enum: [draft, pending, active, paused, archived, deleted]
+        location:
+          type: object
+          properties:
+            latitude:
+              type: number
+              format: double
+            longitude:
+              type: number
+              format: double
+        price:
+          type: number
+          format: double
+        available:
+          type: boolean
+        thumbnail:
+          type: string
+          format: uri
+        distance:
+          type: number
+          format: double
+        created_at:
+          type: string
+          format: date-time
+        max_guests:
+          type: integer
+          format: int32
+        rating:
+          type: number
+          format: double
+        instant_book:
+          type: boolean
+        active:
+          type: boolean
+        amenities:
+          type: array
+          items:
+            type: string
+        cancellation_policy:
+          type: string
+        category:
+          type: object
+          properties:
+            name:
+              type: string
+            code:
+              type: string
+            description:
+              type: string
+        photos:
+          type: array
+          items:
+            type: string
+            format: uri
+        host:
+          type: object
+        house_rules:
+          type: array
+          items:
+            type: string
+        updated_at:
+          type: string
+          format: date-time
+        accept_same_day_booking:
+          type: boolean
+          description: |
+            Allows same-day bookings (check-in and check-out on same date, different times).
+            Default: false (opt-in model).
+      required:
+        - id
+        - title
+        - description
+        - status
+        - location
+        - price
+        - thumbnail
+        - created_at
+        - max_guests
+        - instant_book
+        - amenities
+        - cancellation_policy
+        - category
+        - photos
+        - host
+        - house_rules
+        - updated_at
+
+    ErrorResponse:
+      type: object
+      description: Standard error response model for failed requests.
+      properties:
+        success:
+          type: boolean
+          description: Indicates if the request was successful.
+          example: false
+        error:
+          type: string
+          description: Error message describing the failure.
+          example: Invalid request parameters.
+        toast:
+          type: string
+          description: Optional toast message for the client UI.
+          example: Please check your input and try again.
+      required:
+        - success
+        - error
+
+    LocationSearchResult:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        country:
+          type: string
+        country_code:
+          type: string
+        type:
+          type: string
+          enum: [city, country, region]
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+        popularity_score:
+          type: number
+          format: double
+      required: [id, name, country, country_code, type]
+
+    PopularLocations:
+      type: object
+      properties:
+        destinations:
+          type: array
+          items:
+            $ref: "#/components/schemas/LocationSearchResult"
+        countries:
+          type: array
+          items:
+            $ref: "#/components/schemas/LocationSearchResult"
+      required: [destinations, countries]
+
+    DetectedLocation:
+      type: object
+      properties:
+        city:
+          type: string
+        country:
+          type: string
+        country_code:
+          type: string
+        region:
+          type: string
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+        accuracy:
+          type: string
+          enum: [high, medium, low]
+        confidence_score:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 1
+      required: [city, country, country_code, latitude, longitude, accuracy]
+
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+

@@ -1,0 +1,303 @@
+name: Spec Sync
+
+on:
+  repository_dispatch:
+    types: [spec-update]
+
+permissions:
+  contents: write       # for pushing branches
+  pull-requests: write  # for creating/updating PRs
+
+
+concurrency:
+  group: spec-sync
+  # Queue newer runs instead of canceling in-progress ones for this group
+  cancel-in-progress: false
+
+jobs:
+  sync-spec:
+    runs-on: ubuntu-latest
+    steps:
+      # 1) install & login GH CLI
+      - name: Install GitHub CLI
+        run: |
+          sudo apt update
+          sudo apt install -y gh
+          echo "${{ secrets.OPENAPI_CICD_WORKFLOW_TOKEN }}" | gh auth login --with-token
+
+      # 2) parse incoming payload
+      - name: Parse dispatch payload
+        id: parse
+        run: |
+          echo "MS_SERVICE=${{ github.event.client_payload.service }}" >> $GITHUB_ENV
+          echo "MS_PR_NUMBER=${{ github.event.client_payload.pr_number }}" >> $GITHUB_ENV
+          echo "MS_PR_BRANCH=${{ github.event.client_payload.pr_branch }}" >> $GITHUB_ENV
+          echo "MS_BASE_BRANCH=${{ github.event.client_payload.base_branch || 'main' }}" >> $GITHUB_ENV
+          echo "MS_EVENT_TYPE=${{ github.event.client_payload.event_type }}" >> $GITHUB_ENV
+          echo "MS_SPEC_PATH=${{ github.event.client_payload.spec_path }}" >> $GITHUB_ENV
+          echo "MS_REPO=${{ github.event.client_payload.repo }}" >> $GITHUB_ENV
+          echo "API_SPECS_PATH=services/${{ github.event.client_payload.service }}.yaml" >> $GITHUB_ENV
+
+      - name: Debug parsed variables
+        run: |
+          echo "→ MS_EVENT_TYPE = $MS_EVENT_TYPE"
+          echo "→ MS_PR_NUMBER  = $MS_PR_NUMBER"
+          echo "→ MS_PR_BRANCH  = $MS_PR_BRANCH"
+          echo "→ MS_BASE_BRANCH= $MS_BASE_BRANCH"
+          echo "→ API_SPECS_PATH= $API_SPECS_PATH"
+
+      # 3) checkout api-specs @ base branch
+      - name: Checkout api-specs
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.MS_BASE_BRANCH }}
+          token: ${{ secrets.OPENAPI_CICD_WORKFLOW_TOKEN }}
+
+      # 4a) checkout the microservice at PR branch for PR events
+      - name: Checkout microservice repo (PR branch)
+        if: ${{ contains(fromJson('["opened","synchronize","reopened","closed"]'), env.MS_EVENT_TYPE) }}
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.MS_REPO }}
+          ref: ${{ env.MS_PR_BRANCH }}
+          path: msrepo
+          token: ${{ secrets.API_SPECS_MICROSERVICES_TOKEN }}
+
+      # 4b) checkout the microservice at main branch for merged events
+      - name: Checkout microservice repo (main branch)
+        if: ${{ env.MS_EVENT_TYPE == 'merged' }}
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.MS_REPO }}
+          ref: ${{ env.MS_BASE_BRANCH }}
+          path: msrepo
+          token: ${{ secrets.API_SPECS_MICROSERVICES_TOKEN }}
+
+      # Copy updated service spec from msrepo to services/
+      - name: Copy updated service spec from msrepo
+        run: |
+          cp msrepo/${{ env.MS_SPEC_PATH }} ${{ env.API_SPECS_PATH }}
+          echo "--- BEGIN msrepo/${{ env.MS_SPEC_PATH }} ---"
+          cat msrepo/${{ env.MS_SPEC_PATH }}
+          echo "--- END msrepo/${{ env.MS_SPEC_PATH }} ---"
+
+      # Install dependencies for gateway generation
+      - name: Install dependencies
+        run: npm ci
+
+      # Generate gateway specs with validation
+      - name: Generate gateway specs with validation
+        run: npm run gateway
+        # Note: Validation is now included in the generate script
+
+      # List generated gateway specs
+      - name: List generated gateway specs
+        run: |
+          echo "Gateway directory contents after generation:"
+          ls -l gateway/
+      - name: Print gateway spec files with filenames
+        run: |
+          for f in gateway/*.yaml; do
+            echo "--- BEGIN $f ---"
+            cat "$f"
+            echo "--- END $f ---"
+          done
+        continue-on-error: true
+      # Fail if config.json expects gateways but none generated
+      - name: Fail if config.json expects gateways but none generated
+        run: |
+          # Check if any gateway has a non-empty services array
+          if jq -e '[.gateways[].services | length > 0] | any' gateway/config.json >/dev/null 2>&1; then
+            if ! find gateway -maxdepth 1 -type f \( -name '*.yaml' -o -name '*.yml' \) | grep -q .; then
+              echo "::error file=gateway/config.json::❌ config.json expects gateway specs, but no gateway YAMLs were generated. Check config.json and the gateway generation script."
+              exit 1
+            fi
+          else
+            echo "No gateways with services configured in config.json; skipping gateway spec check."
+          fi
+        shell: bash
+      # 5) sync spec.yaml into a new branch on spec‑repo for open/sync/reopen
+      - name: Sync spec → branch
+        if: ${{ contains(fromJson('["opened","synchronize","reopened"]'), env.MS_EVENT_TYPE) }}
+        run: |
+          git config user.name  "GitHub Actions"
+          git config user.email "actions@github.com"
+
+          cp msrepo/${{ env.MS_SPEC_PATH }} ${{ env.API_SPECS_PATH }}
+          BRANCH=sync/${{ env.MS_SERVICE }}-pr${{ env.MS_PR_NUMBER }}
+          
+          # Clean up any leftover files from gateway generation
+          git clean -fd
+          git stash
+          
+          git checkout -B $BRANCH
+
+          # Add both the updated service spec and all generated gateway specs
+          git add ${{ env.API_SPECS_PATH }} gateway/*.yaml
+
+          echo "--- DIFF for ${{ env.API_SPECS_PATH }} ---"
+          git diff --staged ${{ env.API_SPECS_PATH }} || true
+          echo "--- END DIFF ---"
+
+          if git diff --staged --quiet; then
+            echo "No spec changes, skipping commit."
+          else
+            git commit -m "Sync ${{ env.MS_SERVICE }} spec from MS PR #${{ env.MS_PR_NUMBER }}"
+            git push --force --set-upstream origin $BRANCH
+          fi
+
+      # 5.5) sync spec.yaml directly to main branch for merged events
+      - name: Sync spec → main branch
+        if: ${{ env.MS_EVENT_TYPE == 'merged' }}
+        env:
+          GH_TOKEN: ${{ secrets.OPENAPI_CICD_WORKFLOW_TOKEN }}
+        run: |
+          git config user.name  "GitHub Actions"
+          git config user.email "actions@github.com"
+
+          cp msrepo/${{ env.MS_SPEC_PATH }} ${{ env.API_SPECS_PATH }}
+          
+          # Clean up any leftover files from gateway generation
+          git clean -fd
+          git stash
+
+          # Add both the updated service spec and all generated gateway specs
+          git add ${{ env.API_SPECS_PATH }} gateway/*.yaml
+
+          echo "--- DIFF for ${{ env.API_SPECS_PATH }} ---"
+          git diff --staged ${{ env.API_SPECS_PATH }} || true
+          echo "--- END DIFF ---"
+
+          if git diff --staged --quiet; then
+            echo "No spec changes, skipping commit."
+          else
+            git commit -m "Sync ${{ env.MS_SERVICE }} spec from merged PR #${{ env.MS_PR_NUMBER }}"
+            git push origin ${{ env.MS_BASE_BRANCH }}
+            
+            # Extract PR number from the merge commit message
+            COMMIT_MSG=$(git log --oneline -1 --format=%B)
+            EXTRACTED_PR_NUM=$(echo "$COMMIT_MSG" | grep -oP 'Merge pull request #\K\d+' || echo "")
+            
+            if [[ -n "$EXTRACTED_PR_NUM" ]]; then
+              BRANCH=sync/${{ env.MS_SERVICE }}-pr$EXTRACTED_PR_NUM
+              PR_NUM=$(gh pr list --head $BRANCH --json number -q '.[0].number' || echo "")
+              if [[ -n "$PR_NUM" ]]; then
+                gh pr merge $PR_NUM --merge --delete-branch || echo "Failed to merge PR #$PR_NUM, continuing..."
+              else
+                echo "No sync PR found for branch $BRANCH"
+              fi
+            else
+              echo "Could not extract PR number from commit message: $COMMIT_MSG"
+            fi
+          fi
+
+
+      # 6) create or update the spec-repo PR for open/sync/reopen
+      - name: Create or update spec-repo PR
+        if: ${{ contains(fromJson('["opened","synchronize","reopened"]'), env.MS_EVENT_TYPE) }}
+        env:
+          GH_TOKEN: ${{ secrets.OPENAPI_CICD_WORKFLOW_TOKEN }}
+        run: |
+          BRANCH=sync/${{ env.MS_SERVICE }}-pr${{ env.MS_PR_NUMBER }}
+          # look for existing PR
+          PR_NUM=$(gh pr list --head $BRANCH --json number -q '.[0].number')
+          if [[ -z "$PR_NUM" ]]; then
+            # create one
+            PR_URL=$(gh pr create \
+              --head $BRANCH --base ${{ env.MS_BASE_BRANCH }} \
+              --title "[${{ env.MS_SERVICE }}] Spec Sync #${{ env.MS_PR_NUMBER }}" \
+              --body "Automated spec sync from MS PR #${{ env.MS_PR_NUMBER }}")
+            # extract the number from the URL: ".../pull/42"
+            PR_NUM=${PR_URL##*/pull/}
+          fi
+          echo "API_SPECS_PR_NUMBER=$PR_NUM" >> $GITHUB_ENV
+
+      # 7) close the spec-repo PR when MS PR closes
+      - name: Close spec-repo PR
+        if: ${{ env.MS_EVENT_TYPE == 'closed' }}
+        env:
+          GH_TOKEN: ${{ secrets.OPENAPI_CICD_WORKFLOW_TOKEN }}
+        run: |
+          BRANCH=sync/${{ env.MS_SERVICE }}-pr${{ env.MS_PR_NUMBER }}
+          PR_NUM=$(gh pr list --head $BRANCH --json number -q '.[0].number')
+          if [[ -n "$PR_NUM" ]]; then
+            gh pr close $PR_NUM --delete-branch
+          else
+            echo "No PR found for $BRANCH, nothing to close."
+          fi
+
+      - name: Compute dispatch trigger
+        id: compute
+        run: |
+          # default to no dispatch
+          echo "SHOULD_DISPATCH=false" >> $GITHUB_ENV
+
+          if [[ "$MS_EVENT_TYPE" == "merged" ]]; then
+            # merged payload → staging build
+            echo "DISPATCH_EVENT=merged"              >> $GITHUB_ENV
+            echo "DISPATCH_BRANCH=$MS_BASE_BRANCH"    >> $GITHUB_ENV
+            echo "SHOULD_DISPATCH=true"               >> $GITHUB_ENV
+
+          elif [[ "$MS_EVENT_TYPE" =~ ^(opened|synchronize|reopened)$ ]]; then
+            # PR lifecyle events → preview build
+            echo "DISPATCH_EVENT=$MS_EVENT_TYPE"                           >> $GITHUB_ENV
+            echo "DISPATCH_BRANCH=sync/${MS_SERVICE}-pr${MS_PR_NUMBER}"     >> $GITHUB_ENV
+            echo "SHOULD_DISPATCH=true"                                     >> $GITHUB_ENV
+
+          elif [[ "$MS_EVENT_TYPE" == "closed" ]]; then
+            # PR closed → cleanup
+            echo "DISPATCH_EVENT=closed"                                    >> $GITHUB_ENV
+            echo "DISPATCH_BRANCH=sync/${MS_SERVICE}-pr${MS_PR_NUMBER}"     >> $GITHUB_ENV
+            echo "SHOULD_DISPATCH=true"                                     >> $GITHUB_ENV
+          fi
+
+          # debug
+          echo "→ SHOULD_DISPATCH=$SHOULD_DISPATCH"
+          echo "→ DISPATCH_EVENT=$DISPATCH_EVENT"
+          echo "→ DISPATCH_BRANCH=$DISPATCH_BRANCH"
+
+      - name: Dispatch to api‑docs
+        if: ${{ env.SHOULD_DISPATCH == 'true' }}
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token:       ${{ secrets.OPENAPI_CICD_WORKFLOW_TOKEN }}
+          repository:  inspiredtechinc/api-docs
+          event-type:  spec-sync
+          client-payload: |
+            {
+              "event_type":     "${{ env.DISPATCH_EVENT }}",
+              "spec_path":      "${{ env.API_SPECS_PATH }}",
+              "spec_branch":    "${{ env.DISPATCH_BRANCH }}",
+              "spec_pr_number": "${{ env.API_SPECS_PR_NUMBER }}",
+              "ms_pr_number":   "${{ env.MS_PR_NUMBER }}",
+              "ms_repo":        "${{ env.MS_REPO }}"
+            }
+
+      - name: Dispatch to trigger staging deployment
+        if: ${{ env.MS_EVENT_TYPE == 'merged' && env.SHOULD_DISPATCH == 'true' }}
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token:       ${{ secrets.OPENAPI_CICD_WORKFLOW_TOKEN }}
+          repository:  ${{ github.repository }}
+          event-type:  deploy-staging-gateway
+          client-payload: |
+            {
+              "service": "${{ env.MS_SERVICE }}",
+              "branch": "${{ env.MS_BASE_BRANCH }}",
+              "event_type": "merged",
+              "pr_number": "${{ env.MS_PR_NUMBER }}",
+              "repo": "${{ env.MS_REPO }}"
+            }
+
+      - name: Debug final dispatch payload
+        run: |
+          echo "→ Dispatching to api‑docs:"
+          echo "   event_type:      $DISPATCH_EVENT"
+          echo "   spec_branch:     $DISPATCH_BRANCH"
+          echo "   spec_pr_number:  $API_SPECS_PR_NUMBER"
+          echo "   ms_pr_number:    $MS_PR_NUMBER"
+          echo "   ms_repo:         $MS_REPO"
+          
+          if [[ "$MS_EVENT_TYPE" == "merged" ]]; then
+            echo "→ Also dispatching deploy-staging-gateway for staging deployment"
+          fi

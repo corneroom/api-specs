@@ -1,0 +1,337 @@
+openapi: 3.0.0
+info:
+  title: Project X - Document Service API
+  description: |
+    API specification for the Document service of Project X.
+    
+    ## Internationalization (i18n)
+    This API supports multiple languages through the Accept-Language header.
+    Supported languages:
+    - English (en) - Default
+    - French (fr)
+    - Spanish (es)
+    
+    All responses include a `toast` field with localized messages for user-facing notifications.
+  version: 1.0.0
+  contact:
+    name: project-x-api
+    url: https://www.inspiredtech.ca
+    email: info@aircouch.com
+  termsOfService: https://www.inspiredtech.ca/terms
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+tags:
+  - name: document
+    description: Document operations
+paths:
+  /documents/heartbeat:
+    get:
+      summary: Heartbeat
+      description: Returns a simple heartbeat response to verify the Document service is running.
+      tags:
+        - document
+      operationId: documentsHeartbeat
+      x-google-backend:
+        address: https://document-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security: []
+      responses:
+        "200":
+          description: Heartbeat
+          content:
+            application/json:
+              schema:
+                type: string
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized (missing or invalid token)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /documents:
+    post:
+      summary: Upload files
+      description: Upload one or more files to Google Cloud Storage. Files are base64 encoded in the request body.
+      tags:
+        - document
+      operationId: documentsUploadFiles
+      x-google-backend:
+        address: https://document-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DocumentRequest"
+        description: The document upload request
+        required: true
+      responses:
+        "201":
+          description: Files uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      urls:
+                        type: array
+                        items:
+                          type: string
+                          format: uri
+                        description: Array of uploaded file URLs
+                    required:
+                      - urls
+                  toast:
+                    type: string
+                    description: Localized success message
+                    example: "Documents uploaded successfully"
+                  error:
+                    type: string
+                    example: ""
+                required:
+                  - success
+                  - data
+                  - toast
+                  - error
+        "400":
+          description: Bad request (invalid request body or validation failed)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized (missing or invalid token)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error (failed to upload or decode files)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    patch:
+      summary: Overwrite files
+      description: Overwrite existing files in Google Cloud Storage. Currently not implemented.
+      tags:
+        - document
+      operationId: documentsOverwriteFiles
+      x-google-backend:
+        address: https://document-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DocumentRequest"
+        description: The document overwrite request
+        required: true
+      responses:
+        "200":
+          description: Files overwritten successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    description: Information about the overwritten files
+                  toast:
+                    type: string
+                    description: Localized success message
+                    example: "Documents overwritten successfully"
+                  error:
+                    type: string
+                    example: ""
+                required:
+                  - success
+                  - data
+                  - toast
+                  - error
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized (missing or invalid token)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    delete:
+      summary: Delete files
+      description: Delete files from Google Cloud Storage. Currently not implemented.
+      tags:
+        - document
+      operationId: documentsDeleteFiles
+      x-google-backend:
+        address: https://document-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DocumentRequest"
+        description: The document deletion request
+        required: true
+      responses:
+        "200":
+          description: Files deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    description: Information about the deleted files
+                  toast:
+                    type: string
+                    description: Localized success message
+                    example: "Documents deleted successfully"
+                  error:
+                    type: string
+                    example: ""
+                required:
+                  - success
+                  - data
+                  - toast
+                  - error
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized (missing or invalid token)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+servers:
+  - url: https://project-x-staging-gateway-8ua0taf7.uc.gateway.dev/api/v1
+
+components:
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    DocumentRequest:
+      type: object
+      properties:
+        type:
+          type: string
+          description: Document type/category (determines storage bucket)
+          example: "profile"
+        documents:
+          type: array
+          items:
+            $ref: "#/components/schemas/Document"
+          minItems: 1
+          description: Array of documents to upload
+      required:
+        - type
+        - documents
+
+    Document:
+      type: object
+      properties:
+        name:
+          type: string
+          description: File name
+          example: "profile-picture.jpg"
+        content:
+          type: string
+          format: byte
+          description: Base64 encoded file content
+          example: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+      required:
+        - name
+        - content
+
+    ErrorResponse:
+      type: object
+      description: Standard error response model for failed requests.
+      properties:
+        success:
+          type: boolean
+          description: Indicates if the request was successful.
+          example: false
+        error:
+          type: string
+          description: Error message describing the failure.
+          example: "Failed to parse request body"
+        toast:
+          type: string
+          description: Optional toast message for the client UI.
+          example: "Please check your input and try again."
+      required:
+        - success
+        - error

@@ -1,0 +1,443 @@
+openapi: 3.0.0
+info:
+  title: Project X - Wishlist Service API
+  description: API specification for the Wishlist service of Project X
+  version: 1.0.0
+  contact:
+    name: project-x-api
+    url: https://www.inspiredtech.ca
+    email: info@aircouch.com
+  termsOfService: https://www.inspiredtech.ca/terms
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+tags:
+  - name: wishlist
+    description: Wishlist operations
+paths:
+  /wishlists/heartbeat:
+    get:
+      summary: Wishlist service heartbeat
+      description: Health check endpoint for the wishlist service to verify it is running and accessible.
+      tags:
+        - wishlist
+      operationId: wishlistHeartbeat
+      x-google-backend:
+        address: https://wishlist-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      responses:
+        "200":
+          description: Heartbeat
+          content:
+            application/json:
+              schema:
+                type: string
+                example: OK
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized (missing or invalid token)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security: []
+  "/wishlists":
+    get:
+      summary: Get all listings in wishlist for the authenticated user
+      description: Retrieves all wishlist items grouped by tags for the currently authenticated user.
+      tags:
+        - wishlist
+      operationId: getAllListingsInWishlist
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://wishlist-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      responses:
+        "200":
+          description: All listings in wishlist
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/APIResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized (missing or invalid token)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      summary: Add a single listing to wishlist for the authenticated user (optionally with tag)
+      description: Adds a new listing to the user's wishlist, optionally organizing it under a specific tag.
+      tags:
+        - wishlist
+      operationId: addListingToWishlist
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://wishlist-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddListingRequest"
+        description: Listing to add, with optional tag
+        required: true
+      responses:
+        "201":
+          description: Listing added to wishlist
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/APIResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized (missing or invalid token)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      summary: Remove a single listing from wishlist
+      description: Removes a specific listing from the user's wishlist, optionally from a specific tag.
+      tags:
+        - wishlist
+      operationId: removeListingFromWishlist
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://wishlist-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RemoveListingRequest"
+        description: Listing to remove, with optional tag
+        required: true
+      responses:
+        "200":
+          description: Listing removed from wishlist
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/APIResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized (missing or invalid token)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      summary: Move a single listing to a different tag
+      description: Moves a listing from one tag to another within the user's wishlist.
+      tags:
+        - wishlist
+      operationId: moveListingBetweenTags
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://wishlist-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MoveListingRequest"
+        description: Move a single listing between tags
+        required: true
+      responses:
+        "200":
+          description: Listing moved to new tag
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/APIResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized (missing or invalid token)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  "/wishlists/tags":
+    delete:
+      summary: Delete an entire tag and all its listings from wishlist
+      description: Permanently removes a tag and all associated listings from the user's wishlist.
+      tags:
+        - wishlist
+      operationId: deleteTagFromWishlist
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://wishlist-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeleteTagRequest"
+        description: Tag to delete
+        required: true
+      responses:
+        "200":
+          description: Tag deleted from wishlist
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/APIResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized (missing or invalid token)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: Default
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+servers:
+  - url: https://app-x-staging-gateway-8ua0taf7.uc.gateway.dev/api/v1
+components:
+  schemas:
+    APIResponse:
+      type: object
+      description: Standard API response for wishlist grouped by tag.
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          description: List of tags and their listings
+          items:
+            type: object
+            properties:
+              tag:
+                type: string
+                example: vegas
+              listings:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    listing_id:
+                      type: string
+                    thumbnail:
+                      type: string
+                      format: uri
+                    title:
+                      type: string
+                      description: Optional listing title preview
+                    location:
+                      type: object
+                      description: Optional location preview
+                      properties:
+                        city:
+                          type: string
+                        country:
+                          type: string
+                    price:
+                      type: number
+                      format: float
+                      description: Optional price preview (per night)
+                    rating:
+                      type: number
+                      format: float
+                      description: Optional rating preview
+                  required:
+                    - listing_id
+        error:
+          type: string
+          example: ""
+        toast:
+          type: string
+          example: "Wishlist updated successfully."
+      required:
+        - success
+        - data
+    AddListingRequest:
+      type: object
+      properties:
+        tag:
+          type: string
+          maxLength: 32
+          example: vegas
+        listing:
+          type: object
+          properties:
+            listing_id:
+              type: string
+            thumbnail:
+              type: string
+              format: uri
+          required:
+            - listing_id
+      required:
+        - listing
+    RemoveListingRequest:
+      type: object
+      properties:
+        tag:
+          type: string
+          maxLength: 32
+          example: vegas
+        listing_id:
+          type: string
+          example: listing_123
+      required:
+        - listing_id
+    MoveListingRequest:
+      type: object
+      properties:
+        from_tag:
+          type: string
+          maxLength: 32
+          example: vegas
+        to_tag:
+          type: string
+          maxLength: 32
+          example: california
+        listing_id:
+          type: string
+          example: listing_123
+      required:
+        - from_tag
+        - to_tag
+        - listing_id
+    DeleteTagRequest:
+      type: object
+      properties:
+        tag:
+          type: string
+          maxLength: 32
+          example: old_trip
+      required:
+        - tag
+    ErrorResponse:
+      type: object
+      description: Standard error response model for failed requests.
+      properties:
+        success:
+          type: boolean
+          description: Indicates if the request was successful.
+          example: false
+        error:
+          type: string
+          description: Error message describing the failure.
+          example: Invalid request parameters.
+        toast:
+          type: string
+          description: Optional toast message for the client UI.
+          example: Please check your input and try again.
+      required:
+        - success
+        - error
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+

@@ -1,0 +1,70 @@
+name: Post Preview Comment
+
+on:
+  repository_dispatch:
+    types: [post-preview-comment]
+
+jobs:
+  comment-on-prs:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      # 0: Debug incoming event payload
+      - name: 🐛 Debug incoming dispatch payload
+        if: github.event_name == 'repository_dispatch'
+        run: |
+          echo "=== DISPATCH PAYLOAD ==="
+          echo "event_type:      ${{ github.event.client_payload.event_type }}"           
+          echo "ms_repo:         ${{ github.event.client_payload.ms_repo }}"
+          echo "ms_pr_number:    ${{ github.event.client_payload.ms_pr_number }}"
+          echo "preview_url:     ${{ github.event.client_payload.preview_url }}"
+          echo "spec_pr_number:  ${{ github.event.client_payload.spec_pr_number }}"
+          echo "========================"   
+
+      # 1. Comment on the api‑specs PR (only if PR exists)
+      - name: Comment on api-specs PR
+        if: github.event.client_payload.spec_pr_number && github.event.client_payload.spec_pr_number != '' && github.event.client_payload.event_type != 'merged'
+        uses: peter-evans/create-or-update-comment@v2
+        with:
+          token:        ${{ secrets.GITHUB_TOKEN }}
+          repository:   ${{ github.repository }}
+          issue-number: ${{ github.event.client_payload.spec_pr_number }}
+          body: |
+            🚀 **API‑Specs Documentation Preview is Ready!**  
+            A preview of your updated OpenAPI spec has been generated.  
+            **Preview URL:** [View docs here](${{ github.event.client_payload.preview_url }})  
+            _This preview will be automatically removed when the PR is closed._
+
+      # 2. Comment on the microservice PR (only if PR exists)
+      - name: Comment on Microservice PR
+        if: github.event.client_payload.ms_repo && github.event.client_payload.ms_pr_number && github.event.client_payload.ms_pr_number != '' && github.event.client_payload.event_type != 'merged'
+        uses: peter-evans/create-or-update-comment@v2
+        with:
+          token:        ${{ secrets.MS_PR_COMMENT_TOKEN }}
+          repository:   ${{ github.event.client_payload.ms_repo }}
+          issue-number: ${{ github.event.client_payload.ms_pr_number }}
+          body: |
+            📝 **Docs Preview for Your Service PR**  
+            We've built a live preview of the API docs for this change.  
+            👉 [Open Documentation Preview](${{ github.event.client_payload.preview_url }})  
+            _It will be torn down automatically when the PR is closed._
+
+      # 3. Log when skipping comments for direct pushes or merged events
+      - name: Log skipped comments
+        if: github.event.client_payload.spec_pr_number == '' || github.event.client_payload.ms_pr_number == '' || github.event.client_payload.event_type == 'merged'
+        run: |
+          if [ "${{ github.event.client_payload.event_type }}" = "merged" ]; then
+            echo "ℹ️ Skipping PR comments for merged event"
+            echo "   event_type: '${{ github.event.client_payload.event_type }}'"
+            echo "   ms_pr_number: '${{ github.event.client_payload.ms_pr_number }}' (likely a commit hash)"
+            echo "   This is expected behavior for merged PRs"
+          else
+            echo "ℹ️ Skipping PR comments for direct push to main"
+            echo "   spec_pr_number: '${{ github.event.client_payload.spec_pr_number }}'"
+            echo "   ms_pr_number: '${{ github.event.client_payload.ms_pr_number }}'"
+            echo "   This is expected behavior for direct pushes to main"
+          fi

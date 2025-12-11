@@ -1,0 +1,20 @@
+{
+  "name": "project-x-postman-scripts",
+  "version": "1.0.0",
+  "description": "Scripts for generating and managing Postman collections from gateway specs",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test-postman-flow.js",
+    "generate": "node generate-postman-collections.js",
+    "preserve": "node preserve-and-merge-scripts.js",
+    "push": "node push-to-postman.js",
+    "full-flow": "npm run generate && npm run preserve && npm run push"
+  },
+  "dependencies": {
+    "openapi-to-postmanv2": "^5.3.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
+

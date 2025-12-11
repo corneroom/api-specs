@@ -1,0 +1,690 @@
+openapi: 3.0.3
+info:
+  title: Verification Service API.
+  description: |
+    API for document verification and identity validation with internationalization support.
+    
+    ## Supported Languages
+    The API supports the following languages via the `Accept-Language` header:
+    - English (en) - Default
+    - French (fr)
+    - Spanish (es)
+    
+    All response messages and toast notifications are localized based on the user's language preference.
+  version: 1.0.0
+  contact:
+    name: Project X Team
+    email: support@projectx.com
+  license:
+    name: Apache-2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0
+
+servers:
+  - url: https://app-x-staging-gateway-8ua0taf7.uc.gateway.dev/api/v1
+
+security:
+  - jwtAuth: []
+
+
+
+paths:
+  /verifications:
+    get:
+      operationId: listMyVerifications
+      summary: Get user's verification history
+      description: Get current user's verification submissions
+      tags:
+        - verification
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://verification-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: limit
+          in: query
+          description: Number of results to return
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 10
+        - name: offset
+          in: query
+          description: Number of results to skip
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Verification history retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/APIResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/VerificationListResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+
+  /verifications/facematch:
+    post:
+      operationId: submitFacematchVerification
+      summary: Submit facematch verification request
+      description: |
+        Submit facematch verification with ID document and selfie photos.
+        
+        **Language Support**: Include `Accept-Language` header to receive localized responses:
+        - `en` or `en-US` for English (default)
+        - `fr` or `fr-FR` for French
+        - `es` or `es-ES` for Spanish
+        
+        Example: `Accept-Language: fr-FR,fr;q=0.9,en;q=0.8`
+      tags:
+        - verification
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://verification-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: Accept-Language
+          in: header
+          required: false
+          description: Preferred language for response messages
+          schema:
+            type: string
+            default: "en"
+            enum: ["en", "en-US", "fr", "fr-FR", "es", "es-ES"]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FacematchSubmissionRequest'
+      responses:
+        '200':
+          description: Facematch verification submitted successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/APIResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/VerificationSubmissionResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+
+  /verifications/location:
+    post:
+      operationId: submitLocationVerification
+      summary: Submit location verification request
+      description: |
+        Submit location verification with GPS coordinates.
+        
+        **Language Support**: Include `Accept-Language` header to receive localized responses:
+        - `en` or `en-US` for English (default)
+        - `fr` or `fr-FR` for French
+        - `es` or `es-ES` for Spanish
+        
+        Example: `Accept-Language: fr-FR,fr;q=0.9,en;q=0.8`
+      tags:
+        - verification
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://verification-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: Accept-Language
+          in: header
+          required: false
+          description: Preferred language for response messages
+          schema:
+            type: string
+            default: "en"
+            enum: ["en", "en-US", "fr", "fr-FR", "es", "es-ES"]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LocationSubmissionRequest'
+      responses:
+        '200':
+          description: Location verification submitted successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/APIResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/VerificationSubmissionResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+
+  /verifications/background:
+    post:
+      operationId: submitBackgroundVerification
+      summary: Submit background verification request
+      description: |
+        Submit background verification request. Background checks typically use external services that handle document collection.
+        
+        **Language Support**: Include `Accept-Language` header to receive localized responses:
+        - `en` or `en-US` for English (default)
+        - `fr` or `fr-FR` for French
+        - `es` or `es-ES` for Spanish
+        
+        Example: `Accept-Language: fr-FR,fr;q=0.9,en;q=0.8`
+      tags:
+        - verification
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://verification-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: Accept-Language
+          in: header
+          required: false
+          description: Preferred language for response messages
+          schema:
+            type: string
+            default: "en"
+            enum: ["en", "en-US", "fr", "fr-FR", "es", "es-ES"]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BackgroundSubmissionRequest'
+      responses:
+        '200':
+          description: Background verification submitted successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/APIResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/VerificationSubmissionResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+
+  /verifications/voice:
+    post:
+      operationId: submitVoiceVerification
+      summary: Submit voice verification request
+      description: |
+        Submit voice verification with audio file for voice biometrics.
+        
+        **Language Support**: Include `Accept-Language` header to receive localized responses:
+        - `en` or `en-US` for English (default)
+        - `fr` or `fr-FR` for French
+        - `es` or `es-ES` for Spanish
+        
+        Example: `Accept-Language: fr-FR,fr;q=0.9,en;q=0.8`
+      tags:
+        - verification
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://verification-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: Accept-Language
+          in: header
+          required: false
+          description: Preferred language for response messages
+          schema:
+            type: string
+            default: "en"
+            enum: ["en", "en-US", "fr", "fr-FR", "es", "es-ES"]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VoiceSubmissionRequest'
+      responses:
+        '200':
+          description: Voice verification submitted successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/APIResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/VerificationSubmissionResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+
+  /verifications/{verification_id}:
+    get:
+      operationId: getVerification
+      summary: Get verification details
+      description: Get verification details by ID
+      tags:
+        - verification
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://verification-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: verification_id
+          in: path
+          required: true
+          description: Verification ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Verification details retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/APIResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/VerificationStatusResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+        '403':
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+        '404':
+          description: Verification not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+
+  /verifications/{verification_id}/results:
+    get:
+      operationId: getVerificationResults
+      summary: Get verification AI results
+      description: Get AI validation results for a verification
+      tags:
+        - verification
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://verification-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: verification_id
+          in: path
+          required: true
+          description: Verification ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Verification results retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/APIResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/VerificationResultResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+        '403':
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+        '404':
+          description: Verification not found or results not available
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+
+components:
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    APIResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Whether the request was successful
+        error:
+          type: string
+          description: Error message if request failed (localized)
+        toast:
+          type: string
+          description: User-friendly message for display (localized based on Accept-Language header)
+        data:
+          type: object
+          description: Response data
+      required:
+        - success
+      example:
+        success: true
+        toast: "Verification submitted successfully"
+        data:
+          id: "verification-123"
+          status: "pending"
+
+    FacematchSubmissionRequest:
+      type: object
+      properties:
+        document_type:
+          type: string
+          enum: [drivers_license, passport, national_id]
+          description: Type of ID document being verified
+        front_image_url:
+          type: string
+          format: uri
+          description: URL of the front side of the ID document
+        back_image_url:
+          type: string
+          format: uri
+          description: URL of the back side of the ID document
+        selfie_image_url:
+          type: string
+          format: uri
+          description: URL of the selfie photo for face matching
+        device_info:
+          type: object
+          description: Device information for security
+          default: {}
+        metadata:
+          type: object
+          description: Additional metadata
+          default: {}
+      required:
+        - document_type
+        - front_image_url
+        - back_image_url
+        - selfie_image_url
+
+    LocationSubmissionRequest:
+      type: object
+      properties:
+        location:
+          $ref: '#/components/schemas/GeoLocation'
+        device_info:
+          type: object
+          description: Device information for security
+          default: {}
+        metadata:
+          type: object
+          description: Additional metadata
+          default: {}
+      required:
+        - location
+
+    BackgroundSubmissionRequest:
+      type: object
+      properties:
+        device_info:
+          type: object
+          description: Device information for security
+          default: {}
+        metadata:
+          type: object
+          description: Additional metadata
+          default: {}
+
+    VoiceSubmissionRequest:
+      type: object
+      properties:
+        audio_url:
+          type: string
+          format: uri
+          description: URL of audio file for voice biometrics
+        device_info:
+          type: object
+          description: Device information for security
+          default: {}
+        metadata:
+          type: object
+          description: Additional metadata
+          default: {}
+      required:
+        - audio_url
+
+    GeoLocation:
+      type: object
+      properties:
+        latitude:
+          type: number
+          format: float
+          minimum: -90
+          maximum: 90
+          description: Latitude coordinate
+        longitude:
+          type: number
+          format: float
+          minimum: -180
+          maximum: 180
+          description: Longitude coordinate
+        accuracy:
+          type: number
+          format: float
+          description: Location accuracy in meters
+      required:
+        - latitude
+        - longitude
+
+    VerificationSubmissionResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Verification ID
+        status:
+          type: string
+          enum: [pending, processing, approved, rejected, needs_review, failed]
+          description: Current verification status
+        created_at:
+          type: string
+          format: date-time
+          description: Creation timestamp
+        estimated_processing_time:
+          type: integer
+          description: Estimated processing time in minutes
+      required:
+        - id
+        - status
+        - created_at
+
+    VerificationStatusResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Verification ID
+        user_id:
+          type: string
+          description: User ID
+        verification_type:
+          type: string
+          enum: [facematch, background, location, voice, livevideo, pose, peer]
+          description: Type of verification
+        document_type:
+          type: string
+          enum: [drivers_license, passport, national_id]
+          description: Document type
+        status:
+          type: string
+          enum: [pending, processing, approved, rejected, needs_review, failed]
+          description: Current verification status
+        confidence_score:
+          type: number
+          format: float
+          description: Confidence score from AI validation
+        created_at:
+          type: string
+          format: date-time
+          description: Creation timestamp
+        updated_at:
+          type: string
+          format: date-time
+          description: Last update timestamp
+        reviewed_by:
+          type: string
+          description: ID of reviewer
+        review_notes:
+          type: string
+          description: Review notes
+      required:
+        - id
+        - user_id
+        - verification_type
+        - document_type
+        - status
+        - created_at
+        - updated_at
+
+    VerificationListResponse:
+      type: object
+      properties:
+        verifications:
+          type: array
+          items:
+            $ref: '#/components/schemas/VerificationStatusResponse'
+          description: List of verifications
+        total:
+          type: integer
+          description: Total count
+        page:
+          type: integer
+          description: Current page
+        limit:
+          type: integer
+          description: Items per page
+        has_more:
+          type: boolean
+          description: Whether there are more items
+      required:
+        - verifications
+        - total
+        - page
+        - limit
+        - has_more
+
+    VerificationResultResponse:
+      type: object
+      properties:
+        id_validation:
+          type: boolean
+          description: ID document validation result
+        liveness_detected:
+          type: boolean
+          description: Liveness detection result
+        face_match_score:
+          type: number
+          format: float
+          description: Face matching confidence score
+        overall_confidence:
+          type: number
+          format: float
+          description: Overall confidence score
+        ai_provider:
+          type: string
+          description: AI service provider used
+        processing_time:
+          type: number
+          format: float
+          description: Processing time in seconds
+        extracted_data:
+          type: object
+          description: Extracted data from ID document
+      required:
+        - id_validation
+        - liveness_detected
+        - face_match_score
+        - overall_confidence
+        - ai_provider
+        - processing_time
+
+tags:
+  - name: verification
+    description: User verification operations
+  - name: admin
+    description: Admin verification operations

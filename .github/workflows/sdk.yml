@@ -1,0 +1,457 @@
+# Enhanced SDK Generation Workflow - Config-Driven
+
+name: Generate and Release SDKs
+
+on:
+  workflow_run:
+    workflows:
+      - Deploy All Staging API Gateways
+      - Deploy All Production API Gateways
+    types:
+      - completed
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment for SDK generation'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      force_release:
+        description: 'Force SDK release even if no changes'
+        required: false
+        default: false
+        type: boolean
+      snapshot_type:
+        description: 'Type of snapshot release'
+        required: false
+        default: 'auto'
+        type: choice
+        options:
+          - auto
+          - dev-snapshot
+          - staging-snapshot
+
+concurrency:
+  group: sdk-release-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  generate-and-release-sdks:
+    runs-on: ubuntu-latest
+    # Only run if the triggering workflow succeeded
+    if: github.event.workflow_run.conclusion == 'success'
+    
+    steps:
+      - name: Checkout api-specs repo
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Set up Java (for openapi-generator)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install OpenAPI Generator CLI
+        run: npm install @openapitools/openapi-generator-cli -g
+
+      - name: Determine environment and SDK reference
+        id: sdk-env
+        run: |
+          if [[ "${{ github.event_name }}" == "push" ]] && [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            # Production release from tag
+            ENVIRONMENT="production"
+            SDK_REF="${GITHUB_REF#refs/tags/}"
+            RELEASE_TYPE="production"
+            IS_PRERELEASE="false"
+          elif [[ "${{ github.event_name }}" == "push" ]] && [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            # Pre-release snapshot from main branch for ongoing dev
+            ENVIRONMENT="staging"
+            TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+            COMMIT_SHORT=$(echo "${{ github.sha }}" | cut -c1-7)
+            SDK_REF="snapshot-dev-${TIMESTAMP}-${COMMIT_SHORT}"
+            RELEASE_TYPE="dev-snapshot"
+            IS_PRERELEASE="true"
+          elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            ENVIRONMENT="${{ github.event.inputs.environment }}"
+            SNAPSHOT_TYPE="${{ github.event.inputs.snapshot_type }}"
+            
+            if [[ "$ENVIRONMENT" == "production" ]]; then
+              SDK_REF="v$(date +%Y.%m.%d)-manual-prod"
+              RELEASE_TYPE="manual-production"
+              IS_PRERELEASE="false"
+            elif [[ "$SNAPSHOT_TYPE" == "dev-snapshot" ]]; then
+              TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+              COMMIT_SHORT=$(echo "${{ github.sha }}" | cut -c1-7)
+              SDK_REF="snapshot-dev-${TIMESTAMP}-${COMMIT_SHORT}"
+              RELEASE_TYPE="dev-snapshot"
+              IS_PRERELEASE="true"
+            elif [[ "$SNAPSHOT_TYPE" == "staging-snapshot" ]]; then
+              SDK_REF="v$(date +%Y.%m.%d)-staging-$(date +%H%M)"
+              RELEASE_TYPE="staging-snapshot"
+              IS_PRERELEASE="true"
+            else
+              SDK_REF="v$(date +%Y.%m.%d)-staging-$(date +%H%M)"
+              RELEASE_TYPE="manual-staging"
+              IS_PRERELEASE="false"
+            fi
+          else
+            # Fallback for other events
+            ENVIRONMENT="staging"
+            SDK_REF="snapshot-$(date +%Y%m%d-%H%M%S)"
+            RELEASE_TYPE="snapshot"
+            IS_PRERELEASE="true"
+          fi
+          
+          echo "ENVIRONMENT=$ENVIRONMENT" >> $GITHUB_ENV
+          echo "SDK_REF=$SDK_REF" >> $GITHUB_ENV
+          echo "RELEASE_TYPE=$RELEASE_TYPE" >> $GITHUB_ENV
+          echo "IS_PRERELEASE=$IS_PRERELEASE" >> $GITHUB_ENV
+          
+          echo "🚀 SDK Generation Details:"
+          echo "Environment: $ENVIRONMENT"
+          echo "SDK Reference: $SDK_REF"
+          echo "Release Type: $RELEASE_TYPE"
+          echo "Is Pre-release: $IS_PRERELEASE"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate gateway specs with validation
+        run: npm run gateway
+
+      - name: Parse SDK configuration from config.json
+        id: parse-config
+        run: |
+          # Extract SDK configuration and create environment variables
+          echo "📋 Reading SDK configuration from gateway/config.json..."
+          
+          # Check if sdkSettings exists
+          if ! jq -e '.sdkSettings' gateway/config.json >/dev/null; then
+            echo "❌ No sdkSettings found in config.json"
+            exit 1
+          fi
+          
+          # Get repository URL
+          SDK_REPO_URL=$(jq -r '.sdkSettings.repositoryUrl' gateway/config.json)
+          echo "SDK_REPO_URL=$SDK_REPO_URL" >> $GITHUB_ENV
+          
+          # Parse enabled gateways and their SDK configs
+          ENABLED_GATEWAYS=$(jq -r '[.gateways | to_entries[] | select(.value.sdkConfig.enabled == true) | .key] | join(",")' gateway/config.json)
+          echo "ENABLED_GATEWAYS=$ENABLED_GATEWAYS" >> $GITHUB_ENV
+          
+          echo "🔧 SDK Configuration:"
+          echo "Repository: $SDK_REPO_URL"
+          echo "Enabled Gateways: $ENABLED_GATEWAYS"
+          
+          # Create detailed configuration for each gateway
+          echo "Gateway SDK Configurations:" >> $GITHUB_STEP_SUMMARY
+          jq -r '.gateways | to_entries[] | select(.value.sdkConfig.enabled == true) | "- **\(.key)**: \(.value.sdkConfig.targets | join(", ")) for \(.value.sdkConfig.platforms | join(", "))"' gateway/config.json >> $GITHUB_STEP_SUMMARY
+
+      - name: Generate SDKs for each configured gateway
+        run: |
+          # Clean output directories to avoid stale files
+          rm -rf openapi-dart-sdk openapi-typescript-sdk
+          
+          # Read the enabled gateways
+          IFS=',' read -ra GATEWAYS <<< "$ENABLED_GATEWAYS"
+          
+          for gateway in "${GATEWAYS[@]}"; do
+            if [[ -z "$gateway" ]]; then continue; fi
+            
+            echo "🔨 Processing gateway: $gateway"
+            
+            # Check if gateway spec exists
+            SPEC_FILE="gateway/${gateway}.yaml"
+            if [[ ! -f "$SPEC_FILE" ]]; then
+              echo "⚠️  Warning: Spec file $SPEC_FILE not found, skipping..."
+              continue
+            fi
+            
+            # Get SDK targets for this gateway
+            TARGETS=$(jq -r --arg gw "$gateway" '.gateways[$gw].sdkConfig.targets[]' gateway/config.json)
+            
+            for target in $TARGETS; do
+              echo "  📦 Generating $target SDK for $gateway..."
+              
+              # Get generator configuration
+              GENERATOR=$(jq -r --arg target "$target" '.sdkSettings.generators[$target].generator' gateway/config.json)
+              OUTPUT_PATH=$(jq -r --arg target "$target" '.sdkSettings.outputPaths[$target]' gateway/config.json)
+              
+              # Create output directory
+              mkdir -p "$OUTPUT_PATH/$gateway"
+              
+              # Generate SDK
+              npx @openapitools/openapi-generator-cli generate \
+                -i "$SPEC_FILE" \
+                -g "$GENERATOR" \
+                -o "$OUTPUT_PATH/$gateway" \
+                --skip-validate-spec \
+                --additional-properties="packageName=${gateway}_sdk,packageVersion=$SDK_REF"
+              
+              echo "  ✅ Generated $target SDK for $gateway in $OUTPUT_PATH/$gateway"
+            done
+          done
+
+      - name: Validate generated SDKs
+        run: |
+          echo "🔍 Validating generated SDKs..."
+          
+          # Check if any SDKs were generated
+          if [[ ! -d "openapi-dart-sdk" ]] && [[ ! -d "openapi-typescript-sdk" ]]; then
+            echo "❌ No SDKs were generated!"
+            exit 1
+          fi
+          
+          # List generated SDKs
+          echo "Generated SDK structure:" >> $GITHUB_STEP_SUMMARY
+          if [[ -d "openapi-dart-sdk" ]]; then
+            echo "### Dart SDKs" >> $GITHUB_STEP_SUMMARY
+            find openapi-dart-sdk -maxdepth 2 -type d | sed 's/^/- /' >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [[ -d "openapi-typescript-sdk" ]]; then
+            echo "### TypeScript SDKs" >> $GITHUB_STEP_SUMMARY
+            find openapi-typescript-sdk -maxdepth 2 -type d | sed 's/^/- /' >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Clone SDK repository and prepare release
+        env:
+          GH_TOKEN: ${{ secrets.SDK_PUSH_TOKEN }}
+        run: |
+          echo "📥 Cloning SDK repository..."
+          git clone https://x-access-token:${GH_TOKEN}@${SDK_REPO_URL#https://} sdk-repo
+          cd sdk-repo
+          
+          # Create or checkout SDK branch
+          git checkout $SDK_REF 2>/dev/null || git checkout -b $SDK_REF
+          
+          # Copy generated SDKs
+          if [[ -d "../openapi-dart-sdk" ]]; then
+            cp -r ../openapi-dart-sdk/* .
+          fi
+          if [[ -d "../openapi-typescript-sdk" ]]; then
+            cp -r ../openapi-typescript-sdk/* .
+          fi
+          
+          # Stage changes
+          git add .
+          
+          # Check if there are changes to commit
+          if git diff --staged --quiet; then
+            if [[ "${{ github.event.inputs.force_release }}" == "true" ]]; then
+              echo "No changes detected, but forcing release..."
+              # Create empty commit to force release
+              git commit --allow-empty -m "chore: force SDK release $SDK_REF [skip ci]"
+            else
+              echo "No SDK changes to commit."
+              echo "SDK_CHANGES=false" >> $GITHUB_ENV
+              exit 0
+            fi
+          else
+            echo "SDK_CHANGES=true" >> $GITHUB_ENV
+          fi
+
+      - name: Commit and push SDK changes
+        if: env.SDK_CHANGES == 'true' || github.event.inputs.force_release == 'true'
+        run: |
+          cd sdk-repo
+          
+          # Configure git
+          git config user.name "GitHub Actions SDK Bot"
+          git config user.email "sdk-bot@inspiredtech.com"
+          
+          # Create commit message with details
+          COMMIT_MSG="chore: release SDKs $SDK_REF for $ENVIRONMENT
+          
+          Environment: $ENVIRONMENT
+          Release Type: $RELEASE_TYPE
+          Generated for: $ENABLED_GATEWAYS
+          Source Commit: $GITHUB_SHA
+          
+          [skip ci]"
+          
+          # Commit if not already done
+          if ! git diff --staged --quiet; then
+            git commit -m "$COMMIT_MSG"
+          fi
+          
+          # Push changes
+          git push --set-upstream origin $SDK_REF
+
+      - name: Create GitHub release (for production and pre-releases)
+        if: success() && (env.RELEASE_TYPE == 'production' || env.IS_PRERELEASE == 'true')
+        env:
+          GH_TOKEN: ${{ secrets.SDK_PUSH_TOKEN }}
+        run: |
+          cd sdk-repo
+          
+          # Create release notes based on release type
+          if [[ "$RELEASE_TYPE" == "production" ]]; then
+            RELEASE_TITLE="🚀 SDK Release $SDK_REF"
+            RELEASE_NOTES="## SDK Release $SDK_REF
+
+            ### Generated SDKs
+
+            Generated SDKs for configured gateways based on config.json
+
+            ### Usage
+
+            #### Flutter/Dart
+            \`\`\`yaml
+            dependencies:
+              project_x_sdk:
+                git:
+                  url: $SDK_REPO_URL
+                  path: openapi-dart-sdk/<gateway-name>
+                  ref: $SDK_REF
+            \`\`\`
+
+            #### React/TypeScript
+            \`\`\`bash
+            npm install github:inspiredtechinc/sdk#$SDK_REF:openapi-typescript-sdk/<gateway-name>
+            \`\`\`
+
+            ### Source
+            - **API Specs Repository**: ${{ github.repository }}
+            - **Source Commit**: ${{ github.sha }}
+            - **Environment**: $ENVIRONMENT"
+          else
+            # Pre-release/snapshot notes
+            RELEASE_TITLE="🔄 SDK Pre-release $SDK_REF"
+            RELEASE_NOTES="## SDK Pre-release $SDK_REF
+
+            ### ⚠️ Development Snapshot
+            
+            This is a **pre-release version** intended for ongoing development and testing.
+            - **Not recommended for production use**
+            - **API may change without notice**
+            - **Use for development and testing only**
+
+            ### Generated SDKs
+
+            Generated SDKs for configured gateways based on config.json
+
+            ### Usage (Development)
+
+            #### Flutter/Dart
+            \`\`\`yaml
+            dependencies:
+              project_x_sdk:
+                git:
+                  url: $SDK_REPO_URL
+                  path: openapi-dart-sdk/<gateway-name>
+                  ref: $SDK_REF
+            \`\`\`
+
+            #### React/TypeScript
+            \`\`\`bash
+            npm install github:inspiredtechinc/sdk#$SDK_REF:openapi-typescript-sdk/<gateway-name>
+            \`\`\`
+
+            ### Source
+            - **API Specs Repository**: ${{ github.repository }}
+            - **Source Commit**: ${{ github.sha }}
+            - **Environment**: $ENVIRONMENT
+            - **Release Type**: $RELEASE_TYPE"
+          fi
+
+          # Create GitHub release with appropriate flags
+          if [[ "$IS_PRERELEASE" == "true" ]]; then
+            gh release create "$SDK_REF" \
+              --title "$RELEASE_TITLE" \
+              --notes "$RELEASE_NOTES" \
+              --prerelease \
+              --repo inspiredtechinc/sdk
+          else
+            gh release create "$SDK_REF" \
+              --title "$RELEASE_TITLE" \
+              --notes "$RELEASE_NOTES" \
+              --repo inspiredtechinc/sdk
+          fi
+
+      - name: Generate usage documentation
+        if: env.SDK_CHANGES == 'true' || github.event.inputs.force_release == 'true'
+        run: |
+          echo "## 📚 SDK Usage Instructions" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Add pre-release warning if applicable
+          if [[ "$IS_PRERELEASE" == "true" ]]; then
+            echo "### ⚠️ Pre-release Version" >> $GITHUB_STEP_SUMMARY
+            echo "This is a **development snapshot** - use for testing only!" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Flutter/Dart usage
+          if [[ -d "openapi-dart-sdk" ]]; then
+            echo "### Flutter/Dart SDKs" >> $GITHUB_STEP_SUMMARY
+            echo "Add to your pubspec.yaml:" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "dependencies:" >> $GITHUB_STEP_SUMMARY
+            find openapi-dart-sdk -maxdepth 1 -type d -not -path openapi-dart-sdk | while read dir; do
+              gateway=$(basename "$dir")
+              echo "  ${gateway}_sdk:" >> $GITHUB_STEP_SUMMARY
+              echo "    git:" >> $GITHUB_STEP_SUMMARY
+              echo "      url: $SDK_REPO_URL" >> $GITHUB_STEP_SUMMARY
+              echo "      path: openapi-dart-sdk/$gateway" >> $GITHUB_STEP_SUMMARY
+              echo "      ref: $SDK_REF" >> $GITHUB_STEP_SUMMARY
+            done
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # TypeScript usage
+          if [[ -d "openapi-typescript-sdk" ]]; then
+            echo "### React/TypeScript SDKs" >> $GITHUB_STEP_SUMMARY
+            echo "Install with npm:" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            find openapi-typescript-sdk -maxdepth 1 -type d -not -path openapi-typescript-sdk | while read dir; do
+              gateway=$(basename "$dir")
+              echo "npm install github:inspiredtechinc/sdk#$SDK_REF:openapi-typescript-sdk/$gateway" >> $GITHUB_STEP_SUMMARY
+            done
+          fi
+          
+          # Add version guidance
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Version Guide" >> $GITHUB_STEP_SUMMARY
+          echo "- **Production**: Use tagged versions (v1.0.0, v1.1.0, etc.)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Development**: Use snapshot versions (snapshot-dev-* for latest changes)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Staging**: Use staging snapshots (v*-staging-* for testing)" >> $GITHUB_STEP_SUMMARY
+
+      - name: Notify team on Slack
+        if: success() && (env.SDK_CHANGES == 'true' || github.event.inputs.force_release == 'true')
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_SDK_RELEASE_WEBHOOK_URL }}
+        run: |
+          STATUS="${{ job.status }}"
+          COLOR="#36a64f"
+          if [ "$STATUS" = "failure" ]; then
+            COLOR="#ff0000"
+          elif [ "$STATUS" = "cancelled" ]; then
+            COLOR="#cccccc"
+          fi
+          
+          # Adjust color and title for pre-releases
+          TITLE_PREFIX="🚀"
+          if [[ "$IS_PRERELEASE" == "true" ]]; then
+            TITLE_PREFIX="🔄"
+            if [[ "$COLOR" == "#36a64f" ]]; then
+              COLOR="#ffaa00"  # Orange for pre-releases
+            fi
+          fi
+          
+          # Create JSON payload
+          PAYLOAD="{\"attachments\":[{\"color\":\"$COLOR\",\"title\":\"$TITLE_PREFIX SDK Release: $SDK_REF\",\"fields\":[{\"title\":\"Environment\",\"value\":\"$ENVIRONMENT\",\"short\":true},{\"title\":\"Release Type\",\"value\":\"$RELEASE_TYPE\",\"short\":true},{\"title\":\"Pre-release\",\"value\":\"$IS_PRERELEASE\",\"short\":true},{\"title\":\"Gateways\",\"value\":\"$ENABLED_GATEWAYS\",\"short\":true},{\"title\":\"Status\",\"value\":\"$STATUS\",\"short\":true},{\"title\":\"Repository\",\"value\":\"${{ github.repository }}\",\"short\":false},{\"title\":\"Workflow Run\",\"value\":\"<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Details>\",\"short\":false}]}]}"
+          
+          curl -X POST -H 'Content-type: application/json' --data "$PAYLOAD" "$SLACK_WEBHOOK_URL"

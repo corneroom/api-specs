@@ -1,0 +1,6618 @@
+swagger: '2.0'
+info:
+  description: API Gateway for admin dashboard endpoints
+  license:
+    name: MIT
+    url: 'https://opensource.org/licenses/MIT'
+  title: Dashboard API Gateway
+  version: 1.0.0
+host: dashboard-staging-gateway-8ua0taf7.uc.gateway.dev
+basePath: /api/v1
+schemes:
+  - https
+paths:
+  /dashboard/analytics/booking:
+    get:
+      produces:
+        - application/json
+      parameters:
+        - description: Start date for analytics range (YYYY-MM-DD)
+          format: date
+          in: query
+          name: start_date
+          required: false
+          type: string
+        - description: End date for analytics range (YYYY-MM-DD)
+          format: date
+          in: query
+          name: end_date
+          required: false
+          type: string
+        - description: 'Aggregation granularity (daily, weekly, monthly)'
+          enum:
+            - daily
+            - weekly
+            - monthly
+          in: query
+          name: granularity
+          required: false
+          type: string
+      responses:
+        '200':
+          description: Booking analytics data
+          schema:
+            $ref: '#/definitions/BookingAnalyticsResponse'
+        '400':
+          description: Bad request
+      security:
+        - jwtAuth: []
+      tags:
+        - analytics
+      description: >-
+        Retrieve detailed booking analytics including time-series, breakdowns,
+        and user metrics.
+      operationId: getBookingAnalytics
+      summary: Get booking analytics
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/analytics/listing:
+    get:
+      produces:
+        - application/json
+      parameters:
+        - description: Start date for analytics range (YYYY-MM-DD)
+          format: date
+          in: query
+          name: start_date
+          required: false
+          type: string
+        - description: End date for analytics range (YYYY-MM-DD)
+          format: date
+          in: query
+          name: end_date
+          required: false
+          type: string
+        - description: 'Filter by listing category (e.g., Sleep, Work)'
+          in: query
+          name: category
+          required: false
+          type: string
+        - description: 'Data granularity (daily, weekly, monthly)'
+          enum:
+            - daily
+            - weekly
+            - monthly
+          in: query
+          name: granularity
+          required: false
+          type: string
+      responses:
+        '200':
+          description: Listing analytics data
+          schema:
+            $ref: '#/definitions/ListingAnalyticsResponse'
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/Error400Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - analytics
+      description: >-
+        Retrieve analytics data for listings, including total listings,
+        conversion rates, and user engagement.
+      operationId: getListingAnalytics
+      summary: Get listing analytics.
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/analytics/overview:
+    get:
+      produces:
+        - application/json
+      parameters: []
+      responses:
+        '200':
+          description: Overview metrics data
+          schema:
+            $ref: '#/definitions/OverviewMetricsResponse'
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/Error400Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - analytics
+      description: >-
+        Retrieve platform overview metrics including users, listings, bookings,
+        and reviews.
+      operationId: getOverviewMetrics
+      summary: Get overview metrics
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/analytics/summary:
+    get:
+      produces:
+        - application/json
+      parameters: []
+      responses:
+        '200':
+          description: Platform analytics summary
+          schema:
+            $ref: '#/definitions/AnalyticsSummaryResponse'
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/Error400Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - analytics
+      description: >-
+        Retrieve comprehensive platform analytics including user engagement,
+        session duration, and conversion rates.
+      operationId: getAnalyticsSummary
+      summary: Get platform analytics summary.
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/audit-logs:
+    get:
+      parameters:
+        - in: query
+          name: query
+          type: string
+        - default: 1
+          in: query
+          name: page
+          type: integer
+        - default: 20
+          in: query
+          name: limit
+          type: integer
+      responses:
+        '200':
+          description: List of audit logs
+        '400':
+          description: Bad request
+      security:
+        - jwtAuth: []
+      tags:
+        - dashboard
+      description: Retrieve a list of admin or audit logs.
+      operationId: listAuditLogs
+      summary: List admin/audit logs
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/auth/login/email:
+    post:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          required: false
+          schema:
+            properties:
+              email:
+                format: email
+                type: string
+              password:
+                format: password
+                type: string
+            required:
+              - email
+              - password
+            type: object
+      responses:
+        '200':
+          description: Authenticated User | token will be stored in the cookies
+          schema:
+            properties:
+              status:
+                example: ok
+                type: string
+              user:
+                $ref: '#/definitions/UserSummary'
+            type: object
+        '400':
+          description: Invalid body
+          schema:
+            $ref: '#/definitions/Error400Response'
+      security: []
+      tags:
+        - auth
+      description: Authenticate user by email and password
+      operationId: loginByEmail
+      summary: Login by email
+      x-codegen-request-body-name: body
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/auth/logout:
+    post:
+      produces:
+        - application/json
+      parameters: []
+      responses:
+        '200':
+          description: Logout successful
+          schema:
+            properties:
+              message:
+                example: User logged out successfully
+                type: string
+              status:
+                example: ok
+                type: string
+            type: object
+        '400':
+          description: Invalid body
+          schema:
+            $ref: '#/definitions/Error400Response'
+      security: []
+      tags:
+        - auth
+      description: Logout the current user and clear session
+      operationId: logoutUser
+      summary: Logout the current user
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/auth/session:
+    get:
+      produces:
+        - application/json
+      parameters: []
+      responses:
+        '200':
+          description: Authenticated User | Validate user by token in the cookies
+          schema:
+            properties:
+              status:
+                example: ok
+                type: string
+              user:
+                $ref: '#/definitions/UserSummary'
+            type: object
+        '400':
+          description: Invalid body
+          schema:
+            $ref: '#/definitions/Error400Response'
+      security: []
+      tags:
+        - auth
+      description: Validate user by token in the cookies
+      operationId: getCurrentUserSession
+      summary: Get current sessions
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/bookings:
+    get:
+      produces:
+        - application/json
+      parameters:
+        - default: 1
+          description: Page number
+          in: query
+          minimum: 0
+          name: page
+          type: integer
+        - default: 10
+          description: Results per page
+          in: query
+          minimum: 0
+          name: limit
+          type: integer
+        - description: 'Search query (host, guest, id, etc)'
+          in: query
+          name: query
+          type: string
+        - description: Filter by booking status
+          enum:
+            - completed
+            - flagged
+            - cancelled
+            - pending
+            - accepted
+          in: query
+          name: status
+          type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            properties:
+              bookings:
+                items:
+                  $ref: '#/definitions/BookingSummary'
+                type: array
+              limit:
+                example: 10
+                type: integer
+              page:
+                example: 1
+                type: integer
+              pages:
+                example: 1
+                type: integer
+              status:
+                example: ok
+                type: string
+              total:
+                example: 2
+                type: integer
+            type: object
+        '400':
+          description: Bad request
+      security:
+        - jwtAuth: []
+      tags:
+        - booking
+      description: Retrieve a list of bookings with optional search and filter parameters.
+      operationId: getBookings
+      summary: List/search bookings
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/bookings/{id}':
+    delete:
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+      responses:
+        '204':
+          description: Booking deleted
+        '400':
+          description: Bad request
+      security:
+        - jwtAuth: []
+      tags:
+        - booking
+      description: Delete a booking by ID (admin only).
+      operationId: deleteBookingById
+      summary: Delete booking (admin)
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+    get:
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            properties:
+              booking:
+                $ref: '#/definitions/Booking'
+              status:
+                example: ok
+                type: string
+            type: object
+        '404':
+          description: Booking not found
+      security:
+        - jwtAuth: []
+      tags:
+        - booking
+      description: Retrieve detailed information about a specific booking by ID.
+      operationId: getBookingById
+      summary: Get booking detail
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+    patch:
+      consumes:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/BookingAdminUpdateRequest'
+      responses:
+        '200':
+          description: Booking updated
+        '400':
+          description: Bad request
+      security:
+        - jwtAuth: []
+      tags:
+        - booking
+      description: Update booking details by ID (admin only).
+      operationId: updateBookingById
+      summary: Update booking (admin)
+      x-codegen-request-body-name: booking
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+    put:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            properties:
+              amount:
+                format: float
+                type: number
+              check_in:
+                format: date-time
+                type: string
+              check_out:
+                format: date-time
+                type: string
+              guests:
+                type: integer
+              reason:
+                type: string
+              status:
+                enum:
+                  - pending
+                  - accepted
+                  - cancelled
+                  - completed
+                  - flagged
+                type: string
+            type: object
+      responses:
+        '200':
+          description: Booking updated successfully
+          schema:
+            properties:
+              booking:
+                $ref: '#/definitions/Booking'
+              message:
+                example: Booking updated successfully
+                type: string
+              status:
+                example: ok
+                type: string
+            type: object
+        '400':
+          description: Bad request (invalid input)
+          schema:
+            $ref: '#/definitions/Error400Response'
+        '404':
+          description: Booking not found
+          schema:
+            $ref: '#/definitions/Error404Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - booking
+      description: >-
+        Fully update booking details by ID (admin only). All allowed fields will
+        be overwritten.
+      operationId: putBookingById
+      summary: 'Update booking details (full update, admin)'
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/bookings/{id}/export':
+    get:
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Booking data export
+        '400':
+          description: Bad request
+      security:
+        - jwtAuth: []
+      tags:
+        - booking
+      description: Export all data related to a booking.
+      operationId: exportBookingData
+      summary: Export booking data
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/bookings/{id}/refund':
+    post:
+      consumes:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            properties:
+              amount:
+                format: float
+                type: number
+              reason:
+                type: string
+            type: object
+      responses:
+        '200':
+          description: Refund processed
+        '400':
+          description: Bad request
+      security:
+        - jwtAuth: []
+      tags:
+        - booking
+      description: Process a refund for a booking.
+      operationId: refundBooking
+      summary: Refund booking
+      x-codegen-request-body-name: refund
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/community/analytics/content/{id}':
+    get:
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+        - default: week
+          enum:
+            - day
+            - week
+            - month
+            - year
+          in: query
+          name: period
+          type: string
+      responses:
+        '200':
+          description: Content performance analytics
+          schema:
+            $ref: '#/definitions/ContentAnalyticsResponse'
+        '404':
+          description: Content not found
+          schema:
+            $ref: '#/definitions/Error404Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - community
+      description: Retrieve detailed analytics for specific content (admin only)
+      operationId: getContentAnalytics
+      summary: Get content performance analytics
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/community/analytics/overview:
+    get:
+      produces:
+        - application/json
+      parameters:
+        - format: date-time
+          in: query
+          name: date_from
+          type: string
+        - format: date-time
+          in: query
+          name: date_to
+          type: string
+        - default: week
+          enum:
+            - day
+            - week
+            - month
+            - year
+          in: query
+          name: period
+          type: string
+      responses:
+        '200':
+          description: Community analytics overview
+          schema:
+            $ref: '#/definitions/CommunityAnalyticsResponse'
+        '400':
+          description: Invalid request parameters
+          schema:
+            $ref: '#/definitions/Error400Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - community
+      description: Retrieve community content analytics and metrics (admin only)
+      operationId: getCommunityAnalytics
+      summary: Get community analytics overview
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/community/content:
+    get:
+      produces:
+        - application/json
+      parameters:
+        - default: 1
+          in: query
+          name: page
+          type: integer
+        - default: 20
+          in: query
+          name: limit
+          type: integer
+        - default: all
+          enum:
+            - story
+            - reel
+            - all
+          in: query
+          name: content_type
+          type: string
+        - enum:
+            - active
+            - featured
+            - trending
+            - suspended
+          in: query
+          name: status
+          type: string
+        - in: query
+          name: featured
+          type: boolean
+        - in: query
+          name: trending
+          type: boolean
+        - in: query
+          name: user_id
+          type: string
+        - format: date-time
+          in: query
+          name: date_from
+          type: string
+        - format: date-time
+          in: query
+          name: date_to
+          type: string
+        - default: created_at
+          enum:
+            - created_at
+            - views
+            - likes
+            - featured_at
+          in: query
+          name: sort_by
+          type: string
+        - default: desc
+          enum:
+            - asc
+            - desc
+          in: query
+          name: sort_order
+          type: string
+      responses:
+        '200':
+          description: List of community content
+          schema:
+            $ref: '#/definitions/CommunityContentListResponse'
+        '400':
+          description: Invalid request parameters
+          schema:
+            $ref: '#/definitions/Error400Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - community
+      description: >-
+        Retrieve all community content with filtering and pagination (admin
+        only)
+      operationId: listCommunityContent
+      summary: List all community content
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/community/content/bulk-featured:
+    post:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/BulkFeaturedRequest'
+      responses:
+        '200':
+          description: Bulk featured operations completed
+          schema:
+            $ref: '#/definitions/BulkFeaturedResponse'
+        '400':
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/Error400Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - community
+      description: >-
+        Set multiple content items as featured or remove featured status (admin
+        only)
+      operationId: bulkFeaturedContent
+      summary: Bulk featured content operations
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/community/content/{id}':
+    delete:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+        - in: body
+          name: body
+          required: false
+          schema:
+            $ref: '#/definitions/DeleteContentRequest'
+      responses:
+        '204':
+          description: Content deleted successfully
+        '400':
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/Error400Response'
+        '404':
+          description: Content not found
+          schema:
+            $ref: '#/definitions/Error404Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - community
+      description: Delete community content (admin only)
+      operationId: deleteCommunityContent
+      summary: Delete community content
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+    get:
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Community content details
+          schema:
+            $ref: '#/definitions/CommunityContentResponse'
+        '404':
+          description: Content not found
+          schema:
+            $ref: '#/definitions/Error404Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - community
+      description: >-
+        Retrieve detailed information about specific community content (admin
+        only)
+      operationId: getCommunityContent
+      summary: Get community content details
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/community/featured/queue:
+    get:
+      produces:
+        - application/json
+      parameters:
+        - default: 50
+          in: query
+          name: limit
+          type: integer
+        - default: all
+          enum:
+            - story
+            - reel
+            - all
+          in: query
+          name: content_type
+          type: string
+      responses:
+        '200':
+          description: Featured content queue
+          schema:
+            $ref: '#/definitions/FeaturedQueueResponse'
+        '400':
+          description: Invalid request parameters
+          schema:
+            $ref: '#/definitions/Error400Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - community
+      description: >-
+        Retrieve current featured content queue with priority management (admin
+        only)
+      operationId: getFeaturedQueue
+      summary: Get featured content queue
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/community/reels/{id}/featured':
+    put:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/SetFeaturedRequest'
+      responses:
+        '200':
+          description: Reel featured status updated
+          schema:
+            $ref: '#/definitions/ReelResponse'
+        '400':
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/Error400Response'
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/Error400Response'
+        '404':
+          description: Reel not found
+          schema:
+            $ref: '#/definitions/Error404Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - community
+      description: Mark a reel as featured or remove featured status (admin only)
+      operationId: setReelFeatured
+      summary: Set reel as featured
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/community/stories/{id}/featured':
+    put:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/SetFeaturedRequest'
+      responses:
+        '200':
+          description: Story featured status updated
+          schema:
+            $ref: '#/definitions/StoryResponse'
+        '400':
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/Error400Response'
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/Error400Response'
+        '404':
+          description: Story not found
+          schema:
+            $ref: '#/definitions/Error404Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - community
+      description: Mark a story as featured or remove featured status (admin only)
+      operationId: setStoryFeatured
+      summary: Set story as featured
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/community/users/{userId}/content':
+    get:
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          type: string
+        - default: 1
+          in: query
+          name: page
+          type: integer
+        - default: 20
+          in: query
+          name: limit
+          type: integer
+        - default: all
+          enum:
+            - story
+            - reel
+            - all
+          in: query
+          name: content_type
+          type: string
+        - enum:
+            - active
+            - featured
+            - trending
+            - suspended
+          in: query
+          name: status
+          type: string
+      responses:
+        '200':
+          description: User's content list
+          schema:
+            $ref: '#/definitions/UserContentListResponse'
+        '400':
+          description: Invalid request parameters
+          schema:
+            $ref: '#/definitions/Error400Response'
+        '404':
+          description: User not found
+          schema:
+            $ref: '#/definitions/Error404Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - community
+      description: Retrieve all content created by a specific user (admin only)
+      operationId: getUserContent
+      summary: Get user's content
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/community/users/{userId}/suspend':
+    put:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/SuspendUserRequest'
+      responses:
+        '200':
+          description: User suspension updated
+          schema:
+            $ref: '#/definitions/UserSuspensionResponse'
+        '400':
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/Error400Response'
+        '404':
+          description: User not found
+          schema:
+            $ref: '#/definitions/Error404Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - community
+      description: Temporarily disable content creation for a user (admin only)
+      operationId: suspendUserContent
+      summary: Suspend user content creation
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/config/maps:
+    get:
+      produces:
+        - application/json
+      parameters: []
+      responses:
+        '200':
+          description: Maps configuration data
+          schema:
+            $ref: '#/definitions/MapsConfigResponse'
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/Error400Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - config
+      description: Retrieve maps configuration settings for the dashboard.
+      operationId: getMapsConfig
+      summary: Get maps configuration
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/documents:
+    get:
+      parameters:
+        - in: query
+          name: query
+          type: string
+        - in: query
+          name: status
+          type: string
+        - default: 1
+          in: query
+          name: page
+          type: integer
+        - default: 20
+          in: query
+          name: limit
+          type: integer
+      responses:
+        '200':
+          description: List of documents
+        '400':
+          description: Bad request
+      security:
+        - jwtAuth: []
+      tags:
+        - dashboard
+      description: Retrieve a list of documents for KYC or verification.
+      operationId: listDocuments
+      summary: 'List/search documents (KYC, verification)'
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/documents/{id}/export':
+    get:
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Document data export
+        '400':
+          description: Bad request
+      security:
+        - jwtAuth: []
+      tags:
+        - dashboard
+      description: Export all data related to a document.
+      operationId: exportDocumentData
+      summary: Export document data
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/documents/{id}/verify':
+    post:
+      consumes:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            properties:
+              action:
+                enum:
+                  - approve
+                  - reject
+                type: string
+              reason:
+                type: string
+            type: object
+      responses:
+        '200':
+          description: Verification result
+        '400':
+          description: Bad request
+      security:
+        - jwtAuth: []
+      tags:
+        - dashboard
+      description: Approve or reject a document for KYC verification.
+      operationId: verifyDocument
+      summary: Verify document (KYC)
+      x-codegen-request-body-name: action
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/feedback:
+    get:
+      produces:
+        - application/json
+      parameters:
+        - description: Filter by user ID or email
+          in: query
+          name: user
+          type: string
+        - description: Filter by feedback status
+          in: query
+          name: status
+          type: string
+        - description: Filter by feedback type
+          enum:
+            - suggestion
+            - bug
+            - feedback
+          in: query
+          name: type
+          type: string
+        - default: 1
+          description: Page number
+          in: query
+          minimum: 0
+          name: page
+          type: integer
+        - default: 10
+          description: Results per page
+          in: query
+          minimum: 0
+          name: limit
+          type: integer
+        - description: 'Search query (e.g., created_at)'
+          in: query
+          name: query
+          type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            properties:
+              feedback:
+                items:
+                  $ref: '#/definitions/FeedbackResponse'
+                type: array
+              limit:
+                type: integer
+              page:
+                type: integer
+              pages:
+                type: integer
+              status:
+                example: ok
+                type: string
+              total:
+                type: integer
+            type: object
+        '400':
+          description: Invalid query
+          schema:
+            $ref: '#/definitions/Error400Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - feedback
+      description: Retrieve a list of feedback with optional search and filter parameters.
+      operationId: getAllFeedback
+      summary: List/Search feedback
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+    post:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/FeedbackRequest'
+      responses:
+        '200':
+          description: Feedback submitted
+          schema:
+            $ref: '#/definitions/FeedbackResponse'
+        '400':
+          description: Bad request
+      security: []
+      tags:
+        - feedback
+      description: Submit feedback for the application.
+      operationId: submitAppFeedback
+      summary: Submit app feedback
+      x-codegen-request-body-name: body
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/financial/overview:
+    get:
+      produces:
+        - application/json
+      parameters: []
+      responses:
+        '200':
+          description: Financial overview data
+          schema:
+            $ref: '#/definitions/FinancialOverviewResponse'
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/Error400Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - financial
+      description: >-
+        Retrieve financial overview metrics including balance, income, expenses,
+        and projected revenue.
+      operationId: getFinancialOverview
+      summary: Get financial overview
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/financial/revenue-chart:
+    get:
+      produces:
+        - application/json
+      parameters: []
+      responses:
+        '200':
+          description: Weekly revenue chart data
+          schema:
+            $ref: '#/definitions/RevenueChartResponse'
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/Error400Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - financial
+      description: Retrieve weekly revenue data for chart visualization.
+      operationId: getWeeklyRevenueData
+      summary: Get weekly revenue chart data
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/financial/transactions:
+    get:
+      produces:
+        - application/json
+      parameters:
+        - default: 5
+          description: Number of transactions to retrieve
+          in: query
+          maximum: 100
+          minimum: 1
+          name: limit
+          required: false
+          type: integer
+      responses:
+        '200':
+          description: Recent transactions data
+          schema:
+            $ref: '#/definitions/TransactionsResponse'
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/Error400Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - financial
+      description: Retrieve recent financial transactions with pagination.
+      operationId: getRecentTransactions
+      summary: Get recent transactions
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/firebase/config:
+    get:
+      produces:
+        - application/json
+      parameters: []
+      responses:
+        '200':
+          description: Get firebase remote config
+          schema:
+            properties:
+              configs:
+                $ref: '#/definitions/FirebaseRemoteConfig'
+              status:
+                example: ok
+                type: string
+            type: object
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/Error400Response'
+      security: []
+      tags:
+        - firebase
+      description: Retrieve the current Firebase remote configuration.
+      operationId: getFirebaseConfig
+      summary: Get Firebase remote config
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+    post:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            properties:
+              configKey:
+                type: string
+              configValue:
+                properties: {}
+                type: object
+            type: object
+      responses:
+        '200':
+          description: Update a specific firebase remote config
+          schema:
+            properties:
+              parameters:
+                properties: {}
+                type: object
+              status:
+                example: ok
+                type: string
+            type: object
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/Error400Response'
+      security: []
+      tags:
+        - firebase
+      description: Create or update a Firebase remote configuration.
+      operationId: createFirebaseConfig
+      summary: Create Firebase remote config
+      x-codegen-request-body-name: body
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/firebase/config/{key}':
+    put:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - description: Config name
+          in: path
+          maxLength: 32
+          name: key
+          required: true
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            properties:
+              configValue:
+                properties: {}
+                type: object
+            type: object
+      responses:
+        '200':
+          description: Update a specific firebase remote config
+          schema:
+            properties:
+              parameters:
+                properties: {}
+                type: object
+              status:
+                example: ok
+                type: string
+            type: object
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/Error400Response'
+      security: []
+      tags:
+        - firebase
+      description: Update a specific Firebase remote configuration by key.
+      operationId: updateFirebaseConfig
+      summary: Update Firebase remote config
+      x-codegen-request-body-name: body
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/heartbeat:
+    get:
+      produces:
+        - application/json
+      parameters: []
+      responses:
+        '200':
+          description: Heartbeat
+          schema:
+            example: OK
+            type: string
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/Error400Response'
+      security: []
+      tags:
+        - heartbeat
+      description: Check the status of the dashboard service
+      operationId: heartbeat
+      summary: Dashboard service heartbeat
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/heartbeat/services:
+    get:
+      produces:
+        - application/json
+      parameters: []
+      responses:
+        '200':
+          description: Heartbeat
+          schema:
+            properties:
+              services:
+                items:
+                  properties:
+                    name:
+                      type: string
+                    path:
+                      type: string
+                    status:
+                      type: string
+                  type: object
+                type: array
+              status:
+                example: ok
+                type: string
+            type: object
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/Error400Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - heartbeat
+      description: Check the status of all backend services connected to the dashboard
+      operationId: allServicesHeartBeat
+      summary: Health check for all backend services
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/listings:
+    get:
+      produces:
+        - application/json
+      parameters:
+        - default: 1
+          description: Page number
+          in: query
+          minimum: 0
+          name: page
+          type: integer
+        - default: 10
+          description: Results per page
+          in: query
+          minimum: 0
+          name: limit
+          type: integer
+        - description: Search query
+          in: query
+          name: query
+          type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            properties:
+              listings:
+                items:
+                  $ref: '#/definitions/ListingSummary'
+                type: array
+              status:
+                example: ok
+                type: string
+            type: object
+        '400':
+          description: Bad request
+      security:
+        - jwtAuth: []
+      tags:
+        - listing
+      description: Retrieve a list of listings with optional search and filter parameters.
+      operationId: getListings
+      summary: List/Search listing
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/listings/{id}':
+    delete:
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+      responses:
+        '204':
+          description: Listing deleted
+        '400':
+          description: Bad request
+      security:
+        - jwtAuth: []
+      tags:
+        - listing
+      description: Delete a listing by ID (admin only).
+      operationId: deleteListingById
+      summary: Delete listing (admin)
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+    get:
+      produces:
+        - application/json
+      parameters:
+        - description: Listing ID
+          in: path
+          maxLength: 32
+          name: id
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            properties:
+              listing:
+                $ref: '#/definitions/Listing'
+              status:
+                example: ok
+                type: string
+            type: object
+        '400':
+          description: Invalid listing ID
+          schema:
+            $ref: '#/definitions/Error400Response'
+        '404':
+          description: Listing not found
+          schema:
+            $ref: '#/definitions/Error404Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - listing
+      description: Retrieve detailed information about a specific listing by ID.
+      operationId: getListingById
+      summary: Get a listing detail
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+    patch:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/ListingUpdateRequest'
+      responses:
+        '200':
+          description: Listing updated
+          schema:
+            properties:
+              listing:
+                $ref: '#/definitions/Listing'
+              status:
+                example: ok
+                type: string
+            type: object
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/Error400Response'
+        '404':
+          description: Listing not found
+          schema:
+            $ref: '#/definitions/Error404Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - listing
+      description: >-
+        Partially update listing details by ID. Accepts user or admin depending
+        on JWT role.
+      operationId: updateListingById
+      summary: Update listing (partial)
+      x-codegen-request-body-name: listing
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/listings/{id}/export':
+    get:
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Listing data export
+        '400':
+          description: Bad request
+      security:
+        - jwtAuth: []
+      tags:
+        - listing
+      description: Export all data related to a listing.
+      operationId: exportListingData
+      summary: Export listing data
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/listings/{id}/moderate':
+    post:
+      consumes:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            properties:
+              action:
+                enum:
+                  - approve
+                  - reject
+                type: string
+              reason:
+                type: string
+            type: object
+      responses:
+        '200':
+          description: Moderation result
+        '400':
+          description: Bad request
+      security:
+        - jwtAuth: []
+      tags:
+        - listing
+      description: Approve or reject a listing as part of moderation.
+      operationId: moderateListing
+      summary: Moderate listing (approve/reject)
+      x-codegen-request-body-name: action
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/listings/{id}/reviews':
+    get:
+      produces:
+        - application/json
+      parameters:
+        - description: Listing ID
+          in: path
+          maxLength: 32
+          name: id
+          required: true
+          type: string
+        - default: 1
+          description: Page number
+          in: query
+          minimum: 0
+          name: page
+          type: integer
+        - default: 10
+          description: Results per page
+          in: query
+          minimum: 0
+          name: limit
+          type: integer
+        - default: visible
+          description: Filter by user status
+          enum:
+            - visible
+            - hidden
+          in: query
+          name: status
+          type: string
+      responses:
+        '200':
+          description: List of reviews
+          schema:
+            properties:
+              limit:
+                example: 10
+                type: integer
+              page:
+                example: 1
+                type: integer
+              pages:
+                example: 1
+                type: integer
+              reviews:
+                items:
+                  $ref: '#/definitions/ReviewSummary'
+                type: array
+              status:
+                example: ok
+                type: string
+              total:
+                example: 2
+                type: integer
+            type: object
+        '400':
+          description: Invalid query
+          schema:
+            $ref: '#/definitions/Error400Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - review
+      description: Retrieve all reviews for a specific listing.
+      operationId: getListingReviews
+      summary: List all reviews of a listing
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/listings/{id}/verify':
+    put:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - description: Listing ID
+          in: path
+          maxLength: 32
+          name: id
+          required: true
+          type: string
+        - description: Listing verified status
+          in: body
+          name: body
+          required: true
+          schema:
+            properties:
+              verified:
+                enum:
+                  - 'true'
+                  - 'false'
+                example: 'true'
+                type: string
+            type: object
+      responses:
+        '200':
+          description: Success
+          schema:
+            properties:
+              listing_id:
+                type: string
+              status:
+                example: ok
+                type: string
+            type: object
+        '400':
+          description: Invalid listing ID
+          schema:
+            $ref: '#/definitions/Error400Response'
+        '404':
+          description: Listing not found
+          schema:
+            $ref: '#/definitions/Error404Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - listing
+      description: Restore or revoke a listing's verification status.
+      operationId: verifyListing
+      summary: Restore/Revoke a listing verification
+      x-codegen-request-body-name: verify
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/maintenance:
+    put:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/MaintenanceConfigRequest'
+      responses:
+        '200':
+          description: Successfully updated the maintenance config
+          schema:
+            properties:
+              parameters:
+                properties: {}
+                type: object
+              status:
+                example: ok
+                type: string
+            type: object
+        '400':
+          description: Bad request
+      security: []
+      tags:
+        - config
+      description: Update the maintenance configuration for the application.
+      operationId: updateMaintenanceConfig
+      summary: Update app maintenance config
+      x-codegen-request-body-name: body
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/notifications:
+    get:
+      parameters:
+        - default: 1
+          in: query
+          name: page
+          type: integer
+        - default: 20
+          in: query
+          name: limit
+          type: integer
+      responses:
+        '200':
+          description: List of notifications
+        '400':
+          description: Bad request
+      security:
+        - jwtAuth: []
+      tags:
+        - dashboard
+      description: Retrieve a list of notifications.
+      operationId: listNotifications
+      summary: List notifications
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+    post:
+      consumes:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/NotificationRequest'
+      responses:
+        '201':
+          description: Notification sent
+        '400':
+          description: Bad request
+      security:
+        - jwtAuth: []
+      tags:
+        - dashboard
+      description: Send a notification to a user or users.
+      operationId: sendNotification
+      summary: Send notification
+      x-codegen-request-body-name: notification
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/permissions:
+    get:
+      produces:
+        - application/json
+      parameters: []
+      responses:
+        '200':
+          description: List of permissions
+          schema:
+            $ref: '#/definitions/PermissionsResponse'
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/Error400Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - permissions
+      description: Retrieve a list of all permissions in the system.
+      operationId: getPermissions
+      summary: Get all permissions
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+    post:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/PermissionCreateRequest'
+      responses:
+        '201':
+          description: Permission created successfully
+          schema:
+            $ref: '#/definitions/PermissionResponse'
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/Error400Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - permissions
+      description: Create a new permission in the system.
+      operationId: createPermission
+      summary: Create a new permission
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/permissions/initialize:
+    post:
+      produces:
+        - application/json
+      parameters: []
+      responses:
+        '200':
+          description: Default permissions initialized successfully
+          schema:
+            properties:
+              message:
+                example: Default permissions initialized
+                type: string
+              permissions:
+                items:
+                  $ref: '#/definitions/Permission'
+                type: array
+              status:
+                example: ok
+                type: string
+            type: object
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/Error400Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - permissions
+      description: Initialize the system with default permissions.
+      operationId: initializeDefaultPermissions
+      summary: Initialize default permissions
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/permissions/{id}':
+    delete:
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Permission deleted successfully
+          schema:
+            properties:
+              message:
+                example: Permission deleted successfully
+                type: string
+              status:
+                example: ok
+                type: string
+            type: object
+        '404':
+          description: Permission not found
+          schema:
+            $ref: '#/definitions/Error404Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - permissions
+      description: Delete a permission from the system.
+      operationId: deletePermission
+      summary: Delete permission
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+    get:
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Permission details
+          schema:
+            $ref: '#/definitions/PermissionResponse'
+        '404':
+          description: Permission not found
+          schema:
+            $ref: '#/definitions/Error404Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - permissions
+      description: Retrieve a specific permission by its ID.
+      operationId: getPermissionById
+      summary: Get permission by ID
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+    put:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/PermissionUpdateRequest'
+      responses:
+        '200':
+          description: Permission updated successfully
+          schema:
+            $ref: '#/definitions/PermissionResponse'
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/Error400Response'
+        '404':
+          description: Permission not found
+          schema:
+            $ref: '#/definitions/Error404Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - permissions
+      description: Update an existing permission.
+      operationId: updatePermission
+      summary: Update permission
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/proxychat:
+    post:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - description: Chatbot request payload
+          in: body
+          name: body
+          required: true
+          schema:
+            additionalProperties: true
+            example:
+              conversation_id: abc123
+              message: 'Hello, how are you?'
+            type: object
+      responses:
+        '200':
+          description: Chatbot response
+          schema:
+            properties:
+              data:
+                additionalProperties: true
+                description: Response payload from chatbot service
+                type: object
+              status:
+                example: ok
+                type: string
+            type: object
+        '400':
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/Error400Response'
+        '500':
+          description: Proxy failed
+          schema:
+            properties:
+              error:
+                properties:
+                  code:
+                    example: 500
+                    type: integer
+                  message:
+                    example: Internal server error
+                    type: string
+                type: object
+              status:
+                example: error
+                type: string
+            required:
+              - status
+              - error
+            type: object
+      security:
+        - jwtAuth: []
+      tags:
+        - dashboard
+      description: >-
+        Forwards a chatbot request to the configured chatbot service, returning
+        its response
+      operationId: proxyChatbot
+      summary: Proxy chatbot request
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/reports/breakdown:
+    get:
+      produces:
+        - application/json
+      parameters: []
+      responses:
+        '200':
+          description: Report type breakdown data
+          schema:
+            $ref: '#/definitions/ReportBreakdownResponse'
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/Error400Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - reports
+      description: Retrieve breakdown of reports by type with counts and colors.
+      operationId: getReportTypeBreakdown
+      summary: Get report type breakdown
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/reports/overview:
+    get:
+      produces:
+        - application/json
+      parameters: []
+      responses:
+        '200':
+          description: Reports overview data
+          schema:
+            $ref: '#/definitions/ReportsOverviewResponse'
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/Error400Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - reports
+      description: >-
+        Retrieve reports overview metrics including total reports, open reports,
+        and resolution rates.
+      operationId: getReportsOverview
+      summary: Get reports overview
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/reports/workload:
+    get:
+      produces:
+        - application/json
+      parameters: []
+      responses:
+        '200':
+          description: Admin workload data
+          schema:
+            $ref: '#/definitions/AdminWorkloadResponse'
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/Error400Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - reports
+      description: >-
+        Retrieve admin workload metrics including assigned reports and
+        resolution times.
+      operationId: getAdminWorkload
+      summary: Get admin workload data
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/reviews/{id}':
+    delete:
+      produces:
+        - application/json
+      parameters:
+        - description: Review ID
+          in: path
+          maxLength: 32
+          name: id
+          required: true
+          type: string
+        - default: soft
+          description: Delete type
+          enum:
+            - soft
+            - hard
+          in: query
+          name: option
+          type: string
+      responses:
+        '200':
+          description: Review detail
+          schema:
+            properties:
+              review_id:
+                type: string
+              status:
+                example: ok
+                type: string
+            type: object
+        '400':
+          description: Invalid User ID
+          schema:
+            $ref: '#/definitions/Error400Response'
+        '404':
+          description: User not found
+          schema:
+            $ref: '#/definitions/Error404Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - review
+      description: Delete a review by ID (admin only).s
+      operationId: deleteReviewById
+      summary: Delete a review detail by id
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+    get:
+      produces:
+        - application/json
+      parameters:
+        - description: Review ID
+          in: path
+          maxLength: 32
+          name: id
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Review detail
+          schema:
+            properties:
+              review:
+                $ref: '#/definitions/Review'
+              status:
+                example: ok
+                type: string
+            type: object
+        '400':
+          description: Invalid User ID
+          schema:
+            $ref: '#/definitions/Error400Response'
+        '404':
+          description: User not found
+          schema:
+            $ref: '#/definitions/Error404Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - review
+      description: Retrieve detailed information about a specific review.
+      operationId: getReviewById
+      summary: Get a review detail by id
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/reviews/{id}/export':
+    get:
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Review data export
+        '400':
+          description: Bad request
+      security:
+        - jwtAuth: []
+      tags:
+        - review
+      description: Export all data related to a review.
+      operationId: exportReviewData
+      summary: Export review data
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/reviews/{id}/hidden':
+    put:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - description: Review ID
+          in: path
+          maxLength: 32
+          name: id
+          required: true
+          type: string
+        - in: body
+          name: body
+          required: false
+          schema:
+            properties:
+              hidden:
+                enum:
+                  - 'true'
+                  - 'false'
+                type: string
+            required:
+              - hidden
+            type: object
+      responses:
+        '200':
+          description: Success
+          schema:
+            properties:
+              review_id:
+                type: string
+              status:
+                example: ok
+                type: string
+            type: object
+        '404':
+          description: Not found
+          schema:
+            $ref: '#/definitions/Error404Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - review
+      description: Update the hidden status of a review by ID.
+      operationId: updateReviewHiddenStatus
+      summary: Update review hidden status
+      x-codegen-request-body-name: status
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/reviews/{id}/respond':
+    post:
+      consumes:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+      responses:
+        '200':
+          description: Response added
+        '400':
+          description: Bad request
+      security:
+        - jwtAuth: []
+      tags:
+        - review
+      description: Add a response to a review by ID (admin only).
+      operationId: adminRespondToReview
+      summary: Respond to a review (admin)
+      x-codegen-request-body-name: response
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/reviews/{reviewId}/report':
+    post:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: reviewId
+          required: true
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            properties:
+              comment:
+                type: string
+              reason:
+                type: string
+            required:
+              - reason
+            type: object
+      responses:
+        '200':
+          description: Report submitted successfully
+          schema:
+            properties:
+              report_id:
+                type: string
+              status:
+                type: string
+            type: object
+        '400':
+          description: Bad Request
+      security:
+        - jwtAuth: []
+      tags:
+        - review
+      description: Submit a report for a specific review.
+      operationId: submitReviewReport
+      summary: Submit a report for a review
+      x-codegen-request-body-name: body
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/reviews/{reviewId}/reports':
+    get:
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: reviewId
+          required: true
+          type: string
+      responses:
+        '200':
+          description: List of reports
+          schema:
+            properties:
+              reports:
+                items:
+                  $ref: '#/definitions/ReviewReport'
+                type: array
+              status:
+                type: string
+            type: object
+        '401':
+          description: Unauthorized
+      security:
+        - jwtAuth: []
+      tags:
+        - review
+      description: Retrieve all reports submitted for a specific review.
+      operationId: getReviewReports
+      summary: View all reports for a review
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/roles:
+    get:
+      produces:
+        - application/json
+      parameters: []
+      responses:
+        '200':
+          description: List of roles
+          schema:
+            $ref: '#/definitions/RolesResponse'
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/Error400Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - roles
+      description: Retrieve a list of all roles in the system.
+      operationId: getRoles
+      summary: Get all roles
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+    post:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/RoleCreateRequest'
+      responses:
+        '201':
+          description: Role created successfully
+          schema:
+            $ref: '#/definitions/RoleResponse'
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/Error400Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - roles
+      description: Create a new role in the system.
+      operationId: createRole
+      summary: Create a new role
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/roles/initialize:
+    post:
+      produces:
+        - application/json
+      parameters: []
+      responses:
+        '200':
+          description: Default roles initialized successfully
+          schema:
+            properties:
+              message:
+                example: Default roles initialized
+                type: string
+              roles:
+                items:
+                  $ref: '#/definitions/Role'
+                type: array
+              status:
+                example: ok
+                type: string
+            type: object
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/Error400Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - roles
+      description: Initialize the system with default roles and permissions.
+      operationId: initializeDefaultRoles
+      summary: Initialize default roles
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/roles/{id}':
+    delete:
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Role deleted successfully
+          schema:
+            properties:
+              message:
+                example: Role deleted successfully
+                type: string
+              status:
+                example: ok
+                type: string
+            type: object
+        '404':
+          description: Role not found
+          schema:
+            $ref: '#/definitions/Error404Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - roles
+      description: Delete a role from the system.
+      operationId: deleteRole
+      summary: Delete role
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+    get:
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Role details
+          schema:
+            $ref: '#/definitions/RoleResponse'
+        '404':
+          description: Role not found
+          schema:
+            $ref: '#/definitions/Error404Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - roles
+      description: Retrieve a specific role by its ID.
+      operationId: getRoleById
+      summary: Get role by ID
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+    put:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/RoleUpdateRequest'
+      responses:
+        '200':
+          description: Role updated successfully
+          schema:
+            $ref: '#/definitions/RoleResponse'
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/Error400Response'
+        '404':
+          description: Role not found
+          schema:
+            $ref: '#/definitions/Error404Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - roles
+      description: Update an existing role.
+      operationId: updateRole
+      summary: Update role
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/roles/{id}/permissions':
+    get:
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Role permissions
+          schema:
+            $ref: '#/definitions/RolePermissionsResponse'
+        '404':
+          description: Role not found
+          schema:
+            $ref: '#/definitions/Error404Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - roles
+      description: Retrieve all permissions assigned to a specific role.
+      operationId: getRolePermissions
+      summary: Get role permissions
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+    post:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            properties:
+              permissionId:
+                type: string
+            required:
+              - permissionId
+            type: object
+      responses:
+        '200':
+          description: Permission added successfully
+          schema:
+            properties:
+              message:
+                example: Permission added to role
+                type: string
+              status:
+                example: ok
+                type: string
+            type: object
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/Error400Response'
+        '404':
+          description: Role or permission not found
+          schema:
+            $ref: '#/definitions/Error404Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - roles
+      description: Add a permission to a specific role.
+      operationId: addPermissionToRole
+      summary: Add permission to role
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/roles/{id}/permissions/{permissionId}':
+    delete:
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+        - in: path
+          name: permissionId
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Permission removed successfully
+          schema:
+            properties:
+              message:
+                example: Permission removed from role
+                type: string
+              status:
+                example: ok
+                type: string
+            type: object
+        '404':
+          description: Role or permission not found
+          schema:
+            $ref: '#/definitions/Error404Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - roles
+      description: Remove a permission from a specific role.
+      operationId: removePermissionFromRole
+      summary: Remove permission from role
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/settings:
+    get:
+      produces:
+        - application/json
+      parameters: []
+      responses:
+        '200':
+          description: Settings/config
+          schema:
+            $ref: '#/definitions/SettingsResponse'
+        '400':
+          description: Bad request
+      security:
+        - jwtAuth: []
+      tags:
+        - dashboard
+      description: Retrieve the current platform settings or configuration.
+      operationId: getSettings
+      summary: Get platform settings/config
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+    patch:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/SettingsUpdateRequest'
+      responses:
+        '200':
+          description: Settings updated
+          schema:
+            $ref: '#/definitions/SettingsResponse'
+        '400':
+          description: Bad request
+      security:
+        - jwtAuth: []
+      tags:
+        - dashboard
+      description: Update the platform settings or configuration.
+      operationId: updateSettings
+      summary: Update platform settings/config
+      x-codegen-request-body-name: settings
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/slack/interactive:
+    post:
+      consumes:
+        - application/x-www-form-urlencoded
+      produces:
+        - application/json
+      parameters:
+        - description: URL-encoded JSON payload from Slack containing interaction data
+          in: formData
+          name: payload
+          type: string
+      responses:
+        '200':
+          description: Success - action processed
+          schema:
+            properties:
+              text:
+                example: Action received
+                type: string
+            type: object
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/Error400Response'
+        '401':
+          description: Unauthorized (invalid Slack signature)
+          schema:
+            $ref: '#/definitions/Error400Response'
+      security: []
+      tags:
+        - webhook
+      description: >
+        Handles interactive component callbacks from Slack (button clicks, etc.)
+
+        This endpoint receives POST requests from Slack when users interact with
+        buttons
+
+        in Slack messages. Slack verifies requests via signature, so no JWT auth
+        needed.
+      operationId: slackInteractive
+      summary: Slack interactive webhook handler
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/tasks:
+    get:
+      produces:
+        - application/json
+      parameters:
+        - description: >-
+            Filter by task status (e.g., unassigned, assigned, in-progress,
+            completed)
+          in: query
+          name: status
+          type: string
+        - description: Filter by assigned user ID
+          in: query
+          name: assigned_to
+          type: string
+        - default: 1
+          description: Page number
+          in: query
+          name: page
+          type: integer
+        - default: 10
+          description: Results per page
+          in: query
+          name: limit
+          type: integer
+        - description: 'Sort by field (e.g., created_at, updated_at)'
+          in: query
+          name: sort
+          type: string
+      responses:
+        '200':
+          description: List of unassigned tasks
+          schema:
+            properties:
+              status:
+                example: ok
+                type: string
+              tasks:
+                items:
+                  $ref: '#/definitions/Task'
+                type: array
+            type: object
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/Error400Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - task
+      description: Retrieve a list of all unassigned tasks.
+      operationId: getTaskPool
+      summary: List all unassigned tasks
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+    post:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - description: Task creation request
+          in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/Task'
+      responses:
+        '201':
+          description: Task created successfully
+          schema:
+            properties:
+              status:
+                example: ok
+                type: string
+              task:
+                $ref: '#/definitions/Task'
+            type: object
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/Error400Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - task
+      description: Create a new task in the task pool.
+      operationId: createTask
+      summary: Create a new task
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/tasks/my:
+    get:
+      produces:
+        - application/json
+      parameters:
+        - description: Filter by task status
+          in: query
+          name: status
+          type: string
+        - description: 'Sort by field (e.g., updated_at)'
+          in: query
+          name: sort
+          type: string
+      responses:
+        '200':
+          description: List of my tasks
+          schema:
+            properties:
+              status:
+                example: ok
+                type: string
+              tasks:
+                items:
+                  $ref: '#/definitions/Task'
+                type: array
+            type: object
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/Error400Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - task
+      description: Retrieve a list of tasks assigned to the authenticated user.
+      operationId: getMyTasks
+      summary: List tasks assigned to the authenticated user
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/tasks/stats:
+    get:
+      produces:
+        - application/json
+      parameters: []
+      responses:
+        '200':
+          description: Task statistics
+          schema:
+            $ref: '#/definitions/TaskStats'
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/Error400Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - task
+      description: Retrieve statistics about tasks.
+      operationId: getTaskStats
+      summary: Get task statistics
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/tasks/{id}/assign':
+    patch:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+        - description: User assignment
+          in: body
+          name: body
+          required: true
+          schema:
+            properties:
+              user_id:
+                type: string
+            required:
+              - user_id
+            type: object
+      responses:
+        '200':
+          description: Task assigned
+          schema:
+            properties:
+              status:
+                example: ok
+                type: string
+              task:
+                $ref: '#/definitions/Task'
+            type: object
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/Error400Response'
+        '404':
+          description: Task not found
+          schema:
+            $ref: '#/definitions/Error404Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - task
+      description: Assign a specific task to a user (partial update).
+      operationId: assignTask
+      summary: Assign a task to a user
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/tasks/{id}/comments':
+    get:
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+      responses:
+        '200':
+          description: List of comments
+          schema:
+            properties:
+              comments:
+                items:
+                  $ref: '#/definitions/TaskComment'
+                type: array
+              status:
+                example: ok
+                type: string
+            type: object
+        '404':
+          description: Task not found
+          schema:
+            $ref: '#/definitions/Error404Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - task
+      description: Retrieve all comments for a specific task.
+      operationId: getTaskComments
+      summary: List comments for a task
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+    patch:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+        - description: Comment payload
+          in: body
+          name: body
+          required: true
+          schema:
+            properties:
+              comment:
+                type: string
+            required:
+              - comment
+            type: object
+      responses:
+        '200':
+          description: Comment added
+          schema:
+            properties:
+              comment:
+                $ref: '#/definitions/TaskComment'
+              status:
+                example: ok
+                type: string
+            type: object
+        '404':
+          description: Task not found
+          schema:
+            $ref: '#/definitions/Error404Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - task
+      description: Add a comment to a specific task by updating the comments array.
+      operationId: addTaskComment
+      summary: Add a comment to a task (partial update)
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/tasks/{id}/history':
+    get:
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Task history
+          schema:
+            properties:
+              history:
+                items:
+                  $ref: '#/definitions/TaskHistory'
+                type: array
+              status:
+                example: ok
+                type: string
+            type: object
+        '404':
+          description: Task not found
+          schema:
+            $ref: '#/definitions/Error404Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - task
+      description: Retrieve the history of actions taken on a specific task.
+      operationId: getTaskHistory
+      summary: Get task history
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/user-roles:
+    post:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/UserRoleAssignRequest'
+      responses:
+        '201':
+          description: Role assigned successfully
+          schema:
+            $ref: '#/definitions/UserRoleResponse'
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/Error400Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - user-roles
+      description: Assign a role to a specific user.
+      operationId: assignRoleToUser
+      summary: Assign role to user
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/user-roles/assignment/{userRoleId}':
+    delete:
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: userRoleId
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Role removed successfully
+          schema:
+            properties:
+              message:
+                example: Role removed from user
+                type: string
+              status:
+                example: ok
+                type: string
+            type: object
+        '404':
+          description: User role assignment not found
+          schema:
+            $ref: '#/definitions/Error404Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - user-roles
+      description: Remove a role assignment from a user.
+      operationId: removeRoleFromUser
+      summary: Remove role from user
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/user-roles/bulk-assign:
+    post:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/BulkRoleAssignRequest'
+      responses:
+        '200':
+          description: Roles assigned successfully
+          schema:
+            properties:
+              assignedRoles:
+                items:
+                  $ref: '#/definitions/UserRole'
+                type: array
+              message:
+                example: Roles assigned successfully
+                type: string
+              status:
+                example: ok
+                type: string
+            type: object
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/Error400Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - user-roles
+      description: Assign multiple roles to a user in a single operation.
+      operationId: bulkAssignRolesToUser
+      summary: Bulk assign roles to user
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/user-roles/bulk-remove:
+    delete:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/BulkRoleRemoveRequest'
+      responses:
+        '200':
+          description: Roles removed successfully
+          schema:
+            properties:
+              message:
+                example: Roles removed successfully
+                type: string
+              removedRoles:
+                items:
+                  $ref: '#/definitions/UserRole'
+                type: array
+              status:
+                example: ok
+                type: string
+            type: object
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/Error400Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - user-roles
+      description: Remove multiple roles from a user in a single operation.
+      operationId: bulkRemoveRolesFromUser
+      summary: Bulk remove roles from user
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/user-roles/{userId}':
+    get:
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          type: string
+      responses:
+        '200':
+          description: User roles
+          schema:
+            $ref: '#/definitions/UserRolesResponse'
+        '404':
+          description: User not found
+          schema:
+            $ref: '#/definitions/Error404Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - user-roles
+      description: Retrieve all roles assigned to a specific user.
+      operationId: getUserRoles
+      summary: Get user roles
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/users:
+    get:
+      produces:
+        - application/json
+      parameters:
+        - default: 1
+          description: Page number
+          in: query
+          minimum: 0
+          name: page
+          type: integer
+        - default: 10
+          description: Results per page
+          in: query
+          minimum: 0
+          name: limit
+          type: integer
+        - description: 'Search query (name, email, id, etc)'
+          in: query
+          name: query
+          type: string
+        - description: Filter by user status
+          enum:
+            - activate
+            - ban
+            - deleted
+            - pending
+          in: query
+          name: status
+          type: string
+      responses:
+        '200':
+          description: List of users
+          schema:
+            properties:
+              limit:
+                example: 10
+                type: integer
+              page:
+                example: 1
+                type: integer
+              pages:
+                example: 1
+                type: integer
+              status:
+                example: ok
+                type: string
+              total:
+                example: 2
+                type: integer
+              users:
+                items:
+                  $ref: '#/definitions/UserSummary'
+                type: array
+            type: object
+        '400':
+          description: Invalid query
+          schema:
+            $ref: '#/definitions/Error400Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - user
+      description: Retrieve a list of users with optional search and filter parameters
+      operationId: getUsers
+      summary: List/Search users
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/users/profile/picture:
+    put:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - description: 'Raw binary image file (PNG, JPEG, or GIF)'
+          in: body
+          name: body
+          required: true
+          schema:
+            format: binary
+            type: string
+      responses:
+        '200':
+          description: Profile picture updated successfully
+          schema:
+            properties:
+              status:
+                example: ok
+                type: string
+              url:
+                example: >-
+                  https://unsplash.com/photos/yellow-flowers-bloom-beneath-a-reaching-shadow-0FPDfErlKzQ
+                type: string
+              user_id:
+                type: string
+            type: object
+        '400':
+          description: Bad request
+      security: []
+      tags:
+        - user
+      description: Update the profile picture for the admin user.
+      operationId: updateAdminProfilePicture
+      summary: Update admin's profile picture
+      x-codegen-request-body-name: file
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/users/{id}':
+    delete:
+      produces:
+        - application/json
+      parameters:
+        - description: User ID
+          in: path
+          maxLength: 32
+          name: id
+          required: true
+          type: string
+        - default: soft
+          description: Delete type
+          enum:
+            - soft
+            - hard
+          in: query
+          name: option
+          type: string
+      responses:
+        '200':
+          description: Success
+          schema:
+            properties:
+              status:
+                example: ok
+                type: string
+              user_id:
+                type: string
+            type: object
+        '404':
+          description: User Not found
+          schema:
+            $ref: '#/definitions/Error404Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - user
+      description: Permanently remove a user from the system
+      operationId: deleteUserById
+      summary: Delete a user
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+    get:
+      produces:
+        - application/json
+      parameters:
+        - description: User ID
+          in: path
+          maxLength: 32
+          name: id
+          required: true
+          type: string
+      responses:
+        '200':
+          description: User detail
+          schema:
+            properties:
+              status:
+                example: ok
+                type: string
+              user:
+                $ref: '#/definitions/User'
+            type: object
+        '404':
+          description: User Not found
+          schema:
+            $ref: '#/definitions/Error404Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - user
+      description: Retrieve detailed information about a specific user by their ID
+      operationId: getUserById
+      summary: Get a user detail
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+    put:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/UserAdminUpdateRequest'
+      responses:
+        '200':
+          description: User updated
+          schema:
+            properties:
+              status:
+                example: ok
+                type: string
+              user:
+                $ref: '#/definitions/User'
+            type: object
+        '400':
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/Error400Response'
+        '404':
+          description: User Not found
+          schema:
+            $ref: '#/definitions/Error404Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - user
+      description: Update user details by ID.
+      operationId: updateUserById
+      summary: Update user
+      x-codegen-request-body-name: user
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/users/{id}/ban':
+    post:
+      consumes:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            properties:
+              reason:
+                type: string
+            type: object
+      responses:
+        '200':
+          description: User banned
+        '400':
+          description: Bad request
+      security:
+        - jwtAuth: []
+      tags:
+        - user
+      description: Ban or suspend a user by ID.
+      operationId: banUser
+      summary: Ban or suspend a user
+      x-codegen-request-body-name: reason
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/users/{id}/export':
+    get:
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+      responses:
+        '200':
+          description: User data export
+        '400':
+          description: Bad request
+      security:
+        - jwtAuth: []
+      tags:
+        - user
+      description: Export all data related to a user.
+      operationId: exportUserData
+      summary: Export user data
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/users/{id}/impersonate':
+    post:
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Impersonation token/session
+        '400':
+          description: Bad request
+      security:
+        - jwtAuth: []
+      tags:
+        - user
+      description: Admin impersonates a user (login as user).
+      operationId: impersonateUser
+      summary: Impersonate user (admin login as user)
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/users/{id}/reviews':
+    get:
+      produces:
+        - application/json
+      parameters:
+        - description: User ID
+          in: path
+          maxLength: 32
+          name: id
+          required: true
+          type: string
+        - default: 1
+          description: Page number
+          in: query
+          minimum: 0
+          name: page
+          type: integer
+        - default: 10
+          description: Results per page
+          in: query
+          minimum: 0
+          name: limit
+          type: integer
+        - default: visible
+          description: Filter by user status
+          enum:
+            - visible
+            - hidden
+          in: query
+          name: status
+          type: string
+      responses:
+        '200':
+          description: List of reviews
+          schema:
+            properties:
+              limit:
+                example: 10
+                type: integer
+              page:
+                example: 1
+                type: integer
+              pages:
+                example: 1
+                type: integer
+              reviews:
+                items:
+                  $ref: '#/definitions/ReviewSummary'
+                type: array
+              status:
+                example: ok
+                type: string
+              total:
+                example: 2
+                type: integer
+            type: object
+        '400':
+          description: Invalid query
+          schema:
+            $ref: '#/definitions/Error400Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - review
+      description: Retrieve all reviews for a specific user.
+      operationId: getUserReviews
+      summary: List all reviews of an user
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/users/{id}/sendMessage':
+    post:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - description: User ID
+          in: path
+          maxLength: 32
+          name: id
+          required: true
+          type: string
+        - in: body
+          name: body
+          required: false
+          schema:
+            properties:
+              message:
+                type: string
+            required:
+              - message
+            type: object
+      responses:
+        '200':
+          description: Success
+          schema:
+            properties:
+              status:
+                example: ok
+                type: string
+              toast:
+                example: Message sent successfully
+                type: string
+            type: object
+        '404':
+          description: Not found
+          schema:
+            $ref: '#/definitions/Error404Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - user
+      description: Send a message to a specific user.
+      operationId: userSendMessage
+      summary: Send message to an User
+      x-codegen-request-body-name: message
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/users/{id}/status':
+    put:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - description: User ID
+          in: path
+          maxLength: 32
+          name: id
+          required: true
+          type: string
+        - in: body
+          name: body
+          required: false
+          schema:
+            properties:
+              status:
+                enum:
+                  - activate
+                  - ban
+                  - deleted
+                  - pending
+                type: string
+            required:
+              - status
+            type: object
+      responses:
+        '200':
+          description: Success
+          schema:
+            properties:
+              status:
+                example: ok
+                type: string
+              user_id:
+                type: string
+            type: object
+        '404':
+          description: Not found
+          schema:
+            $ref: '#/definitions/Error404Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - user
+      description: Update the status of a user by ID.
+      operationId: updateUserStatus
+      summary: Update user status
+      x-codegen-request-body-name: status
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/users/{id}/verify':
+    put:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - description: User ID
+          in: path
+          maxLength: 32
+          name: id
+          required: true
+          type: string
+        - description: User verified status
+          in: body
+          name: body
+          required: true
+          schema:
+            properties:
+              verified:
+                enum:
+                  - 'true'
+                  - 'false'
+                example: 'true'
+                type: string
+            type: object
+      responses:
+        '200':
+          description: Success
+          schema:
+            properties:
+              status:
+                example: ok
+                type: string
+              user_id:
+                example: user_id123
+                type: string
+            type: object
+        '400':
+          description: Invalid User ID
+          schema:
+            $ref: '#/definitions/Error400Response'
+        '404':
+          description: User not found
+          schema:
+            $ref: '#/definitions/Error404Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - user
+      description: Restore or revoke a user's email verification status
+      operationId: verifyUser
+      summary: Restore/Revoke a user verification
+      x-codegen-request-body-name: verify
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/{proxy}':
+    options:
+      parameters:
+        - in: path
+          name: proxy
+          required: true
+          type: string
+      responses:
+        '204':
+          description: Preflight OK
+        '400':
+          description: Bad request
+      security: []
+      tags:
+        - cors
+      description: Enable CORS for the specified resource.
+      operationId: corsAny
+      summary: CORS support
+      x-google-allow: all
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/{proxy}/{proxy1}':
+    options:
+      parameters:
+        - in: path
+          name: proxy
+          required: true
+          type: string
+        - in: path
+          name: proxy1
+          required: true
+          type: string
+      responses:
+        '204':
+          description: Preflight OK
+        '400':
+          description: Bad request
+      security: []
+      tags:
+        - cors
+      description: Enable CORS for the specified resource.
+      operationId: corsAny1
+      summary: CORS support
+      x-google-allow: all
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/{proxy}/{proxy1}/{proxy2}':
+    options:
+      parameters:
+        - in: path
+          name: proxy
+          required: true
+          type: string
+        - in: path
+          name: proxy1
+          required: true
+          type: string
+        - in: path
+          name: proxy2
+          required: true
+          type: string
+      responses:
+        '204':
+          description: Preflight OK
+        '400':
+          description: Bad request
+      security: []
+      tags:
+        - cors
+      description: Enable CORS for the specified resource.
+      operationId: corsAny2
+      summary: CORS support
+      x-google-allow: all
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/{proxy}/{proxy1}/{proxy2}/{proxy3}':
+    options:
+      parameters:
+        - in: path
+          name: proxy
+          required: true
+          type: string
+        - in: path
+          name: proxy1
+          required: true
+          type: string
+        - in: path
+          name: proxy2
+          required: true
+          type: string
+        - in: path
+          name: proxy3
+          required: true
+          type: string
+      responses:
+        '204':
+          description: Preflight OK
+        '400':
+          description: Bad request
+      security: []
+      tags:
+        - cors
+      description: Enable CORS for the specified resource.
+      operationId: corsAny3
+      summary: CORS support
+      x-google-allow: all
+      x-google-backend:
+        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+definitions:
+  AdminWorkloadResponse:
+    properties:
+      data:
+        items:
+          properties:
+            admin:
+              type: string
+            assignedReports:
+              type: integer
+            avgResolutionTime:
+              format: float
+              type: number
+            resolvedToday:
+              type: integer
+          type: object
+        type: array
+      status:
+        example: ok
+        type: string
+    type: object
+  AnalyticsSummaryResponse:
+    properties:
+      summary:
+        properties:
+          bookings:
+            properties:
+              cancellation_rate:
+                example: 0.07
+                format: float
+                type: number
+              completed_bookings:
+                example: 17420
+                type: integer
+              total_bookings:
+                example: 18750
+                type: integer
+            type: object
+          cohort_analysis:
+            properties:
+              retention_rate_last_3_months:
+                example: 0.62
+                format: float
+                type: number
+              top_cohort:
+                properties:
+                  retention_rate:
+                    example: 0.78
+                    format: float
+                    type: number
+                  signup_month:
+                    example: 2025-05
+                    type: string
+                  size:
+                    example: 320
+                    type: integer
+                type: object
+            type: object
+          geographic_trends:
+            properties:
+              top_regions:
+                items:
+                  properties:
+                    percentage:
+                      example: 0.45
+                      format: float
+                      type: number
+                    region:
+                      example: North America
+                      type: string
+                  type: object
+                type: array
+            type: object
+          last_updated:
+            example: '2025-08-12T15:30:00Z'
+            format: date-time
+            type: string
+          listings:
+            properties:
+              new_listings_last_30_days:
+                example: 210
+                type: integer
+              total_active_listings:
+                example: 4820
+                type: integer
+            type: object
+          revenues_payouts:
+            properties:
+              revenue_growth_rate:
+                example: 0.05
+                format: float
+                type: number
+              total_payouts:
+                example: 1893200
+                format: float
+                type: number
+              total_revenue:
+                example: 2384500
+                format: float
+                type: number
+            type: object
+          users:
+            properties:
+              new_signups_last_30_days:
+                example: 520
+                type: integer
+              total:
+                example: 12450
+                type: integer
+              user_type_distribution:
+                properties:
+                  guests:
+                    example: 9000
+                    type: integer
+                  hosts:
+                    example: 3450
+                    type: integer
+                type: object
+            type: object
+          verification:
+            description: Verification status summary
+            properties:
+              approved:
+                example: 116
+                type: integer
+              pending:
+                example: 30
+                type: integer
+              rejected:
+                example: 25
+                type: integer
+            type: object
+        type: object
+    type: object
+  Booking:
+    properties:
+      host:
+        type: string
+      amount:
+        example: 500
+        format: float
+        type: number
+      check_in:
+        example: '2025-06-01T14:00:00.000Z'
+        format: date-time
+        type: string
+      check_out:
+        example: '2025-06-05T11:00:00.000Z'
+        format: date-time
+        type: string
+      created_at:
+        example: '2025-06-05T11:00:00.000Z'
+        format: date-time
+        type: string
+      days:
+        example: 4
+        type: integer
+      guest:
+        type: string
+      guests:
+        example: 2
+        type: integer
+      id:
+        type: string
+      listing_id:
+        type: string
+      payment_id:
+        type: string
+      rating:
+        example: 4.5
+        format: float
+        type: number
+      status:
+        enum:
+          - pending
+          - accepted
+          - rejected
+          - cancelled
+          - completed
+          - awaiting_payment
+        example: pending
+        type: string
+    type: object
+  BookingAdminUpdateRequest:
+    properties:
+      admin_notes:
+        type: string
+      refund_amount:
+        format: double
+        type: number
+      status:
+        enum:
+          - pending
+          - confirmed
+          - cancelled
+          - completed
+          - disputed
+        type: string
+    required:
+      - status
+    type: object
+  BookingAnalyticsResponse:
+    properties:
+      metrics:
+        properties:
+          average_duration:
+            format: float
+            type: number
+          bookings_by_type:
+            additionalProperties:
+              type: integer
+            type: object
+          bookings_over_time:
+            properties:
+              daily:
+                items:
+                  properties:
+                    count:
+                      type: integer
+                    date:
+                      format: date
+                      type: string
+                  type: object
+                type: array
+              monthly:
+                items:
+                  properties:
+                    count:
+                      type: integer
+                    month:
+                      type: string
+                  type: object
+                type: array
+              weekly:
+                items:
+                  properties:
+                    count:
+                      type: integer
+                    week:
+                      type: string
+                  type: object
+                type: array
+            type: object
+          cancellation_rate:
+            format: float
+            type: number
+          repeat_bookings_per_user:
+            properties:
+              avg:
+                format: float
+                type: number
+              distribution:
+                items:
+                  properties:
+                    count:
+                      type: integer
+                    user_id:
+                      type: string
+                  type: object
+                type: array
+            type: object
+          total_bookings:
+            type: integer
+        type: object
+      success:
+        example: true
+        type: boolean
+    type: object
+  BookingSummary:
+    properties:
+      host:
+        type: string
+      check_in:
+        example: '2025-06-01T14:00:00.000Z'
+        format: date-time
+        type: string
+      check_out:
+        example: '2025-06-05T11:00:00.000Z'
+        format: date-time
+        type: string
+      guest:
+        type: string
+      id:
+        example: bkg_001
+        type: string
+      status:
+        enum:
+          - pending
+          - cancelled
+          - completed
+          - flagged
+          - accepted
+        example: pending
+        type: string
+    type: object
+  BulkFeaturedRequest:
+    properties:
+      tags:
+        description: Tags to apply to the content
+        items:
+          type: string
+        type: array
+      category:
+        description: Category for the content
+        type: string
+      content_ids:
+        description: List of content IDs to update
+        items:
+          type: string
+        type: array
+      featured:
+        description: Whether to set as featured or remove featured status
+        type: boolean
+      priority:
+        description: Priority level for featured content
+        maximum: 100
+        minimum: 0
+        type: integer
+    required:
+      - content_ids
+      - featured
+    type: object
+  BulkFeaturedResponse:
+    properties:
+      failed_count:
+        type: integer
+      failed_items:
+        items:
+          properties:
+            content_id:
+              type: string
+            error:
+              type: string
+          type: object
+        type: array
+      success:
+        type: boolean
+      updated_count:
+        type: integer
+    required:
+      - success
+      - updated_count
+      - failed_count
+      - failed_items
+    type: object
+  BulkRoleAssignRequest:
+    properties:
+      assignedBy:
+        type: string
+      roleIds:
+        items:
+          type: string
+        type: array
+      userId:
+        type: string
+    required:
+      - userId
+      - roleIds
+    type: object
+  BulkRoleRemoveRequest:
+    properties:
+      roleIds:
+        items:
+          type: string
+        type: array
+      userId:
+        type: string
+    required:
+      - userId
+      - roleIds
+    type: object
+  CommunityAnalyticsResponse:
+    properties:
+      date_range:
+        properties:
+          from:
+            format: date-time
+            type: string
+          to:
+            format: date-time
+            type: string
+        type: object
+      engagement_metrics:
+        properties:
+          avg_likes_per_content:
+            format: float
+            type: number
+          avg_views_per_content:
+            format: float
+            type: number
+          content_creation_trend:
+            items:
+              properties:
+                count:
+                  type: integer
+                date:
+                  format: date
+                  type: string
+              type: object
+            type: array
+          engagement_rate:
+            format: float
+            type: number
+        type: object
+      overview:
+        properties:
+          active_users:
+            type: integer
+          featured_content:
+            type: integer
+          total_comments:
+            type: integer
+          total_content:
+            type: integer
+          total_likes:
+            type: integer
+          total_reels:
+            type: integer
+          total_stories:
+            type: integer
+          total_views:
+            type: integer
+          trending_content:
+            type: integer
+        type: object
+      period:
+        type: string
+      top_content:
+        items:
+          $ref: '#/definitions/TopContentItem'
+        type: array
+      top_users:
+        items:
+          $ref: '#/definitions/TopUserItem'
+        type: array
+    required:
+      - period
+      - overview
+      - top_content
+      - top_users
+      - engagement_metrics
+    type: object
+  CommunityContentItem:
+    properties:
+      tags:
+        items:
+          type: string
+        type: array
+      author:
+        type: string
+      author_avatar:
+        type: string
+      category:
+        type: string
+      comments:
+        type: integer
+      created_at:
+        format: date-time
+        type: string
+      featured:
+        type: boolean
+      id:
+        type: string
+      likes:
+        type: integer
+      priority:
+        type: integer
+      status:
+        enum:
+          - active
+          - suspended
+          - deleted
+        type: string
+      title:
+        type: string
+      trending:
+        type: boolean
+      type:
+        enum:
+          - story
+          - reel
+        type: string
+      views:
+        type: integer
+    required:
+      - id
+      - type
+      - title
+      - author
+      - created_at
+      - views
+      - likes
+      - comments
+      - featured
+      - trending
+      - status
+    type: object
+  CommunityContentListResponse:
+    properties:
+      content:
+        items:
+          $ref: '#/definitions/CommunityContentItem'
+        type: array
+      filters:
+        properties:
+          featured_count:
+            type: integer
+          total_count:
+            type: integer
+          trending_count:
+            type: integer
+        type: object
+      pagination:
+        $ref: '#/definitions/Pagination'
+    required:
+      - content
+      - pagination
+    type: object
+  CommunityContentResponse:
+    properties:
+      tags:
+        items:
+          type: string
+        type: array
+      author:
+        type: string
+      author_avatar:
+        type: string
+      category:
+        type: string
+      comments:
+        type: integer
+      content:
+        type: string
+      country_code:
+        type: string
+      created_at:
+        format: date-time
+        type: string
+      featured:
+        type: boolean
+      featured_at:
+        format: date-time
+        type: string
+        x-nullable: true
+      id:
+        type: string
+      image_url:
+        type: string
+      likes:
+        type: integer
+      location:
+        type: string
+      priority:
+        type: integer
+      public:
+        type: boolean
+      status:
+        enum:
+          - active
+          - suspended
+          - deleted
+        type: string
+      title:
+        type: string
+      trending:
+        type: boolean
+      type:
+        enum:
+          - story
+          - reel
+        type: string
+      updated_at:
+        format: date-time
+        type: string
+      video_url:
+        type: string
+      views:
+        type: integer
+    required:
+      - id
+      - type
+      - title
+      - content
+      - author
+      - created_at
+      - views
+      - likes
+      - comments
+      - featured
+      - trending
+      - status
+    type: object
+  ContentAnalyticsResponse:
+    properties:
+      content_id:
+        type: string
+      daily_stats:
+        items:
+          properties:
+            comments:
+              type: integer
+            date:
+              format: date
+              type: string
+            likes:
+              type: integer
+            views:
+              type: integer
+          type: object
+        type: array
+      metrics:
+        properties:
+          comments:
+            type: integer
+          engagement_rate:
+            format: float
+            type: number
+          likes:
+            type: integer
+          shares:
+            type: integer
+          views:
+            type: integer
+        type: object
+      performance_trend:
+        enum:
+          - growing
+          - stable
+          - declining
+        type: string
+      period:
+        type: string
+      title:
+        type: string
+      top_engagement_times:
+        items:
+          properties:
+            engagement_count:
+              type: integer
+            hour:
+              type: integer
+          type: object
+        type: array
+      type:
+        enum:
+          - story
+          - reel
+        type: string
+    required:
+      - content_id
+      - title
+      - type
+      - period
+      - metrics
+      - daily_stats
+      - performance_trend
+    type: object
+  DeleteContentRequest:
+    properties:
+      notify_user:
+        default: true
+        description: Whether to notify the content creator
+        type: boolean
+      reason:
+        description: Reason for deletion
+        type: string
+    required:
+      - reason
+    type: object
+  Error400Response:
+    properties:
+      error:
+        properties:
+          code:
+            example: 400
+            type: integer
+          message:
+            example: Invalid request
+            type: string
+        type: object
+      status:
+        example: error
+        type: string
+    required:
+      - error
+      - status
+    type: object
+  Error404Response:
+    properties:
+      error:
+        properties:
+          code:
+            example: 404
+            type: integer
+          message:
+            example: Not found
+            type: string
+        type: object
+      status:
+        example: error
+        type: string
+    required:
+      - error
+      - status
+    type: object
+  FeaturedContentItem:
+    properties:
+      author:
+        type: string
+      featured_at:
+        format: date-time
+        type: string
+      featured_until:
+        format: date-time
+        type: string
+        x-nullable: true
+      id:
+        type: string
+      likes:
+        type: integer
+      performance_score:
+        format: float
+        type: number
+      priority:
+        type: integer
+      title:
+        type: string
+      type:
+        enum:
+          - story
+          - reel
+        type: string
+      views:
+        type: integer
+    required:
+      - id
+      - type
+      - title
+      - author
+      - priority
+      - featured_at
+      - views
+      - likes
+    type: object
+  FeaturedQueueResponse:
+    properties:
+      featured_content:
+        items:
+          $ref: '#/definitions/FeaturedContentItem'
+        type: array
+      max_featured:
+        type: integer
+      rotation_schedule:
+        properties:
+          next_rotation:
+            format: date-time
+            type: string
+          rotation_frequency:
+            enum:
+              - hourly
+              - daily
+              - weekly
+            type: string
+        type: object
+      total_featured:
+        type: integer
+    required:
+      - featured_content
+      - total_featured
+    type: object
+  FeedbackRequest:
+    properties:
+      app_version:
+        type: string
+      attachments:
+        items:
+          properties:
+            base64_data:
+              type: string
+            file_name:
+              type: string
+            mime_type:
+              type: string
+          type: object
+        type: array
+      description:
+        type: string
+      device_model:
+        type: string
+      network:
+        type: string
+      os_version:
+        type: string
+      platform:
+        enum:
+          - ios
+          - android
+        type: string
+      timezone:
+        type: string
+      title:
+        type: string
+      type:
+        enum:
+          - bug
+          - suggestion
+          - feedback
+        type: string
+      user:
+        description: user_id
+        type: string
+      wantsUpdate:
+        description: Whether the user would like to be contacted regarding their feedback
+        type: boolean
+    required:
+      - app_version
+      - description
+      - device_model
+      - os_version
+      - platform
+      - title
+      - type
+      - user
+    type: object
+  FeedbackResponse:
+    properties:
+      message:
+        type: string
+      report_id:
+        type: string
+      status:
+        type: string
+      submitted_at:
+        format: date-time
+        type: string
+    type: object
+  FinancialOverviewResponse:
+    properties:
+      data:
+        properties:
+          currentBalance:
+            example: 125000.5
+            format: float
+            type: number
+          lastUpdated:
+            format: date-time
+            type: string
+          monthlyExpense:
+            example: 12000
+            format: float
+            type: number
+          monthlyIncome:
+            example: 45000
+            format: float
+            type: number
+          projectedRevenue:
+            example: 49500
+            format: float
+            type: number
+        type: object
+      status:
+        example: ok
+        type: string
+    type: object
+  FirebaseRemoteConfig:
+    properties:
+      key:
+        description: Config name
+        type: string
+      value:
+        description: Config value
+        properties: {}
+        type: object
+    type: object
+  Gender:
+    enum:
+      - Male
+      - Female
+      - Non-binary
+      - Other
+      - Prefer not to say
+    type: string
+  Listing:
+    properties:
+      host:
+        properties:
+          avatar:
+            type: string
+          first_name:
+            type: string
+          gender:
+            type: string
+          id:
+            type: string
+          rating:
+            format: float
+            type: number
+        type: object
+      active:
+        type: boolean
+      amenities:
+        items:
+          type: string
+        type: array
+      available:
+        type: boolean
+      baggage_drop:
+        type: boolean
+      cancellation_policy:
+        type: string
+      created_at:
+        format: date-time
+        type: string
+      deleted:
+        type: boolean
+      description:
+        type: string
+      house_rules:
+        items:
+          type: string
+        type: array
+      id:
+        description: Unique ID of the listing
+        type: string
+      instant_book:
+        type: boolean
+      location:
+        properties:
+          address:
+            properties:
+              city:
+                type: string
+              country:
+                type: string
+              flag:
+                type: string
+              postal_code:
+                type: string
+              province:
+                type: string
+              street:
+                type: string
+              unit_number:
+                type: string
+            type: object
+          events:
+            description: List of events associated with the listing
+            items:
+              properties:
+                date:
+                  format: date-time
+                  type: string
+                description:
+                  type: string
+                name:
+                  type: string
+              type: object
+            type: array
+          geohash:
+            type: string
+          latitude:
+            format: float
+            type: number
+          longitude:
+            format: float
+            type: number
+        type: object
+      max_guests:
+        type: integer
+      photos:
+        description: List of image URLs
+        items:
+          type: string
+        type: array
+      price:
+        format: float
+        type: number
+      rating:
+        format: float
+        type: number
+      reviews:
+        type: string
+      thumbnail:
+        description: URL to thumbnail image
+        type: string
+      title:
+        type: string
+      verified:
+        type: boolean
+    type: object
+  ListingAnalyticsResponse:
+    properties:
+      metrics:
+        properties:
+          active_vs_inactive:
+            properties:
+              active:
+                example: 210
+                type: integer
+              inactive:
+                example: 20
+                type: integer
+            type: object
+          conversion_rate:
+            example: 0.32
+            format: float
+            type: number
+          listings_added:
+            properties:
+              daily:
+                example:
+                  - count: 5
+                    date: '2025-08-15'
+                  - count: 3
+                    date: '2025-08-16'
+                  - count: 6
+                    date: '2025-08-17'
+                items:
+                  properties:
+                    count:
+                      type: integer
+                    date:
+                      format: date
+                      type: string
+                  type: object
+                type: array
+              monthly:
+                example:
+                  - count: 60
+                    month: 2025-07
+                  - count: 70
+                    month: 2025-08
+                items:
+                  properties:
+                    count:
+                      type: integer
+                    month:
+                      type: string
+                  type: object
+                type: array
+              weekly:
+                example:
+                  - count: 20
+                    week: 2025-W32
+                  - count: 25
+                    week: 2025-W33
+                items:
+                  properties:
+                    count:
+                      type: integer
+                    week:
+                      type: string
+                  type: object
+                type: array
+            type: object
+          listings_by_category:
+            additionalProperties:
+              type: integer
+            example:
+              Sleep: 120
+              Work: 80
+            type: object
+          top_hosts:
+            example:
+              - host_id: host_45
+                name: Alice
+                rating: 4.9
+                total_bookings: 120
+              - host_id: host_12
+                name: Bob
+                rating: 4.7
+                total_bookings: 90
+            items:
+              properties:
+                host_id:
+                  type: string
+                name:
+                  type: string
+                rating:
+                  format: float
+                  type: number
+                total_bookings:
+                  type: integer
+              type: object
+            type: array
+          top_listings:
+            example:
+              - listing_id: listing_123
+                rating: 4.8
+                title: Modern Loft
+              - listing_id: listing_555
+                rating: 4.4
+                title: Beach House
+            items:
+              properties:
+                listing_id:
+                  type: string
+                rating:
+                  format: float
+                  type: number
+                title:
+                  type: string
+              type: object
+            type: array
+          total_listings:
+            example: 230
+            type: integer
+        type: object
+      success:
+        example: true
+        type: boolean
+    type: object
+  ListingSummary:
+    properties:
+      host:
+        properties:
+          avatar:
+            type: string
+          first_name:
+            type: string
+          gender:
+            type: string
+          id:
+            type: string
+          rating:
+            format: float
+            type: number
+        type: object
+      active:
+        type: boolean
+      created_at:
+        format: date-time
+        type: string
+      id:
+        type: string
+      location:
+        properties:
+          address:
+            properties:
+              city:
+                type: string
+              country:
+                type: string
+              flag:
+                type: string
+              postal_code:
+                type: string
+              province:
+                type: string
+              street:
+                type: string
+              unit_number:
+                type: string
+            type: object
+          geohash:
+            type: string
+          latitude:
+            format: float
+            type: number
+          longitude:
+            format: float
+            type: number
+        type: object
+      price:
+        format: float
+        type: number
+      rating:
+        format: float
+        type: number
+    type: object
+  ListingUpdateRequest:
+    additionalProperties: false
+    description: 'Allowed, editable fields for a listing update (partial updates allowed).'
+    example:
+      instant_book: true
+      location:
+        address:
+          city: Toronto
+          country: CA
+      photos:
+        - 'https://cdn.example.com/img/1.jpg'
+        - 'https://cdn.example.com/img/2.jpg'
+      price: 129
+      title: Updated title
+    properties:
+      active:
+        type: boolean
+      amenities:
+        items:
+          type: string
+        type: array
+      cancellation_policy:
+        type: string
+      category:
+        type: string
+      description:
+        maxLength: 10000
+        type: string
+      house_rules:
+        items:
+          type: string
+        type: array
+      instant_book:
+        type: boolean
+      location:
+        additionalProperties: false
+        description: Partial location update; all fields optional.
+        properties:
+          address:
+            additionalProperties: false
+            properties:
+              city:
+                type: string
+              country:
+                type: string
+              flag:
+                type: string
+              postal_code:
+                type: string
+              province:
+                type: string
+              street:
+                type: string
+              unit_number:
+                type: string
+            type: object
+          geohash:
+            type: string
+          latitude:
+            format: float
+            type: number
+          longitude:
+            format: float
+            type: number
+        type: object
+      max_guests:
+        minimum: 1
+        type: integer
+      photos:
+        description: List of image URLs
+        items:
+          format: uri
+          type: string
+        type: array
+      price:
+        format: float
+        minimum: 0
+        type: number
+      thumbnail:
+        description: URL to thumbnail image
+        format: uri
+        type: string
+      title:
+        maxLength: 200
+        type: string
+    type: object
+  MaintenanceConfigRequest:
+    properties:
+      configValue:
+        properties:
+          active:
+            type: boolean
+          end_time:
+            format: date-time
+            type: string
+          initiated_at:
+            format: date-time
+            type: string
+          message:
+            type: string
+          restrict_app_access:
+            type: boolean
+          services:
+            description: List of services affected by maintenance
+            items:
+              type: string
+            type: array
+          start_time:
+            format: date-time
+            type: string
+          updated_by:
+            type: string
+        required:
+          - active
+          - end_time
+          - initiated_at
+          - message
+          - restrict_app_access
+          - services
+          - start_time
+          - updated_by
+        type: object
+    required:
+      - configValue
+    type: object
+  MapsConfigResponse:
+    properties:
+      data:
+        properties:
+          apiKey:
+            type: string
+          center:
+            properties:
+              lat:
+                format: float
+                type: number
+              lng:
+                format: float
+                type: number
+            type: object
+          defaultZoom:
+            type: integer
+        type: object
+      status:
+        example: ok
+        type: string
+    type: object
+  NotificationRequest:
+    properties:
+      data:
+        properties: {}
+        type: object
+      message:
+        type: string
+      type:
+        enum:
+          - info
+          - warning
+          - alert
+          - success
+        type: string
+      user_id:
+        type: string
+    required:
+      - message
+    type: object
+  OverviewMetricsResponse:
+    properties:
+      data:
+        properties:
+          activeListings:
+            example: 89
+            type: integer
+          lastUpdated:
+            format: date-time
+            type: string
+          pendingReviews:
+            example: 23
+            type: integer
+          recentActivity:
+            items:
+              properties:
+                id:
+                  type: string
+                message:
+                  type: string
+                timestamp:
+                  type: string
+                type:
+                  enum:
+                    - user
+                    - listing
+                    - review
+                    - booking
+                  type: string
+              type: object
+            type: array
+          totalBookings:
+            example: 156
+            type: integer
+          totalUsers:
+            example: 1247
+            type: integer
+        type: object
+      status:
+        example: ok
+        type: string
+    type: object
+  Pagination:
+    properties:
+      has_next:
+        type: boolean
+      has_prev:
+        type: boolean
+      limit:
+        type: integer
+      page:
+        type: integer
+      total:
+        type: integer
+      total_pages:
+        type: integer
+    required:
+      - page
+      - limit
+      - total
+      - total_pages
+      - has_next
+      - has_prev
+    type: object
+  Permission:
+    properties:
+      action:
+        type: string
+      createdAt:
+        format: date-time
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      resource:
+        type: string
+      updatedAt:
+        format: date-time
+        type: string
+    type: object
+  PermissionCreateRequest:
+    properties:
+      action:
+        type: string
+      description:
+        type: string
+      name:
+        type: string
+      resource:
+        type: string
+    required:
+      - name
+      - description
+      - resource
+      - action
+    type: object
+  PermissionResponse:
+    properties:
+      data:
+        $ref: '#/definitions/Permission'
+      status:
+        example: ok
+        type: string
+    type: object
+  PermissionUpdateRequest:
+    properties:
+      action:
+        type: string
+      description:
+        type: string
+      name:
+        type: string
+      resource:
+        type: string
+    type: object
+  PermissionsResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/Permission'
+        type: array
+      status:
+        example: ok
+        type: string
+    type: object
+  ReelResponse:
+    properties:
+      tags:
+        default: []
+        items:
+          type: string
+        type: array
+      author:
+        type: string
+      author_avatar:
+        type: string
+      category:
+        default: travel
+        type: string
+      comments:
+        type: integer
+      content:
+        type: string
+      country_code:
+        type: string
+      created_at:
+        format: date-time
+        type: string
+      featured:
+        default: false
+        type: boolean
+      featured_at:
+        format: date-time
+        type: string
+        x-nullable: true
+      id:
+        type: string
+      image_url:
+        type: string
+      likes:
+        type: integer
+      location:
+        type: string
+      priority:
+        default: 0
+        type: integer
+      public:
+        default: false
+        type: boolean
+      title:
+        type: string
+      trending:
+        default: false
+        type: boolean
+      video_url:
+        type: string
+      views:
+        type: integer
+    required:
+      - id
+      - title
+      - location
+      - image_url
+      - video_url
+      - content
+      - country_code
+      - likes
+      - views
+      - comments
+      - created_at
+      - featured
+      - priority
+      - category
+      - tags
+      - trending
+      - author
+      - author_avatar
+      - public
+    type: object
+  ReportBreakdownResponse:
+    properties:
+      data:
+        items:
+          properties:
+            color:
+              type: string
+            count:
+              type: integer
+            type:
+              type: string
+          type: object
+        type: array
+      status:
+        example: ok
+        type: string
+    type: object
+  ReportsOverviewResponse:
+    properties:
+      data:
+        properties:
+          avgResolutionTime:
+            example: 2.5
+            format: float
+            type: number
+          openReports:
+            example: 12
+            type: integer
+          resolutionRate:
+            example: 73.3
+            format: float
+            type: number
+          totalReports:
+            example: 45
+            type: integer
+        type: object
+      status:
+        example: ok
+        type: string
+    type: object
+  RevenueChartResponse:
+    properties:
+      data:
+        items:
+          properties:
+            date:
+              type: string
+            revenue:
+              format: float
+              type: number
+          type: object
+        type: array
+      status:
+        example: ok
+        type: string
+    type: object
+  Review:
+    properties:
+      author:
+        description: ID of the user who wrote the review
+        type: string
+      booking_id:
+        description: ID of the associated booking
+        type: string
+      category:
+        description: Category of the review (e.g. cleanliness)
+        type: string
+      comment:
+        description: Text comment provided by the reviewer
+        type: string
+      created_at:
+        format: date-time
+        type: string
+      edit_history:
+        items:
+          properties: {}
+          type: object
+        type: array
+      emoji_sentiment:
+        type: string
+      hidden:
+        type: boolean
+      id:
+        description: Unique identifier for the review
+        type: string
+      listing_id:
+        description: ID of the listing being reviewed
+        type: string
+      metrics:
+        properties:
+          accuracy:
+            format: float
+            type: number
+          check_in:
+            format: float
+            type: number
+          cleanliness:
+            format: float
+            type: number
+          communication:
+            format: float
+            type: number
+          location:
+            format: float
+            type: number
+          value:
+            format: float
+            type: number
+        type: object
+      overall_rating:
+        format: float
+        type: number
+      status:
+        description: Moderation status of the review
+        type: string
+      target:
+        description: 'The entity this review targets (e.g., listing ID)'
+        type: string
+      type:
+        description: 'Type of target (e.g., "listing")'
+        type: string
+      updated_at:
+        format: date-time
+        type: string
+      version:
+        description: Review version number
+        type: integer
+    type: object
+  ReviewReport:
+    properties:
+      action_taken:
+        enum:
+          - none
+          - removed_review
+          - warned_user
+          - banned_user
+          - other
+        type: string
+      comment:
+        type: string
+      created_at:
+        format: date-time
+        type: string
+      reason:
+        enum:
+          - spam
+          - harassment
+          - hate_speech
+          - nudity
+          - scam_or_fraud
+          - offensive_language
+          - misleading_information
+          - fake_review
+          - other
+        type: string
+      report_id:
+        type: string
+      reporter_id:
+        type: string
+      reviewed_at:
+        type: string
+      reviewed_by:
+        type: string
+      status:
+        enum:
+          - pending
+          - reviewed
+          - dismissed
+        type: string
+    type: object
+  ReviewSummary:
+    properties:
+      author:
+        description: ID of the user who wrote the review
+        type: string
+      booking_id:
+        description: ID of the associated booking
+        type: string
+      category:
+        description: Category of the review (e.g. cleanliness)
+        type: string
+      comment:
+        description: Text comment provided by the reviewer
+        type: string
+      created_at:
+        format: date-time
+        type: string
+      emoji_sentiment:
+        type: string
+      hidden:
+        type: boolean
+      id:
+        description: Unique identifier for the review
+        type: string
+      listing_id:
+        description: ID of the listing being reviewed
+        type: string
+      metrics:
+        properties:
+          accuracy:
+            format: float
+            type: number
+          check_in:
+            format: float
+            type: number
+          cleanliness:
+            format: float
+            type: number
+          communication:
+            format: float
+            type: number
+          location:
+            format: float
+            type: number
+          value:
+            format: float
+            type: number
+        type: object
+      overall_rating:
+        format: float
+        type: number
+      status:
+        type: string
+      updated_at:
+        format: date-time
+        type: string
+    type: object
+  Role:
+    properties:
+      createdAt:
+        format: date-time
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      permissions:
+        items:
+          type: string
+        type: array
+      updatedAt:
+        format: date-time
+        type: string
+    type: object
+  RoleCreateRequest:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+      permissions:
+        items:
+          type: string
+        type: array
+    required:
+      - name
+      - description
+    type: object
+  RolePermissionsResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/Permission'
+        type: array
+      status:
+        example: ok
+        type: string
+    type: object
+  RoleResponse:
+    properties:
+      data:
+        $ref: '#/definitions/Role'
+      status:
+        example: ok
+        type: string
+    type: object
+  RoleUpdateRequest:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+      permissions:
+        items:
+          type: string
+        type: array
+    type: object
+  RolesResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/Role'
+        type: array
+      status:
+        example: ok
+        type: string
+    type: object
+  SetFeaturedRequest:
+    properties:
+      tags:
+        items:
+          type: string
+        type: array
+      category:
+        type: string
+      featured:
+        type: boolean
+      priority:
+        maximum: 100
+        minimum: 0
+        type: integer
+    required:
+      - featured
+    type: object
+  SettingsResponse:
+    properties:
+      feature_toggles:
+        additionalProperties:
+          type: boolean
+        type: object
+      maintenance_mode:
+        type: boolean
+      notification_templates:
+        additionalProperties:
+          type: string
+        type: object
+      updated_at:
+        format: date-time
+        type: string
+    type: object
+  SettingsUpdateRequest:
+    properties:
+      feature_toggles:
+        additionalProperties:
+          type: boolean
+        type: object
+      maintenance_mode:
+        type: boolean
+      notification_templates:
+        additionalProperties:
+          type: string
+        type: object
+    type: object
+  StoryResponse:
+    properties:
+      tags:
+        default: []
+        items:
+          type: string
+        type: array
+      author:
+        type: string
+      author_avatar:
+        type: string
+      category:
+        default: travel
+        type: string
+      comments:
+        type: integer
+      content:
+        type: string
+      country_code:
+        type: string
+      created_at:
+        format: date-time
+        type: string
+      expires_at:
+        format: date-time
+        type: string
+      featured:
+        default: false
+        type: boolean
+      featured_at:
+        format: date-time
+        type: string
+        x-nullable: true
+      id:
+        type: string
+      image_url:
+        type: string
+      likes:
+        type: integer
+      location:
+        type: string
+      priority:
+        default: 0
+        type: integer
+      public:
+        default: false
+        type: boolean
+      title:
+        type: string
+      trending:
+        default: false
+        type: boolean
+      views:
+        type: integer
+    required:
+      - id
+      - title
+      - location
+      - image_url
+      - content
+      - country_code
+      - likes
+      - views
+      - comments
+      - created_at
+      - expires_at
+      - featured
+      - priority
+      - category
+      - tags
+      - trending
+      - author
+      - author_avatar
+      - public
+    type: object
+  SuspendUserRequest:
+    properties:
+      duration_hours:
+        description: Duration in hours (null for permanent)
+        minimum: 1
+        type: integer
+      notify_user:
+        default: true
+        type: boolean
+      reason:
+        type: string
+      suspended:
+        type: boolean
+    required:
+      - suspended
+      - reason
+    type: object
+  Task:
+    properties:
+      assignee:
+        type: string
+      comments:
+        items:
+          $ref: '#/definitions/TaskComment'
+        type: array
+      created_at:
+        format: date-time
+        type: string
+      description:
+        type: string
+      due_date:
+        format: date-time
+        type: string
+      history:
+        items:
+          $ref: '#/definitions/TaskHistory'
+        type: array
+      id:
+        type: string
+      status:
+        enum:
+          - pending
+          - assigned
+          - in_progress
+          - completed
+          - abandoned
+          - reassigned
+        type: string
+      title:
+        type: string
+      updated_at:
+        format: date-time
+        type: string
+    type: object
+  TaskComment:
+    properties:
+      comment:
+        type: string
+      created_at:
+        format: date-time
+        type: string
+      id:
+        type: string
+      task_id:
+        type: string
+      user:
+        type: string
+    type: object
+  TaskHistory:
+    properties:
+      action:
+        type: string
+      details:
+        type: string
+      id:
+        type: string
+      task_id:
+        type: string
+      timestamp:
+        format: date-time
+        type: string
+      user:
+        type: string
+    type: object
+  TaskStats:
+    properties:
+      abandoned:
+        type: integer
+      assigned:
+        type: integer
+      completed:
+        type: integer
+      in_progress:
+        type: integer
+      pending:
+        type: integer
+      reassigned:
+        type: integer
+      total:
+        type: integer
+    type: object
+  TopContentItem:
+    properties:
+      author:
+        type: string
+      comments:
+        type: integer
+      engagement_score:
+        format: float
+        type: number
+      id:
+        type: string
+      likes:
+        type: integer
+      title:
+        type: string
+      type:
+        enum:
+          - story
+          - reel
+        type: string
+      views:
+        type: integer
+    required:
+      - id
+      - type
+      - title
+      - author
+      - views
+      - likes
+      - comments
+    type: object
+  TopUserItem:
+    properties:
+      engagement_score:
+        format: float
+        type: number
+      total_content:
+        type: integer
+      total_likes:
+        type: integer
+      total_views:
+        type: integer
+      user_id:
+        type: string
+      user_name:
+        type: string
+    required:
+      - user_id
+      - user_name
+      - total_content
+      - total_views
+      - total_likes
+    type: object
+  TransactionsResponse:
+    properties:
+      data:
+        items:
+          properties:
+            amount:
+              type: string
+            customer:
+              type: string
+            date:
+              type: string
+            id:
+              type: string
+            status:
+              enum:
+                - Pending
+                - Completed
+                - Declined
+              type: string
+          type: object
+        type: array
+      status:
+        example: ok
+        type: string
+    type: object
+  User:
+    properties:
+      Address:
+        description: User's address
+        properties:
+          city:
+            type: string
+          coordinates:
+            properties:
+              latitude:
+                format: float
+                type: number
+              longitude:
+                description: User's address
+                format: float
+                type: number
+            type: object
+          country:
+            type: string
+          postal_code:
+            type: string
+          state:
+            type: string
+          street:
+            type: string
+        type: object
+      EmailVerified:
+        description: Whether the user's email is verified
+        type: boolean
+      FCMToken:
+        description: Firebase Cloud Messaging token
+        type: string
+      Onboarding:
+        description: Onboarding status and details
+        properties:
+          app_version:
+            type: string
+          brand:
+            type: string
+          device_id:
+            type: string
+          device_model:
+            type: string
+          device_type:
+            type: string
+          fingerprint:
+            type: string
+          location:
+            properties:
+              latitude:
+                format: float
+                type: number
+              longitude:
+                format: float
+                type: number
+            type: object
+          os_version:
+            type: string
+          risk_score:
+            format: float
+            type: number
+          trust_level:
+            type: string
+        type: object
+      PhoneVerified:
+        description: Whether the user's phone is verified
+        type: boolean
+      RegistrationMethod:
+        description: How the user registered
+        type: string
+      Roles:
+        description: List of user roles
+        items:
+          type: string
+        type: array
+      avatar:
+        format: uri
+        type: string
+      bio:
+        type: string
+      birthday:
+        format: date-time
+        type: string
+      city:
+        type: string
+      contacts:
+        description: List of user contacts
+        items:
+          properties:
+            type:
+              description: 'Contact type (e.g., email, phone)'
+              type: string
+            value:
+              description: Contact value
+              type: string
+          type: object
+        type: array
+      country:
+        type: string
+      created_at:
+        format: date-time
+        type: string
+      deleted:
+        description: Whether the user is deleted
+        type: boolean
+      deleted_at:
+        description: When the user was deleted
+        format: date-time
+        type: string
+      email:
+        type: string
+      events:
+        description: List of user events
+        items:
+          properties:
+            created_at:
+              format: date-time
+              type: string
+            created_by:
+              type: string
+            message:
+              type: string
+            metadata:
+              additionalProperties: true
+              type: object
+            type:
+              type: string
+          type: object
+        type: array
+      first_name:
+        type: string
+      gender:
+        $ref: '#/definitions/Gender'
+      id:
+        type: string
+      interests:
+        items:
+          type: string
+        maxItems: 10
+        type: array
+      languages:
+        items:
+          type: string
+        maxItems: 10
+        type: array
+      last_name:
+        type: string
+      latitude:
+        description: Latitude of the user's current location
+        format: float
+        type: number
+      longitude:
+        description: Longitude of the user's current location
+        format: float
+        type: number
+      phone:
+        type: string
+      status:
+        type: string
+      updated_at:
+        format: date-time
+        type: string
+      verifications:
+        description: Array of verification records for this user
+        items:
+          properties:
+            attempts:
+              type: integer
+            details:
+              type: string
+            expires_at:
+              format: date-time
+              type: string
+            provider:
+              type: string
+            reference_id:
+              type: string
+            reviewed_by:
+              type: string
+            status:
+              type: string
+            timestamp:
+              format: date-time
+              type: string
+            type:
+              description: >-
+                Verification type (facematch, background, location, livevideo,
+                pose, badge)
+              type: string
+            verified:
+              type: boolean
+          type: object
+        type: array
+      verified:
+        type: boolean
+    type: object
+  UserAdminUpdateRequest:
+    properties:
+      avatar:
+        format: uri
+        type: string
+      bio:
+        type: string
+      first_name:
+        type: string
+      gender:
+        type: string
+      interests:
+        items:
+          type: string
+        type: array
+      languages:
+        items:
+          type: string
+        type: array
+      last_name:
+        type: string
+    type: object
+  UserContentListResponse:
+    properties:
+      content:
+        items:
+          $ref: '#/definitions/CommunityContentItem'
+        type: array
+      pagination:
+        $ref: '#/definitions/Pagination'
+      user_avatar:
+        type: string
+      user_id:
+        type: string
+      user_name:
+        type: string
+      user_stats:
+        properties:
+          account_status:
+            enum:
+              - active
+              - suspended
+              - banned
+            type: string
+          featured_content:
+            type: integer
+          total_content:
+            type: integer
+          total_likes:
+            type: integer
+          total_views:
+            type: integer
+        type: object
+    required:
+      - user_id
+      - content
+      - pagination
+      - user_stats
+    type: object
+  UserRole:
+    properties:
+      assignedAt:
+        format: date-time
+        type: string
+      assignedBy:
+        type: string
+      id:
+        type: string
+      isActive:
+        type: boolean
+      role:
+        $ref: '#/definitions/Role'
+      roleId:
+        type: string
+      userId:
+        type: string
+    type: object
+  UserRoleAssignRequest:
+    properties:
+      assignedBy:
+        type: string
+      roleId:
+        type: string
+      userId:
+        type: string
+    required:
+      - userId
+      - roleId
+    type: object
+  UserRoleResponse:
+    properties:
+      data:
+        $ref: '#/definitions/UserRole'
+      status:
+        example: ok
+        type: string
+    type: object
+  UserRolesResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/UserRole'
+        type: array
+      status:
+        example: ok
+        type: string
+    type: object
+  UserSummary:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      id:
+        type: string
+      last_name:
+        type: string
+      permissions:
+        items:
+          type: string
+        type: array
+      role:
+        type: string
+      status:
+        type: string
+    type: object
+  UserSuspensionResponse:
+    properties:
+      reason:
+        type: string
+      suspended:
+        type: boolean
+      suspended_at:
+        format: date-time
+        type: string
+      suspended_by:
+        type: string
+      suspended_until:
+        format: date-time
+        type: string
+        x-nullable: true
+      user_id:
+        type: string
+    required:
+      - user_id
+      - suspended
+      - reason
+      - suspended_by
+      - suspended_at
+    type: object
+securityDefinitions:
+  jwtAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+x-components:
+  responses: {}
+

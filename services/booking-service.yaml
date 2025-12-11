@@ -1,0 +1,1026 @@
+openapi: 3.0.0
+info:
+  title: Project X - Booking Service API
+  version: 1.0.0
+  description: API specification for Project X Booking Service.
+  contact:
+    name: project-x-api
+    url: https://www.inspiredtech.ca
+    email: info@aircouch.com
+  termsOfService: https://www.inspiredtech.ca/terms
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+tags:
+  - name: booking
+    description: Booking operations
+
+servers:
+  - url: https://app-x-staging-gateway-8ua0taf7.uc.gateway.dev/api/v1
+
+x-google-backend:
+  address: https://booking-service-ee3nwblsmq-uc.a.run.app
+  path_translation: APPEND_PATH_TO_ADDRESS
+
+paths:
+  /bookings/heartbeat:
+    get:
+      summary: Heartbeat
+      description: Health check endpoint for the booking service.
+      tags: [booking]
+      operationId: bookingsHeartbeat
+      security: []
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: string
+                example: OK
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /bookings:
+    # POST /bookings endpoint has been deprecated - use POST /bookings/initiate + PATCH /bookings/{id}/finalize instead
+    # The endpoint is kept in the OpenAPI spec for backward compatibility but returns 410 Gone
+    post:
+      summary: Create a booking (DEPRECATED)
+      description: |
+        **DEPRECATED**: This endpoint has been deprecated. Please use the two-step booking flow instead:
+        1. POST /api/v1/bookings/initiate - Creates a draft booking
+        2. PATCH /api/v1/bookings/{id}/finalize - Finalizes the booking with payment intent
+        
+        This endpoint now returns 410 Gone with a deprecation message.
+      tags: [booking]
+      operationId: bookingsCreate
+      deprecated: true
+      security: [{ jwtAuth: [] }]
+      requestBody:
+        description: Booking request payload
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookingRequest"
+      responses:
+        "410":
+          description: Gone - Endpoint deprecated. Use POST /bookings/initiate + PATCH /bookings/{id}/finalize instead.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "201":
+          description: Booking created successfully (legacy response - endpoint is deprecated)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseBooking"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    get:
+      summary: Get all bookings for the authenticated user
+      description: Returns bookings for the currently authenticated user ("my bookings").
+      tags: [booking]
+      operationId: bookingsList
+      security: [{ jwtAuth: [] }]
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, default: 1, minimum: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 10, minimum: 1, maximum: 100 }
+      responses:
+        "200":
+          description: Paginated list of bookings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookingsSplitResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /bookings/host:
+    get:
+      summary: Get all bookings where the authenticated user is the host
+      description: Returns bookings where the currently authenticated user is the host.
+      tags: [booking]
+      operationId: bookingsHost
+      security: [{ jwtAuth: [] }]
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, default: 1, minimum: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 10, minimum: 1, maximum: 100 }
+      responses:
+        "200":
+          description: Paginated list of host bookings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookingsSplitResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /bookings/initiate:
+    post:
+      summary: Initiate a booking (draft)
+      description: Creates a draft booking with minimal information. Guest ID is extracted from JWT token. Returns a booking ID that can be used to create a payment intent and finalize the booking later.
+      tags: [booking]
+      operationId: bookingsInitiate
+      security: [{ jwtAuth: [] }]
+      requestBody:
+        description: Minimal booking initiation payload
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InitiateBookingRequest"
+      responses:
+        "201":
+          description: Draft booking created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseBooking"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /bookings/drafts:
+    get:
+      summary: Get all draft bookings for user
+      description: Retrieve all active draft bookings for the authenticated user. Returns all draft bookings that are not expired and have valid check-in dates, ordered by creation date (most recent first). Limited to 10 most recent drafts.
+      tags: [booking]
+      operationId: bookingsGetDrafts
+      security: [{ jwtAuth: [] }]
+      responses:
+        "200":
+          description: Draft bookings retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseBookings"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /bookings/draft:
+    get:
+      summary: Get draft booking for listing
+      description: Retrieve an existing draft booking for the authenticated user and specified listing. Returns the most recent draft booking if one exists, or 404 if none found.
+      tags: [booking]
+      operationId: bookingsGetDraft
+      security: [{ jwtAuth: [] }]
+      parameters:
+        - name: listing_id
+          in: query
+          required: true
+          schema: { type: string }
+          description: Listing ID to check for draft booking
+      responses:
+        "200":
+          description: Draft booking found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseBooking"
+        "404":
+          description: No draft booking found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /bookings/{id}:
+    get:
+      summary: Get a booking by ID
+      description: Retrieve a booking by its ID.
+      tags: [booking]
+      operationId: bookingsGet
+      security: [{ jwtAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, maxLength: 32 }
+      responses:
+        "200":
+          description: Booking details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseBooking"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    delete:
+      summary: Delete a draft booking
+      description: Delete a draft booking by its ID. Only allows deletion of draft bookings owned by the authenticated user.
+      tags: [booking]
+      operationId: bookingsDelete
+      security: [{ jwtAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, maxLength: 32 }
+      responses:
+        "200":
+          description: Draft booking deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Draft booking deleted successfully"
+        "400":
+          description: Bad Request (e.g., booking is not a draft or user doesn't own it)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Booking not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /bookings/{id}/cancel:
+    patch:
+      summary: Cancel a booking
+      description: Cancel a booking by its ID.
+      tags: [booking]
+      operationId: bookingsCancel
+      security: [{ jwtAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        description: Reason for cancellation
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  enum:
+                    - Change of travel plans
+                    - Guest asked to cancel
+                    - Guest did not show up
+                    - Guest did not have required payment
+                    - Accidental booking
+                    - Other
+              required: [reason]
+      responses:
+        "202":
+          description: Booking cancelled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseBooking"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /bookings/{id}/complete:
+    patch:
+      summary: Complete a booking
+      description: Mark a booking as completed by its ID. Only host or guest can complete.
+      tags: [booking]
+      operationId: bookingsComplete
+      security: [{ jwtAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Booking completed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseBooking"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Booking not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /bookings/{id}/accept:
+    patch:
+      summary: Accept a booking
+      description: Accept a booking by its ID.
+      tags: [booking]
+      operationId: bookingsAccept
+      security: [{ jwtAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        description: Optional message to the guest
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+              required: [message]
+      responses:
+        "202":
+          description: Booking accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseBooking"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /bookings/{id}/reject:
+    patch:
+      summary: Reject a booking
+      description: Reject a booking by its ID.
+      tags: [booking]
+      operationId: bookingsReject
+      security: [{ jwtAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, maxLength: 32 }
+      requestBody:
+        description: Reason for rejection
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  maxLength: 255
+                reason:
+                  type: string
+                  maxLength: 255
+                  enum:
+                    - Listing is no longer available
+                    - Going on vacation
+                    - Traveling for work
+                    - Guest is not a good fit
+                    - Other
+              required: [message, reason]
+      responses:
+        "202":
+          description: Booking rejected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseBooking"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /bookings/{id}/finalize:
+    patch:
+      summary: Finalize a booking
+      description: Completes a draft booking with full details and payment intent ID. The payment intent ID is used to verify/charge the payment. Actual payment confirmation happens via Stripe webhook, which will update the booking status accordingly.
+      tags: [booking]
+      operationId: bookingsFinalize
+      security: [{ jwtAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        description: Booking finalization payload with full booking details
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FinalizeBookingRequest"
+      responses:
+        "200":
+          description: Booking finalized successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseBooking"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Booking not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /bookings/{id}/payment-intent:
+    patch:
+      summary: Update draft booking with payment intent ID
+      description: Updates a draft booking with payment intent ID. This allows the payment intent to be restored when the user continues the booking after hot reload.
+      tags: [booking]
+      operationId: bookingsUpdatePaymentIntent
+      security: [{ jwtAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        description: Payment intent ID to associate with draft booking
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                payment_intent_id:
+                  type: string
+                  description: Stripe payment intent ID
+              required: [payment_intent_id]
+      responses:
+        "200":
+          description: Booking updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseBooking"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Booking not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /listings/{id}/availability/calendar:
+    get:
+      summary: Get listing availability calendar
+      description: Returns a list of unavailable dates for a listing within a specified date range. Used to disable unavailable dates in date pickers.
+      tags: [booking]
+      operationId: listingsGetAvailabilityCalendar
+      security: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Listing ID
+        - name: start_date
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+          description: Start date for availability check (defaults to today)
+        - name: days
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 60
+            minimum: 1
+            maximum: 365
+          description: Number of days to check availability (default 60, max 365)
+      responses:
+        "200":
+          description: Availability calendar retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseAvailabilityCalendar"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ApiResponseBookings:
+      type: object
+      description: Standard API response for multiple bookings.
+      properties:
+        success:
+          type: boolean
+          description: Indicates if the request was successful.
+          example: true
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Booking"
+          description: Array of booking objects.
+        error:
+          type: string
+          description: Error message if request failed.
+          example: ""
+        toast:
+          type: string
+          description: Optional toast message for the client UI.
+          example: "Draft bookings retrieved successfully"
+      required:
+        - success
+        - data
+
+    ApiResponseBooking:
+      type: object
+      properties:
+        success: { type: boolean, example: true }
+        data: { $ref: "#/components/schemas/Booking" }
+        toast: { type: string, example: "Booking processed successfully." }
+        error: { type: string, example: "" }
+      required: [success, data]
+
+    Booking:
+      type: object
+      properties:
+        id: { type: string, example: bkg_001 }
+        listing: { $ref: "#/components/schemas/ListingInfo" }
+        guest: { $ref: "#/components/schemas/User" }
+        host: { $ref: "#/components/schemas/User" }
+        check_in: { type: string, format: date-time }
+        check_out: { type: string, format: date-time }
+        rate: { type: number, format: float, example: 9.99 }
+        amount: { type: number, format: float, example: 49.99 }
+        currency: { type: string, example: "USD" }
+        rating: { type: number, format: float, example: 4.5 }
+        days: { type: integer, example: 4 }
+        payment_id: { type: string, example: pay_001 }
+        payment_intent_id:
+          type: string
+          description: Stripe payment intent ID (for draft bookings)
+          example: "pi_1234567890"
+        status:
+          type: string
+          enum:
+            [
+              draft,
+              pending,
+              accepted,
+              rejected,
+              cancelled,
+              unpaid,
+              confirmed,
+              completed,
+            ]
+          description: |
+            Booking status lifecycle:
+            - draft: Draft booking before payment intent creation
+            - pending: Initial status when booking is created/finalized (non-instant, waiting for host)
+            - accepted: Payment can proceed (instant booking or host-approved non-instant booking)
+            - rejected: Host has declined the booking request
+            - cancelled: Booking cancelled by guest or host
+            - unpaid: Payment required but not completed (payment failed, canceled, or requires action)
+            - confirmed: Payment successful, booking is active
+            - completed: Booking period ended, final payment processing triggered
+          example: draft
+        guests: { type: integer, example: 2 }
+        notes: { type: string, example: "Guest arriving late." }
+        created_at:
+          { type: string, format: date-time, example: "2025-09-02T12:00:00Z" }
+        time_zone: { type: string, example: "America/New_York" }
+        cancellation_policy: { type: string, example: "Flexible" }
+        discount_code: { type: string, example: "SUMMER25" }
+        # Review tracking fields
+        guest_review_listing: 
+          type: boolean
+          description: Whether the guest has reviewed the listing
+        guest_review_host: 
+          type: boolean
+          description: Whether the guest has reviewed the host
+        host_review_guest: 
+          type: boolean
+          description: Whether the host has reviewed the guest
+        review_edit_deadline:
+          type: string
+          format: date-time
+          description: Deadline for editing reviews
+        review_create_deadline:
+          type: string
+          format: date-time
+          description: Deadline for submitting reviews
+
+      required: [id, listing, guest, host, check_in, check_out]
+
+    User:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        avatar: { type: string }
+      required: [id, name, avatar]
+
+    ListingInfo:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        address: { type: string }
+        thumbnail: { type: string, example: "https://img.com/listing_123_space.jpg" }
+        currency: { type: string, example: "USD" }
+      required: [id, title, address, thumbnail]
+
+    BookingsSplitResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        upcoming:
+          type: array
+          items:
+            $ref: "#/components/schemas/Booking"
+        past:
+          type: array
+          items:
+            $ref: "#/components/schemas/Booking"
+        pagination:
+          type: object
+          properties:
+            page: { type: integer, example: 1 }
+            limit: { type: integer, example: 10 }
+            total: { type: integer, example: 25 }
+            pages: { type: integer, example: 3 }
+          required: [page, limit, total, pages]
+        toast:
+          type: string
+          example: "Bookings fetched"
+        error:
+          type: string
+          example: ""
+      required: [success, upcoming, past, pagination]
+    BookingRequest:
+      type: object
+      properties:
+        listing_id: { type: string }
+        guest_id: { type: string }
+        check_in: { type: string, format: date-time }
+        check_out: { type: string, format: date-time }
+        guests: { type: integer }
+        payment_id: { type: string }
+        notes: { type: string }
+        referral_code: { type: string }
+        promo_code: { type: string }
+        # Enhanced booking fields
+        space_type: 
+          type: string
+          enum: ["couchsurf", "workspace", "storage", "shower", "parking"]
+          description: "Type of space being booked"
+        duration_type:
+          type: string
+          enum: ["hours", "days", "weeks", "minutes"]
+          description: "Duration unit for the booking"
+        duration_value:
+          type: integer
+          description: "Duration value (e.g., 2 hours, 3 days, 1 week)"
+        deviceInfo:
+          type: object
+          properties:
+            device_id: { type: string }
+            device_type: { type: string }
+            os_version: { type: string }
+            app_version: { type: string }
+      required: [listing_id, guest_id, check_in, check_out, guests]
+
+    ErrorResponse:
+      type: object
+      description: Standard error response model for failed requests.
+      properties:
+        success:
+          type: boolean
+          description: Indicates if the request was successful.
+          example: false
+        error:
+          type: string
+          description: Error message describing the failure.
+          example: Invalid request parameters.
+        toast:
+          type: string
+          description: Optional toast message for the client UI.
+          example: Please check your input and try again.
+      required:
+        - success
+
+    ApiResponseAvailabilityCalendar:
+      type: object
+      description: Standard API response for listing availability calendar.
+      properties:
+        success:
+          type: boolean
+          description: Indicates if the request was successful.
+          example: true
+        data:
+          $ref: "#/components/schemas/AvailabilityCalendar"
+        error:
+          type: string
+          description: Error message if request failed.
+          example: ""
+        toast:
+          type: string
+          description: Optional toast message for the client UI.
+          example: ""
+      required:
+        - success
+        - data
+
+    AvailabilityCalendar:
+      type: object
+      description: Listing availability calendar data.
+      properties:
+        listing_id:
+          type: string
+          description: Listing ID
+          example: "listing123"
+        start_date:
+          type: string
+          format: date
+          description: Start date of the availability check
+          example: "2024-01-01"
+        end_date:
+          type: string
+          format: date
+          description: End date of the availability check
+          example: "2024-03-01"
+        unavailable_dates:
+          type: array
+          items:
+            type: string
+            format: date
+          description: List of unavailable dates (YYYY-MM-DD format)
+          example: ["2024-01-15", "2024-01-16", "2024-02-10"]
+      required:
+        - listing_id
+        - start_date
+        - end_date
+        - unavailable_dates
+
+    InitiateBookingRequest:
+      type: object
+      description: Minimal payload to initiate a draft booking. All fields except listing_id are optional to allow progressive booking flow.
+      properties:
+        listing_id:
+          type: string
+          description: ID of the listing to book
+          example: "lst_123456"
+        category:
+          type: string
+          description: Optional category code for filtering/follow-up purposes
+          enum: ["couchsurf", "workspace", "storage", "shower", "parking"]
+          example: "couchsurf"
+        check_in:
+          type: string
+          format: date-time
+          description: Optional check-in date and time. If provided, will be stored in draft booking.
+          example: "2025-09-15T14:00:00Z"
+        check_out:
+          type: string
+          format: date-time
+          description: Optional check-out date and time. If provided, will be stored in draft booking.
+          example: "2025-09-18T11:00:00Z"
+        guests:
+          type: integer
+          minimum: 1
+          description: Optional number of guests. If provided, will be stored in draft booking.
+          example: 2
+      required:
+        - listing_id
+
+    FinalizeBookingRequest:
+      type: object
+      description: Full booking details to finalize a draft booking
+      properties:
+        check_in:
+          type: string
+          format: date-time
+          description: Check-in date and time
+          example: "2025-09-15T14:00:00Z"
+        check_out:
+          type: string
+          format: date-time
+          description: Check-out date and time
+          example: "2025-09-18T11:00:00Z"
+        guests:
+          type: integer
+          minimum: 1
+          description: Number of guests
+          example: 2
+        payment_intent_id:
+          type: string
+          description: Stripe payment intent ID. Used to verify/charge the payment. Actual payment confirmation happens via Stripe webhook.
+          example: "pi_1234567890"
+        notes:
+          type: string
+          description: Optional notes for the booking
+          example: "Arriving late, will be there around 6 PM"
+      required:
+        - check_in
+        - check_out
+        - guests
+        - payment_intent_id

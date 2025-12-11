@@ -1,0 +1,1113 @@
+openapi: 3.0.3
+info:
+  title: Project X Chat Service API
+  description: |
+    Real-time chat service for user-to-user messaging in Project X platform.
+    Supports direct messaging, conversation management, and real-time features.
+    Updated to include polling endpoint for REST-only mode. Force sync trigger.
+  version: 1.0.0
+  contact:
+    name: Project X Team
+    email: dev@projectx.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://app-x-staging-gateway-8ua0taf7.uc.gateway.dev/api/v1
+
+paths:
+  /conversations/heartbeat:
+    get:
+      summary: Heartbeat
+      description: Health check endpoint for the booking service.
+      tags: [conversations]
+      operationId: conversationHeartBeat
+      x-google-backend:
+        address: https://chat-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security: []
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: string
+                example: OK
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /conversations:
+    get:
+      summary: List user conversations
+      description: Get all conversations for the authenticated user
+      operationId: listConversations
+      x-google-backend:
+        address: https://chat-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      tags:
+        - conversations
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of conversations to return
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: offset
+          in: query
+          description: Number of conversations to skip
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: type
+          in: query
+          description: Filter conversations by type
+          required: false
+          schema:
+            type: string
+            enum: [direct, group]
+      responses:
+        '200':
+          description: List of conversations
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ListResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Conversation'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      summary: Create a new conversation
+      description: Create a new conversation between users
+      operationId: createConversation
+      x-google-backend:
+        address: https://chat-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      tags:
+        - conversations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateConversationRequest'
+      responses:
+        '201':
+          description: Conversation created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Conversation'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          description: Conversation already exists
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /conversations/{conversationId}:
+    get:
+      summary: Get conversation details
+      description: Get details of a specific conversation
+      operationId: getConversation
+      x-google-backend:
+        address: https://chat-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      tags:
+        - conversations
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          description: Unique identifier of the conversation
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Conversation details
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Conversation'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    put:
+      summary: Update conversation
+      description: Update conversation settings (archive, mute, etc.)
+      operationId: updateConversation
+      x-google-backend:
+        address: https://chat-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      tags:
+        - conversations
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          description: Unique identifier of the conversation
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateConversationRequest'
+      responses:
+        '200':
+          description: Conversation updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Conversation'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      summary: Archive conversation
+      description: Archive a conversation (soft delete)
+      operationId: archiveConversation
+      x-google-backend:
+        address: https://chat-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      tags:
+        - conversations
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          description: Unique identifier of the conversation
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Conversation archived successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /conversations/{conversationId}/messages:
+    get:
+      summary: Get conversation messages
+      description: Get messages from a specific conversation
+      operationId: getMessages
+      x-google-backend:
+        address: https://chat-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      tags:
+        - Messages
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          description: Unique identifier of the conversation
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: Maximum number of messages to return
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+        - name: before
+          in: query
+          description: Get messages before this timestamp (ISO 8601)
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: after
+          in: query
+          description: Get messages after this timestamp (ISO 8601)
+          required: false
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: List of messages
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ListResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Message'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      summary: Send a message
+      description: Send a new message to a conversation
+      operationId: sendMessage
+      x-google-backend:
+        address: https://chat-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      tags:
+        - Messages
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          description: Unique identifier of the conversation
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendMessageRequest'
+      responses:
+        '201':
+          description: Message sent successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Message'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /messages/{messageId}:
+    get:
+      summary: Get message details
+      description: Get details of a specific message
+      operationId: getMessage
+      x-google-backend:
+        address: https://chat-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      tags:
+        - Messages
+      parameters:
+        - name: messageId
+          in: path
+          required: true
+          description: Unique identifier of the message
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Message details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    put:
+      summary: Update message
+      description: Update a message (edit, delete, etc.)
+      operationId: updateMessage
+      x-google-backend:
+        address: https://chat-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      tags:
+        - Messages
+      parameters:
+        - name: messageId
+          in: path
+          required: true
+          description: Unique identifier of the message
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMessageRequest'
+      responses:
+        '200':
+          description: Message updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /messages/{messageId}/read:
+    put:
+      summary: Mark message as read
+      description: Mark a specific message as read by the current user
+      operationId: markMessageAsRead
+      x-google-backend:
+        address: https://chat-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      tags:
+        - Messages
+      parameters:
+        - name: messageId
+          in: path
+          required: true
+          description: Unique identifier of the message
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Message marked as read
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /conversations/{conversationId}/read:
+    put:
+      summary: Mark all messages as read
+      description: Mark all messages in a conversation as read by the current user
+      operationId: markAllMessagesAsRead
+      x-google-backend:
+        address: https://chat-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      tags:
+        - Messages
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          description: Unique identifier of the conversation
+          schema:
+            type: string
+      responses:
+        '200':
+          description: All messages marked as read
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  updated_count:
+                    type: integer
+                    description: Number of messages marked as read
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /conversations/{conversationId}/poll:
+    get:
+      summary: Poll for new messages
+      description: Poll for new messages in a conversation (replaces WebSocket for offline messaging)
+      operationId: pollMessages
+      x-google-backend:
+        address: https://chat-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      tags:
+        - Real-time
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          description: Unique identifier of the conversation
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: Maximum number of messages to return
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+        - name: since
+          in: query
+          description: Get messages since this timestamp (ISO 8601)
+          required: false
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: New messages since last poll
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  messages:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Message'
+                  has_more:
+                    type: boolean
+                    description: Whether there are more messages
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /conversations/{conversationId}/typing:
+    post:
+      summary: Send typing indicator
+      description: Send typing indicator to other participants
+      operationId: sendTypingIndicator
+      x-google-backend:
+        address: https://chat-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      tags:
+        - Real-time
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          description: Unique identifier of the conversation
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TypingIndicatorRequest'
+      responses:
+        '200':
+          description: Typing indicator sent
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /ws:
+    get:
+      summary: WebSocket connection
+      description: Establish WebSocket connection for real-time messaging
+      operationId: websocket
+      x-google-backend:
+        address: https://chat-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      tags:
+        - Real-time
+      parameters:
+        - name: token
+          in: query
+          required: true
+          description: JWT token for authentication
+          schema:
+            type: string
+        - name: conversation_id
+          in: query
+          required: false
+          description: Join specific conversation
+          schema:
+            type: string
+      responses:
+        '101':
+          description: WebSocket connection established
+        '200':
+          description: Connection successful
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /health:
+    get:
+      summary: Health check
+      description: Check service health status
+      operationId: healthCheck
+      x-google-backend:
+        address: https://chat-service-ee3nwblsmq-uc.a.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      tags:
+        - conversations
+      security: []
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [healthy, unhealthy]
+                  timestamp:
+                    type: string
+                    format: date-time
+                  version:
+                    type: string
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [healthy, unhealthy]
+                  timestamp:
+                    type: string
+                    format: date-time
+                  error:
+                    type: string
+
+components:
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    SuccessResponse:
+      type: object
+      required:
+        - success
+        - data
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          description: Response data
+        message:
+          type: string
+          description: Optional success message
+          example: "Operation completed successfully"
+
+    ListResponse:
+      type: object
+      required:
+        - success
+        - data
+        - pagination
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          description: List of items
+          items:
+            type: object
+        pagination:
+          type: object
+          required:
+            - page
+            - limit
+            - total
+            - pages
+            - has_next
+            - has_prev
+          properties:
+            page:
+              type: integer
+              description: Current page number
+              example: 1
+            limit:
+              type: integer
+              description: Items per page
+              example: 20
+            total:
+              type: integer
+              description: Total number of items
+              example: 100
+            pages:
+              type: integer
+              description: Total number of pages
+              example: 5
+            has_next:
+              type: boolean
+              description: Whether there are more pages
+              example: true
+            has_prev:
+              type: boolean
+              description: Whether there are previous pages
+              example: false
+        message:
+          type: string
+          description: Optional success message
+
+    ErrorResponse:
+      type: object
+      required:
+        - success
+        - error
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              description: Error code
+              example: "VALIDATION_ERROR"
+            message:
+              type: string
+              description: Human-readable error message
+              example: "Invalid request parameters"
+            details:
+              type: object
+              description: Additional error details
+            timestamp:
+              type: string
+              format: date-time
+              description: When the error occurred
+        message:
+          type: string
+          description: User-friendly error message
+          example: "Please check your input and try again"
+
+    Conversation:
+      type: object
+      required:
+        - id
+        - type
+        - participants
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          description: Unique identifier of the conversation
+          example: "conv_123456789"
+        type:
+          type: string
+          enum: [direct, group]
+          description: Type of conversation
+          example: "direct"
+        participants:
+          type: array
+          items:
+            type: string
+          description: List of user IDs participating in the conversation
+          example: ["user_123", "user_456"]
+        created_at:
+          type: string
+          format: date-time
+          description: When the conversation was created
+          example: "2024-01-15T10:30:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: When the conversation was last updated
+          example: "2024-01-15T14:45:00Z"
+        last_message:
+          $ref: '#/components/schemas/Message'
+        metadata:
+          type: object
+          description: Additional conversation metadata
+          properties:
+            title:
+              type: string
+              description: Conversation title (for group chats)
+            description:
+              type: string
+              description: Conversation description
+            avatar_url:
+              type: string
+              description: Conversation avatar URL
+        status:
+          type: string
+          enum: [active, archived, deleted]
+          description: Conversation status
+          example: "active"
+        unread_count:
+          type: integer
+          description: Number of unread messages for current user
+          example: 3
+
+    Message:
+      type: object
+      required:
+        - id
+        - conversation_id
+        - sender_id
+        - content
+        - message_type
+        - timestamp
+        - status
+      properties:
+        id:
+          type: string
+          description: Unique identifier of the message
+          example: "msg_123456789"
+        conversation_id:
+          type: string
+          description: ID of the conversation this message belongs to
+          example: "conv_123456789"
+        sender_id:
+          type: string
+          description: ID of the user who sent the message
+          example: "user_123"
+        content:
+          type: string
+          description: Message content
+          example: "Hello! How are you doing?"
+        message_type:
+          type: string
+          enum: [text, image, file, system]
+          description: Type of message content
+          example: "text"
+        timestamp:
+          type: string
+          format: date-time
+          description: When the message was sent
+          example: "2024-01-15T14:45:00Z"
+        status:
+          type: string
+          enum: [sent, delivered, read, failed]
+          description: Message delivery status
+          example: "delivered"
+        read_by:
+          type: object
+          additionalProperties:
+            type: string
+            format: date-time
+          description: Map of user IDs to read timestamps
+          example: {"user_456": "2024-01-15T14:50:00Z"}
+        metadata:
+          type: object
+          description: Additional message metadata
+          properties:
+            file_url:
+              type: string
+              description: URL for file/image messages
+            file_name:
+              type: string
+              description: Original filename for file messages
+            file_size:
+              type: integer
+              description: File size in bytes
+            mime_type:
+              type: string
+              description: MIME type of the file
+            edited_at:
+              type: string
+              format: date-time
+              description: When the message was last edited
+            reply_to:
+              type: string
+              description: ID of the message this is replying to
+
+    CreateConversationRequest:
+      type: object
+      required:
+        - participants
+        - type
+      properties:
+        participants:
+          type: array
+          items:
+            type: string
+          minItems: 2
+          maxItems: 2
+          description: List of user IDs (exactly 2 for direct conversations)
+          example: ["user_123", "user_456"]
+        type:
+          type: string
+          enum: [direct, group]
+          description: Type of conversation to create
+          example: "direct"
+        metadata:
+          type: object
+          description: Optional conversation metadata
+          properties:
+            title:
+              type: string
+              description: Conversation title (for group chats)
+            description:
+              type: string
+              description: Conversation description
+
+    UpdateConversationRequest:
+      type: object
+      properties:
+        metadata:
+          type: object
+          description: Conversation metadata to update
+          properties:
+            title:
+              type: string
+              description: Conversation title
+            description:
+              type: string
+              description: Conversation description
+            avatar_url:
+              type: string
+              description: Conversation avatar URL
+        status:
+          type: string
+          enum: [active, archived]
+          description: Conversation status
+
+    SendMessageRequest:
+      type: object
+      required:
+        - content
+        - message_type
+      properties:
+        content:
+          type: string
+          description: Message content
+          example: "Hello! How are you doing?"
+        message_type:
+          type: string
+          enum: [text, image, file]
+          description: Type of message content
+          example: "text"
+        metadata:
+          type: object
+          description: Additional message metadata
+          properties:
+            file_url:
+              type: string
+              description: URL for file/image messages
+            file_name:
+              type: string
+              description: Original filename for file messages
+            file_size:
+              type: integer
+              description: File size in bytes
+            mime_type:
+              type: string
+              description: MIME type of the file
+            reply_to:
+              type: string
+              description: ID of the message this is replying to
+
+    UpdateMessageRequest:
+      type: object
+      properties:
+        content:
+          type: string
+          description: Updated message content
+        metadata:
+          type: object
+          description: Updated message metadata
+          properties:
+            file_url:
+              type: string
+              description: Updated file URL
+            file_name:
+              type: string
+              description: Updated filename
+
+    TypingIndicatorRequest:
+      type: object
+      required:
+        - is_typing
+      properties:
+        is_typing:
+          type: boolean
+          description: Whether the user is currently typing
+          example: true
+
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          description: Error code
+          example: "VALIDATION_ERROR"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Invalid request parameters"
+        details:
+          type: object
+          description: Additional error details
+        timestamp:
+          type: string
+          format: date-time
+          description: When the error occurred
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+tags:
+  - name: conversations
+    description: Conversation management operations
+  - name: Messages
+    description: Message operations
+  - name: Real-time
+    description: Real-time messaging operations
