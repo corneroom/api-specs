@@ -54,7 +54,7 @@ paths:
       operationId: getBookingAnalytics
       summary: Get booking analytics
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/analytics/listing:
     get:
@@ -106,7 +106,7 @@ paths:
       operationId: getListingAnalytics
       summary: Get listing analytics.
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/analytics/overview:
     get:
@@ -132,7 +132,7 @@ paths:
       operationId: getOverviewMetrics
       summary: Get overview metrics
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/analytics/summary:
     get:
@@ -158,7 +158,7 @@ paths:
       operationId: getAnalyticsSummary
       summary: Get platform analytics summary.
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/audit-logs:
     get:
@@ -187,7 +187,7 @@ paths:
       operationId: listAuditLogs
       summary: List admin/audit logs
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/auth/login/email:
     post:
@@ -234,7 +234,7 @@ paths:
       summary: Login by email
       x-codegen-request-body-name: body
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/auth/logout:
     post:
@@ -264,7 +264,7 @@ paths:
       operationId: logoutUser
       summary: Logout the current user
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/auth/session:
     get:
@@ -293,7 +293,7 @@ paths:
       operationId: getCurrentUserSession
       summary: Get current sessions
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/bookings:
     get:
@@ -361,7 +361,7 @@ paths:
       operationId: getBookings
       summary: List/search bookings
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/dashboard/bookings/{id}':
     delete:
@@ -383,7 +383,7 @@ paths:
       operationId: deleteBookingById
       summary: Delete booking (admin)
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     get:
       produces:
@@ -414,7 +414,7 @@ paths:
       operationId: getBookingById
       summary: Get booking detail
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     patch:
       consumes:
@@ -443,7 +443,7 @@ paths:
       summary: Update booking (admin)
       x-codegen-request-body-name: booking
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     put:
       consumes:
@@ -514,7 +514,7 @@ paths:
       operationId: putBookingById
       summary: 'Update booking details (full update, admin)'
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/dashboard/bookings/{id}/export':
     get:
@@ -536,7 +536,7 @@ paths:
       operationId: exportBookingData
       summary: Export booking data
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/dashboard/bookings/{id}/refund':
     post:
@@ -572,7 +572,7 @@ paths:
       summary: Refund booking
       x-codegen-request-body-name: refund
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/dashboard/community/analytics/content/{id}':
     get:
@@ -609,7 +609,7 @@ paths:
       operationId: getContentAnalytics
       summary: Get content performance analytics
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/community/analytics/overview:
     get:
@@ -650,7 +650,7 @@ paths:
       operationId: getCommunityAnalytics
       summary: Get community analytics overview
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/community/content:
     get:
@@ -733,7 +733,7 @@ paths:
       operationId: listCommunityContent
       summary: List all community content
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/community/content/bulk-featured:
     post:
@@ -766,7 +766,7 @@ paths:
       operationId: bulkFeaturedContent
       summary: Bulk featured content operations
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/dashboard/community/content/{id}':
     delete:
@@ -803,7 +803,7 @@ paths:
       operationId: deleteCommunityContent
       summary: Delete community content
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     get:
       produces:
@@ -832,7 +832,7 @@ paths:
       operationId: getCommunityContent
       summary: Get community content details
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/community/featured/queue:
     get:
@@ -870,7 +870,7 @@ paths:
       operationId: getFeaturedQueue
       summary: Get featured content queue
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/dashboard/community/reels/{id}/featured':
     put:
@@ -913,7 +913,7 @@ paths:
       operationId: setReelFeatured
       summary: Set reel as featured
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/dashboard/community/stories/{id}/featured':
     put:
@@ -956,7 +956,7 @@ paths:
       operationId: setStoryFeatured
       summary: Set story as featured
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/dashboard/community/users/{userId}/content':
     get:
@@ -1012,7 +1012,7 @@ paths:
       operationId: getUserContent
       summary: Get user's content
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/dashboard/community/users/{userId}/suspend':
     put:
@@ -1051,7 +1051,7 @@ paths:
       operationId: suspendUserContent
       summary: Suspend user content creation
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/config/maps:
     get:
@@ -1075,7 +1075,7 @@ paths:
       operationId: getMapsConfig
       summary: Get maps configuration
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/documents:
     get:
@@ -1107,7 +1107,7 @@ paths:
       operationId: listDocuments
       summary: 'List/search documents (KYC, verification)'
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/dashboard/documents/{id}/export':
     get:
@@ -1129,7 +1129,7 @@ paths:
       operationId: exportDocumentData
       summary: Export document data
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/dashboard/documents/{id}/verify':
     post:
@@ -1167,7 +1167,7 @@ paths:
       summary: Verify document (KYC)
       x-codegen-request-body-name: action
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/feedback:
     get:
@@ -1239,7 +1239,7 @@ paths:
       operationId: getAllFeedback
       summary: List/Search feedback
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     post:
       consumes:
@@ -1267,7 +1267,7 @@ paths:
       summary: Submit app feedback
       x-codegen-request-body-name: body
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/financial/overview:
     get:
@@ -1293,7 +1293,7 @@ paths:
       operationId: getFinancialOverview
       summary: Get financial overview
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/financial/revenue-chart:
     get:
@@ -1317,7 +1317,7 @@ paths:
       operationId: getWeeklyRevenueData
       summary: Get weekly revenue chart data
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/financial/transactions:
     get:
@@ -1349,7 +1349,7 @@ paths:
       operationId: getRecentTransactions
       summary: Get recent transactions
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/firebase/config:
     get:
@@ -1378,7 +1378,7 @@ paths:
       operationId: getFirebaseConfig
       summary: Get Firebase remote config
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     post:
       consumes:
@@ -1421,7 +1421,7 @@ paths:
       summary: Create Firebase remote config
       x-codegen-request-body-name: body
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/dashboard/firebase/config/{key}':
     put:
@@ -1469,7 +1469,7 @@ paths:
       summary: Update Firebase remote config
       x-codegen-request-body-name: body
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/heartbeat:
     get:
@@ -1493,7 +1493,7 @@ paths:
       operationId: heartbeat
       summary: Dashboard service heartbeat
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/heartbeat/services:
     get:
@@ -1532,7 +1532,7 @@ paths:
       operationId: allServicesHeartBeat
       summary: Health check for all backend services
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/listings:
     get:
@@ -1578,7 +1578,7 @@ paths:
       operationId: getListings
       summary: List/Search listing
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/dashboard/listings/{id}':
     delete:
@@ -1600,7 +1600,7 @@ paths:
       operationId: deleteListingById
       summary: Delete listing (admin)
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     get:
       produces:
@@ -1639,7 +1639,7 @@ paths:
       operationId: getListingById
       summary: Get a listing detail
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     patch:
       consumes:
@@ -1686,7 +1686,7 @@ paths:
       summary: Update listing (partial)
       x-codegen-request-body-name: listing
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/dashboard/listings/{id}/export':
     get:
@@ -1708,7 +1708,7 @@ paths:
       operationId: exportListingData
       summary: Export listing data
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/dashboard/listings/{id}/moderate':
     post:
@@ -1746,7 +1746,7 @@ paths:
       summary: Moderate listing (approve/reject)
       x-codegen-request-body-name: action
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/dashboard/listings/{id}/reviews':
     get:
@@ -1816,7 +1816,7 @@ paths:
       operationId: getListingReviews
       summary: List all reviews of a listing
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/dashboard/listings/{id}/verify':
     put:
@@ -1872,7 +1872,7 @@ paths:
       summary: Restore/Revoke a listing verification
       x-codegen-request-body-name: verify
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/maintenance:
     put:
@@ -1908,7 +1908,7 @@ paths:
       summary: Update app maintenance config
       x-codegen-request-body-name: body
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/notifications:
     get:
@@ -1934,7 +1934,7 @@ paths:
       operationId: listNotifications
       summary: List notifications
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     post:
       consumes:
@@ -1959,7 +1959,7 @@ paths:
       summary: Send notification
       x-codegen-request-body-name: notification
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/permissions:
     get:
@@ -1983,7 +1983,7 @@ paths:
       operationId: getPermissions
       summary: Get all permissions
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     post:
       consumes:
@@ -2013,7 +2013,7 @@ paths:
       operationId: createPermission
       summary: Create a new permission
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/permissions/initialize:
     post:
@@ -2048,7 +2048,7 @@ paths:
       operationId: initializeDefaultPermissions
       summary: Initialize default permissions
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/dashboard/permissions/{id}':
     delete:
@@ -2083,7 +2083,7 @@ paths:
       operationId: deletePermission
       summary: Delete permission
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     get:
       produces:
@@ -2110,7 +2110,7 @@ paths:
       operationId: getPermissionById
       summary: Get permission by ID
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     put:
       consumes:
@@ -2148,7 +2148,7 @@ paths:
       operationId: updatePermission
       summary: Update permission
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/proxychat:
     post:
@@ -2214,7 +2214,7 @@ paths:
       operationId: proxyChatbot
       summary: Proxy chatbot request
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/reports/breakdown:
     get:
@@ -2238,7 +2238,7 @@ paths:
       operationId: getReportTypeBreakdown
       summary: Get report type breakdown
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/reports/overview:
     get:
@@ -2264,7 +2264,7 @@ paths:
       operationId: getReportsOverview
       summary: Get reports overview
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/reports/workload:
     get:
@@ -2290,7 +2290,7 @@ paths:
       operationId: getAdminWorkload
       summary: Get admin workload data
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/dashboard/reviews/{id}':
     delete:
@@ -2338,7 +2338,7 @@ paths:
       operationId: deleteReviewById
       summary: Delete a review detail by id
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     get:
       produces:
@@ -2377,7 +2377,7 @@ paths:
       operationId: getReviewById
       summary: Get a review detail by id
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/dashboard/reviews/{id}/export':
     get:
@@ -2399,7 +2399,7 @@ paths:
       operationId: exportReviewData
       summary: Export review data
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/dashboard/reviews/{id}/hidden':
     put:
@@ -2451,7 +2451,7 @@ paths:
       summary: Update review hidden status
       x-codegen-request-body-name: status
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/dashboard/reviews/{id}/respond':
     post:
@@ -2484,7 +2484,7 @@ paths:
       summary: Respond to a review (admin)
       x-codegen-request-body-name: response
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/dashboard/reviews/{reviewId}/report':
     post:
@@ -2530,7 +2530,7 @@ paths:
       summary: Submit a report for a review
       x-codegen-request-body-name: body
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/dashboard/reviews/{reviewId}/reports':
     get:
@@ -2563,7 +2563,7 @@ paths:
       operationId: getReviewReports
       summary: View all reports for a review
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/roles:
     get:
@@ -2587,7 +2587,7 @@ paths:
       operationId: getRoles
       summary: Get all roles
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     post:
       consumes:
@@ -2617,7 +2617,7 @@ paths:
       operationId: createRole
       summary: Create a new role
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/roles/initialize:
     post:
@@ -2652,7 +2652,7 @@ paths:
       operationId: initializeDefaultRoles
       summary: Initialize default roles
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/dashboard/roles/{id}':
     delete:
@@ -2687,7 +2687,7 @@ paths:
       operationId: deleteRole
       summary: Delete role
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     get:
       produces:
@@ -2714,7 +2714,7 @@ paths:
       operationId: getRoleById
       summary: Get role by ID
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     put:
       consumes:
@@ -2752,7 +2752,7 @@ paths:
       operationId: updateRole
       summary: Update role
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/dashboard/roles/{id}/permissions':
     get:
@@ -2780,7 +2780,7 @@ paths:
       operationId: getRolePermissions
       summary: Get role permissions
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     post:
       consumes:
@@ -2830,7 +2830,7 @@ paths:
       operationId: addPermissionToRole
       summary: Add permission to role
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/dashboard/roles/{id}/permissions/{permissionId}':
     delete:
@@ -2869,7 +2869,7 @@ paths:
       operationId: removePermissionFromRole
       summary: Remove permission from role
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/settings:
     get:
@@ -2891,7 +2891,7 @@ paths:
       operationId: getSettings
       summary: Get platform settings/config
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     patch:
       consumes:
@@ -2920,7 +2920,7 @@ paths:
       summary: Update platform settings/config
       x-codegen-request-body-name: settings
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/slack/interactive:
     post:
@@ -2964,7 +2964,7 @@ paths:
       operationId: slackInteractive
       summary: Slack interactive webhook handler
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/tasks:
     get:
@@ -3020,7 +3020,7 @@ paths:
       operationId: getTaskPool
       summary: List all unassigned tasks
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     post:
       consumes:
@@ -3057,7 +3057,7 @@ paths:
       operationId: createTask
       summary: Create a new task
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/tasks/my:
     get:
@@ -3097,7 +3097,7 @@ paths:
       operationId: getMyTasks
       summary: List tasks assigned to the authenticated user
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/tasks/stats:
     get:
@@ -3121,7 +3121,7 @@ paths:
       operationId: getTaskStats
       summary: Get task statistics
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/dashboard/tasks/{id}/assign':
     patch:
@@ -3172,7 +3172,7 @@ paths:
       operationId: assignTask
       summary: Assign a task to a user
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/dashboard/tasks/{id}/comments':
     get:
@@ -3208,7 +3208,7 @@ paths:
       operationId: getTaskComments
       summary: List comments for a task
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     patch:
       consumes:
@@ -3254,7 +3254,7 @@ paths:
       operationId: addTaskComment
       summary: Add a comment to a task (partial update)
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/dashboard/tasks/{id}/history':
     get:
@@ -3290,7 +3290,7 @@ paths:
       operationId: getTaskHistory
       summary: Get task history
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/user-roles:
     post:
@@ -3321,7 +3321,7 @@ paths:
       operationId: assignRoleToUser
       summary: Assign role to user
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/dashboard/user-roles/assignment/{userRoleId}':
     delete:
@@ -3356,7 +3356,7 @@ paths:
       operationId: removeRoleFromUser
       summary: Remove role from user
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/user-roles/bulk-assign:
     post:
@@ -3398,7 +3398,7 @@ paths:
       operationId: bulkAssignRolesToUser
       summary: Bulk assign roles to user
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/user-roles/bulk-remove:
     delete:
@@ -3440,7 +3440,7 @@ paths:
       operationId: bulkRemoveRolesFromUser
       summary: Bulk remove roles from user
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/dashboard/user-roles/{userId}':
     get:
@@ -3468,7 +3468,7 @@ paths:
       operationId: getUserRoles
       summary: Get user roles
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/users:
     get:
@@ -3537,7 +3537,7 @@ paths:
       operationId: getUsers
       summary: List/Search users
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/users/profile/picture:
     put:
@@ -3578,7 +3578,7 @@ paths:
       summary: Update admin's profile picture
       x-codegen-request-body-name: file
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/dashboard/users/{id}':
     delete:
@@ -3622,7 +3622,7 @@ paths:
       operationId: deleteUserById
       summary: Delete a user
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     get:
       produces:
@@ -3657,7 +3657,7 @@ paths:
       operationId: getUserById
       summary: Get a user detail
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     put:
       consumes:
@@ -3702,7 +3702,7 @@ paths:
       summary: Update user
       x-codegen-request-body-name: user
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/dashboard/users/{id}/ban':
     post:
@@ -3735,7 +3735,7 @@ paths:
       summary: Ban or suspend a user
       x-codegen-request-body-name: reason
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/dashboard/users/{id}/export':
     get:
@@ -3757,7 +3757,7 @@ paths:
       operationId: exportUserData
       summary: Export user data
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/dashboard/users/{id}/impersonate':
     post:
@@ -3779,7 +3779,7 @@ paths:
       operationId: impersonateUser
       summary: Impersonate user (admin login as user)
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/dashboard/users/{id}/reviews':
     get:
@@ -3849,7 +3849,7 @@ paths:
       operationId: getUserReviews
       summary: List all reviews of an user
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/dashboard/users/{id}/sendMessage':
     post:
@@ -3899,7 +3899,7 @@ paths:
       summary: Send message to an User
       x-codegen-request-body-name: message
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/dashboard/users/{id}/status':
     put:
@@ -3953,7 +3953,7 @@ paths:
       summary: Update user status
       x-codegen-request-body-name: status
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/dashboard/users/{id}/verify':
     put:
@@ -4010,7 +4010,7 @@ paths:
       summary: Restore/Revoke a user verification
       x-codegen-request-body-name: verify
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/dashboard/{proxy}':
     options:
@@ -4032,7 +4032,7 @@ paths:
       summary: CORS support
       x-google-allow: all
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/dashboard/{proxy}/{proxy1}':
     options:
@@ -4058,7 +4058,7 @@ paths:
       summary: CORS support
       x-google-allow: all
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/dashboard/{proxy}/{proxy1}/{proxy2}':
     options:
@@ -4088,7 +4088,7 @@ paths:
       summary: CORS support
       x-google-allow: all
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/dashboard/{proxy}/{proxy1}/{proxy2}/{proxy3}':
     options:
@@ -4122,7 +4122,7 @@ paths:
       summary: CORS support
       x-google-allow: all
       x-google-backend:
-        address: 'https://dashboard-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
 definitions:
   AdminWorkloadResponse:

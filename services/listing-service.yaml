@@ -23,7 +23,7 @@ paths:
         - listing
       operationId: listingsHeartbeat
       x-google-backend:
-        address: https://listing-service-ee3nwblsmq-uc.a.run.app
+        address: https://listing-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security: []
       responses:
@@ -133,7 +133,7 @@ paths:
         - listing
       operationId: listingsCreateListing
       x-google-backend:
-        address: https://listing-service-ee3nwblsmq-uc.a.run.app
+        address: https://listing-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []
@@ -548,7 +548,7 @@ paths:
             type: integer
             minimum: 0
       x-google-backend:
-        address: https://listing-service-ee3nwblsmq-uc.a.run.app
+        address: https://listing-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       responses:
         "200":
@@ -759,7 +759,7 @@ paths:
       operationId: listingsGetGroupedListings
       security: []
       x-google-backend:
-        address: https://listing-service-ee3nwblsmq-uc.a.run.app
+        address: https://listing-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       parameters:
         - name: latitude
@@ -870,7 +870,7 @@ paths:
         - listing
       operationId: categoriesGetAllCategories
       x-google-backend:
-        address: https://listing-service-ee3nwblsmq-uc.a.run.app
+        address: https://listing-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []
@@ -952,7 +952,7 @@ paths:
             type: number
             format: double
       x-google-backend:
-        address: https://listing-service-ee3nwblsmq-uc.a.run.app
+        address: https://listing-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       responses:
         "200":
@@ -1111,7 +1111,7 @@ paths:
         - listing
       operationId: listingsCreateDraft
       x-google-backend:
-        address: https://listing-service-ee3nwblsmq-uc.a.run.app
+        address: https://listing-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []
@@ -1445,7 +1445,7 @@ paths:
         - listing
       operationId: listingsUpdateDraft
       x-google-backend:
-        address: https://listing-service-ee3nwblsmq-uc.a.run.app
+        address: https://listing-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []
@@ -1775,7 +1775,7 @@ paths:
         - listing
       operationId: listingsGetListing
       x-google-backend:
-        address: https://listing-service-ee3nwblsmq-uc.a.run.app
+        address: https://listing-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []
@@ -1969,7 +1969,7 @@ paths:
         - listing
       operationId: listingsUpdateListing
       x-google-backend:
-        address: https://listing-service-ee3nwblsmq-uc.a.run.app
+        address: https://listing-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []
@@ -2315,7 +2315,7 @@ paths:
         - listing
       operationId: listingsDeleteListing
       x-google-backend:
-        address: https://listing-service-ee3nwblsmq-uc.a.run.app
+        address: https://listing-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []
@@ -2444,7 +2444,7 @@ paths:
         - listing
       operationId: listingsGetListingWeather
       x-google-backend:
-        address: https://listing-service-ee3nwblsmq-uc.a.run.app
+        address: https://listing-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []
@@ -2636,7 +2636,7 @@ paths:
         - listing
       operationId: listingsGetAllListingsForCurrentUser
       x-google-backend:
-        address: https://listing-service-ee3nwblsmq-uc.a.run.app
+        address: https://listing-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []
@@ -2873,7 +2873,7 @@ paths:
         - listing
       operationId: listingsReportListing
       x-google-backend:
-        address: https://listing-service-ee3nwblsmq-uc.a.run.app
+        address: https://listing-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []
@@ -3031,7 +3031,7 @@ paths:
         - listing
       operationId: listingsAddBlackoutDates
       x-google-backend:
-        address: https://listing-service-ee3nwblsmq-uc.a.run.app
+        address: https://listing-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []
@@ -3160,7 +3160,7 @@ paths:
         - listing
       operationId: listingsRemoveBlackoutDate
       x-google-backend:
-        address: https://listing-service-ee3nwblsmq-uc.a.run.app
+        address: https://listing-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []
@@ -3219,7 +3219,7 @@ paths:
         - listing
       operationId: listingsGetBlackoutDates
       x-google-backend:
-        address: https://listing-service-ee3nwblsmq-uc.a.run.app
+        address: https://listing-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []
@@ -3309,7 +3309,7 @@ paths:
         - listing
       operationId: listingsGetAvailability
       x-google-backend:
-        address: https://listing-service-ee3nwblsmq-uc.a.run.app
+        address: https://listing-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []
@@ -3429,7 +3429,7 @@ paths:
         - listing
       operationId: dashboardSection
       x-google-backend:
-        address: https://listing-service-ee3nwblsmq-uc.a.run.app
+        address: https://listing-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       parameters:
         - name: section

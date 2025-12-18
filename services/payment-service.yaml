@@ -44,7 +44,7 @@ paths:
         - health
       operationId: getHealth
       x-google-backend:
-        address: https://payment-service-ee3nwblsmq-uc.a.run.app
+        address: https://payment-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security: []
       responses:
@@ -75,7 +75,7 @@ paths:
         - payment
       operationId: paymentHeartbeat
       x-google-backend:
-        address: https://payment-service-ee3nwblsmq-uc.a.run.app
+        address: https://payment-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security: [{ jwtAuth: [] }]
       parameters:
@@ -115,7 +115,7 @@ paths:
         - payment
       operationId: getEarnings
       x-google-backend:
-        address: https://payment-service-ee3nwblsmq-uc.a.run.app
+        address: https://payment-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security: [{ jwtAuth: [] }]
       parameters:
@@ -155,7 +155,7 @@ paths:
         - payment
       operationId: getTransactionHistory
       x-google-backend:
-        address: https://payment-service-ee3nwblsmq-uc.a.run.app
+        address: https://payment-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security: [{ jwtAuth: [] }]
       parameters:
@@ -212,7 +212,7 @@ paths:
         - payment
       operationId: createPaymentIntent
       x-google-backend:
-        address: https://payment-service-ee3nwblsmq-uc.a.run.app
+        address: https://payment-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security: [{ jwtAuth: [] }]
       parameters:
@@ -264,7 +264,7 @@ paths:
         - payment
       operationId: getPaymentIntent
       x-google-backend:
-        address: https://payment-service-ee3nwblsmq-uc.a.run.app
+        address: https://payment-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security: [{ jwtAuth: [] }]
       parameters:
@@ -316,7 +316,7 @@ paths:
         - payment
       operationId: usePaymentMethod
       x-google-backend:
-        address: https://payment-service-ee3nwblsmq-uc.a.run.app
+        address: https://payment-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security: [{ jwtAuth: [] }]
       parameters:
@@ -380,7 +380,7 @@ paths:
         - payment
       operationId: createRefund
       x-google-backend:
-        address: https://payment-service-ee3nwblsmq-uc.a.run.app
+        address: https://payment-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security: [{ jwtAuth: [] }]
       parameters:
@@ -432,7 +432,7 @@ paths:
         - payment
       operationId: attachPaymentMethod
       x-google-backend:
-        address: https://payment-service-ee3nwblsmq-uc.a.run.app
+        address: https://payment-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security: [{ jwtAuth: [] }]
       parameters:
@@ -504,7 +504,7 @@ paths:
         - payment
       operationId: getPaymentMethods
       x-google-backend:
-        address: https://payment-service-ee3nwblsmq-uc.a.run.app
+        address: https://payment-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security: [{ jwtAuth: [] }]
       parameters:
@@ -543,7 +543,7 @@ paths:
         - payment
       operationId: savePaymentMethod
       x-google-backend:
-        address: https://payment-service-ee3nwblsmq-uc.a.run.app
+        address: https://payment-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security: [{ jwtAuth: [] }]
       parameters:
@@ -609,7 +609,7 @@ paths:
         - payment
       operationId: removePaymentMethod
       x-google-backend:
-        address: https://payment-service-ee3nwblsmq-uc.a.run.app
+        address: https://payment-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security: [{ jwtAuth: [] }]
       parameters:
@@ -674,7 +674,7 @@ paths:
         - payment
       operationId: setDefaultPaymentMethod
       x-google-backend:
-        address: https://payment-service-ee3nwblsmq-uc.a.run.app
+        address: https://payment-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security: [{ jwtAuth: [] }]
       parameters:
@@ -753,7 +753,7 @@ paths:
         - payment
       operationId: createSetupIntent
       x-google-backend:
-        address: https://payment-service-ee3nwblsmq-uc.a.run.app
+        address: https://payment-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security: [{ jwtAuth: [] }]
       parameters:
@@ -799,7 +799,7 @@ paths:
         - payment
       operationId: getSetupIntent
       x-google-backend:
-        address: https://payment-service-ee3nwblsmq-uc.a.run.app
+        address: https://payment-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security: [{ jwtAuth: [] }]
       parameters:
@@ -852,7 +852,7 @@ paths:
         - webhook
       operationId: handleProviderWebhook
       x-google-backend:
-        address: https://payment-service-ee3nwblsmq-uc.a.run.app
+        address: https://payment-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security: []
       parameters:

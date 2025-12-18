@@ -24,7 +24,7 @@ paths:
       tags: [conversations]
       operationId: conversationHeartBeat
       x-google-backend:
-        address: https://chat-service-ee3nwblsmq-uc.a.run.app
+        address: https://chat-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security: []
       responses:
@@ -53,7 +53,7 @@ paths:
       description: Get all conversations for the authenticated user
       operationId: listConversations
       x-google-backend:
-        address: https://chat-service-ee3nwblsmq-uc.a.run.app
+        address: https://chat-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []
@@ -108,7 +108,7 @@ paths:
       description: Create a new conversation between users
       operationId: createConversation
       x-google-backend:
-        address: https://chat-service-ee3nwblsmq-uc.a.run.app
+        address: https://chat-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []
@@ -147,7 +147,7 @@ paths:
       description: Get details of a specific conversation
       operationId: getConversation
       x-google-backend:
-        address: https://chat-service-ee3nwblsmq-uc.a.run.app
+        address: https://chat-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []
@@ -186,7 +186,7 @@ paths:
       description: Update conversation settings (archive, mute, etc.)
       operationId: updateConversation
       x-google-backend:
-        address: https://chat-service-ee3nwblsmq-uc.a.run.app
+        address: https://chat-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []
@@ -228,7 +228,7 @@ paths:
       description: Archive a conversation (soft delete)
       operationId: archiveConversation
       x-google-backend:
-        address: https://chat-service-ee3nwblsmq-uc.a.run.app
+        address: https://chat-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []
@@ -259,7 +259,7 @@ paths:
       description: Get messages from a specific conversation
       operationId: getMessages
       x-google-backend:
-        address: https://chat-service-ee3nwblsmq-uc.a.run.app
+        address: https://chat-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []
@@ -323,7 +323,7 @@ paths:
       description: Send a new message to a conversation
       operationId: sendMessage
       x-google-backend:
-        address: https://chat-service-ee3nwblsmq-uc.a.run.app
+        address: https://chat-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []
@@ -371,7 +371,7 @@ paths:
       description: Get details of a specific message
       operationId: getMessage
       x-google-backend:
-        address: https://chat-service-ee3nwblsmq-uc.a.run.app
+        address: https://chat-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []
@@ -405,7 +405,7 @@ paths:
       description: Update a message (edit, delete, etc.)
       operationId: updateMessage
       x-google-backend:
-        address: https://chat-service-ee3nwblsmq-uc.a.run.app
+        address: https://chat-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []
@@ -448,7 +448,7 @@ paths:
       description: Mark a specific message as read by the current user
       operationId: markMessageAsRead
       x-google-backend:
-        address: https://chat-service-ee3nwblsmq-uc.a.run.app
+        address: https://chat-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []
@@ -483,7 +483,7 @@ paths:
       description: Mark all messages in a conversation as read by the current user
       operationId: markAllMessagesAsRead
       x-google-backend:
-        address: https://chat-service-ee3nwblsmq-uc.a.run.app
+        address: https://chat-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []
@@ -522,7 +522,7 @@ paths:
       description: Poll for new messages in a conversation (replaces WebSocket for offline messaging)
       operationId: pollMessages
       x-google-backend:
-        address: https://chat-service-ee3nwblsmq-uc.a.run.app
+        address: https://chat-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []
@@ -581,7 +581,7 @@ paths:
       description: Send typing indicator to other participants
       operationId: sendTypingIndicator
       x-google-backend:
-        address: https://chat-service-ee3nwblsmq-uc.a.run.app
+        address: https://chat-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []
@@ -618,7 +618,7 @@ paths:
       description: Establish WebSocket connection for real-time messaging
       operationId: websocket
       x-google-backend:
-        address: https://chat-service-ee3nwblsmq-uc.a.run.app
+        address: https://chat-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []
@@ -651,7 +651,7 @@ paths:
       description: Check service health status
       operationId: healthCheck
       x-google-backend:
-        address: https://chat-service-ee3nwblsmq-uc.a.run.app
+        address: https://chat-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       tags:
         - conversations

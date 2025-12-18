@@ -20,7 +20,7 @@ servers:
   - url: https://app-x-staging-gateway-8ua0taf7.uc.gateway.dev/api/v1
 
 x-google-backend:
-  address: https://booking-service-ee3nwblsmq-uc.a.run.app
+  address: https://booking-service-981292602655.us-central1.run.app
   path_translation: APPEND_PATH_TO_ADDRESS
 
 paths:
@@ -362,23 +362,12 @@ paths:
           required: true
           schema: { type: string }
       requestBody:
-        description: Reason for cancellation
+        description: Cancellation request with actor and reason
         required: true
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                reason:
-                  type: string
-                  enum:
-                    - Change of travel plans
-                    - Guest asked to cancel
-                    - Guest did not show up
-                    - Guest did not have required payment
-                    - Accidental booking
-                    - Other
-              required: [reason]
+              $ref: "#/components/schemas/CancelBookingRequest"
       responses:
         "202":
           description: Booking cancelled
@@ -742,6 +731,10 @@ components:
       type: object
       properties:
         id: { type: string, example: bkg_001 }
+        booking_code:
+          type: string
+          description: Human-friendly booking code (e.g., CR-8J3K2P)
+          example: "CR-8J3K2P"
         listing: { $ref: "#/components/schemas/ListingInfo" }
         guest: { $ref: "#/components/schemas/User" }
         host: { $ref: "#/components/schemas/User" }
@@ -825,6 +818,28 @@ components:
         address: { type: string }
         thumbnail: { type: string, example: "https://img.com/listing_123_space.jpg" }
         currency: { type: string, example: "USD" }
+        latitude: 
+          type: number
+          format: float
+          nullable: true
+          description: Latitude coordinate of the listing location
+        longitude:
+          type: number
+          format: float
+          nullable: true
+          description: Longitude coordinate of the listing location
+        city: { type: string, description: "City where the listing is located" }
+        country: { type: string, description: "Country where the listing is located" }
+        province: { type: string, description: "Province/state where the listing is located" }
+        flag: { type: string, description: "Country flag emoji" }
+        category_code: { type: string, description: "Listing category code" }
+        category_name: { type: string, description: "Listing category name" }
+        timezone: { type: string, example: "America/Toronto", description: "Timezone of the listing location" }
+        instant_book: { type: boolean, description: "Whether the listing allows instant booking" }
+        base_rate: 
+          type: number
+          format: float
+          description: "Original listing price per night at booking time"
       required: [id, title, address, thumbnail]
 
     BookingsSplitResponse:
@@ -1024,3 +1039,47 @@ components:
         - check_out
         - guests
         - payment_intent_id
+
+    GuestCancellationReason:
+      type: string
+      description: Reason code for guest-initiated cancellations
+      enum:
+        - change_of_plans
+        - accidental_booking
+        - travel_issue
+        - price_or_payment_issue
+        - health_or_emergency
+        - other
+      example: change_of_plans
+
+    HostCancellationReason:
+      type: string
+      description: Reason code for host-initiated cancellations
+      enum:
+        - guest_asked_to_cancel
+        - guest_no_show
+        - guest_payment_issue
+        - property_issue
+        - host_schedule_issue
+        - safety_or_comfort_concern
+        - other
+      example: guest_asked_to_cancel
+
+    CancelBookingRequest:
+      type: object
+      description: Request body for cancelling a booking
+      properties:
+        actor:
+          type: string
+          enum: [guest, host]
+          description: Who is cancelling the booking
+          example: guest
+        reason:
+          oneOf:
+            - $ref: "#/components/schemas/GuestCancellationReason"
+            - $ref: "#/components/schemas/HostCancellationReason"
+          description: Cancellation reason code (must match actor type)
+          example: change_of_plans
+      required:
+        - actor
+        - reason

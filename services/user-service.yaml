@@ -29,7 +29,7 @@ paths:
         - user
       operationId: userHeartbeat
       x-google-backend:
-        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        address: https://user-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       responses:
         "200":
@@ -156,7 +156,7 @@ paths:
         - user
       operationId: emailSignUp
       x-google-backend:
-        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        address: https://user-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       requestBody:
         content:
@@ -279,7 +279,7 @@ paths:
         - user
       operationId: emailSignUpOTPConfirm
       x-google-backend:
-        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        address: https://user-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       requestBody:
         content:
@@ -451,7 +451,7 @@ paths:
         - user
       operationId: phoneSignUp
       x-google-backend:
-        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        address: https://user-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       requestBody:
         content:
@@ -529,7 +529,7 @@ paths:
         - user
       operationId: phoneSignUpOTPConfirm
       x-google-backend:
-        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        address: https://user-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       requestBody:
         content:
@@ -700,7 +700,7 @@ paths:
         - user
       operationId: sendRegistrationEmailOTP
       x-google-backend:
-        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        address: https://user-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       requestBody:
         content:
@@ -795,7 +795,7 @@ paths:
         - user
       operationId: sendRegistrationPhoneOTP
       x-google-backend:
-        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        address: https://user-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       requestBody:
         content:
@@ -889,7 +889,7 @@ paths:
         - user
       operationId: socialAuth
       x-google-backend:
-        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        address: https://user-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       requestBody:
         content:
@@ -1042,7 +1042,7 @@ paths:
         - user
       operationId: emailSignIn
       x-google-backend:
-        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        address: https://user-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       requestBody:
         content:
@@ -1200,7 +1200,7 @@ paths:
         - user
       operationId: phoneSignIn
       x-google-backend:
-        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        address: https://user-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       requestBody:
         content:
@@ -1358,7 +1358,7 @@ paths:
         - user
       operationId: initiateOTPLogin
       x-google-backend:
-        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        address: https://user-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       requestBody:
         content:
@@ -1511,7 +1511,7 @@ paths:
         - user
       operationId: verifyOTPLogin
       x-google-backend:
-        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        address: https://user-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       requestBody:
         content:
@@ -1704,7 +1704,7 @@ paths:
         - user
       operationId: refreshToken
       x-google-backend:
-        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        address: https://user-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       requestBody:
         content:
@@ -1826,7 +1826,7 @@ paths:
         - user
       operationId: requestPasswordReset
       x-google-backend:
-        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        address: https://user-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       requestBody:
         content:
@@ -1936,7 +1936,7 @@ paths:
         - user
       operationId: verifyPasswordResetOTP
       x-google-backend:
-        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        address: https://user-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       requestBody:
         content:
@@ -2043,7 +2043,7 @@ paths:
         - user
       operationId: confirmPasswordReset
       x-google-backend:
-        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        address: https://user-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       requestBody:
         content:
@@ -2164,7 +2164,7 @@ paths:
         - user
       operationId: getCurrentUser
       x-google-backend:
-        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        address: https://user-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []
@@ -2251,7 +2251,7 @@ paths:
         - user
       operationId: updateCurrentUser
       x-google-backend:
-        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        address: https://user-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []
@@ -2359,7 +2359,7 @@ paths:
         - user
       operationId: requestUserDeletion
       x-google-backend:
-        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        address: https://user-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []
@@ -2424,7 +2424,7 @@ paths:
         - user
       operationId: getUserProfileById
       x-google-backend:
-        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        address: https://user-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []
@@ -2563,7 +2563,7 @@ paths:
         - user
       operationId: getCurrentUserStats
       x-google-backend:
-        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        address: https://user-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []
@@ -2722,7 +2722,7 @@ paths:
         - user
       operationId: updateCurrentUserAvatar
       x-google-backend:
-        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        address: https://user-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []
@@ -2839,7 +2839,7 @@ paths:
         - user
       operationId: deleteCurrentUserAvatar
       x-google-backend:
-        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        address: https://user-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []
@@ -2948,7 +2948,7 @@ paths:
         - user
       operationId: changeCurrentUserPassword
       x-google-backend:
-        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        address: https://user-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []
@@ -3057,7 +3057,7 @@ paths:
         - user
       operationId: logoutCurrentUser
       x-google-backend:
-        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        address: https://user-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []
@@ -3135,7 +3135,7 @@ paths:
         - user
       operationId: confirmCurrentUserPhoneNumberVerification
       x-google-backend:
-        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        address: https://user-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []
@@ -3238,7 +3238,7 @@ paths:
         - user
       operationId: initiateCurrentUserPhoneNumberVerification
       x-google-backend:
-        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        address: https://user-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []
@@ -3347,7 +3347,7 @@ paths:
         - user
       operationId: addCurrentUserPhone
       x-google-backend:
-        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        address: https://user-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []
@@ -3417,7 +3417,7 @@ paths:
         - user
       operationId: addCurrentUserEmail
       x-google-backend:
-        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        address: https://user-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []
@@ -3488,7 +3488,7 @@ paths:
         - user
       operationId: confirmCurrentUserEmail
       x-google-backend:
-        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        address: https://user-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []
@@ -3602,7 +3602,7 @@ paths:
         - user
       operationId: verifyCurrentUserEmail
       x-google-backend:
-        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        address: https://user-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []
@@ -3844,7 +3844,7 @@ paths:
         - user
       operationId: getCurrentUserDevices
       x-google-backend:
-        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        address: https://user-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []
@@ -3940,7 +3940,7 @@ paths:
         - user
       operationId: addOrUpdateCurrentUserDevice
       x-google-backend:
-        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        address: https://user-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []
@@ -4028,7 +4028,7 @@ paths:
         - user
       operationId: updateCurrentUserDevice
       x-google-backend:
-        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        address: https://user-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []
@@ -4137,7 +4137,7 @@ paths:
         - user
       operationId: registerAnonymousDeviceInterest
       x-google-backend:
-        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        address: https://user-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security: []  # Explicitly mark as unauthenticated (anonymous endpoint)
       parameters:
@@ -4224,7 +4224,7 @@ paths:
         - user
       operationId: removeCurrentUserDevice
       x-google-backend:
-        address: https://user-service-ee3nwblsmq-uc.a.run.app
+        address: https://user-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []

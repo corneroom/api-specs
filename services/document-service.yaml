@@ -33,7 +33,7 @@ paths:
         - document
       operationId: documentsHeartbeat
       x-google-backend:
-        address: https://document-service-ee3nwblsmq-uc.a.run.app
+        address: https://document-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security: []
       responses:
@@ -76,7 +76,7 @@ paths:
         - document
       operationId: documentsUploadFiles
       x-google-backend:
-        address: https://document-service-ee3nwblsmq-uc.a.run.app
+        address: https://document-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []
@@ -153,7 +153,7 @@ paths:
         - document
       operationId: documentsOverwriteFiles
       x-google-backend:
-        address: https://document-service-ee3nwblsmq-uc.a.run.app
+        address: https://document-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []
@@ -216,7 +216,7 @@ paths:
         - document
       operationId: documentsDeleteFiles
       x-google-backend:
-        address: https://document-service-ee3nwblsmq-uc.a.run.app
+        address: https://document-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []

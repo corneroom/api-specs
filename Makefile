@@ -163,25 +163,25 @@ flutter-client: ## Generate Flutter API client for corneroom
 sync: ## Sync API specs from backend services to services/ directory
 	@echo "🔄 Syncing API specs from backend services..."
 	@echo "📋 Copying booking-service API spec..."
-	@cp ../../backend/booking-service/docs/api.yaml services/booking-service.yaml
+	@cp ../../../backend/booking-service/docs/api.yaml services/booking-service.yaml
 	@echo "📋 Copying chat-service API spec..."
-	@cp ../../backend/chat-service/docs/api.yaml services/chat-service.yaml
+	@cp ../../../backend/chat-service/docs/api.yaml services/chat-service.yaml
 	@echo "📋 Copying community-service API spec..."
-	@cp ../../backend/community-service/docs/api.yaml services/community-service.yaml
+	@cp ../../../backend/community-service/docs/api.yaml services/community-service.yaml
 	@echo "📋 Copying dashboard-service API spec..."
-	@cp ../../backend/dashboard-service/docs/api.yaml services/dashboard-service.yaml
+	@cp ../../../backend/dashboard-service/docs/api.yaml services/dashboard-service.yaml
 	@echo "📋 Copying document-service API spec..."
-	@cp ../../backend/document-service/docs/api.yaml services/document-service.yaml
+	@cp ../../../backend/document-service/docs/api.yaml services/document-service.yaml
 	@echo "📋 Copying listing-service API spec..."
-	@cp ../../backend/listing-service/docs/api.yaml services/listing-service.yaml
+	@cp ../../../backend/listing-service/docs/api.yaml services/listing-service.yaml
 	@echo "📋 Copying payment-service API spec..."
-	@cp ../../backend/payment-service/docs/api.yaml services/payment-service.yaml
+	@cp ../../../backend/payment-service/docs/api.yaml services/payment-service.yaml
 	@echo "📋 Copying review-service API spec..."
-	@cp ../../backend/review-service/docs/api.yaml services/review-service.yaml
+	@cp ../../../backend/review-service/docs/api.yaml services/review-service.yaml
 	@echo "📋 Copying user-service API spec..."
-	@cp ../../backend/user-service/docs/api.yaml services/user-service.yaml
+	@cp ../../../backend/user-service/docs/api.yaml services/user-service.yaml
 	@echo "📋 Copying verification-service API spec..."
-	@cp ../../backend/verification-service/docs/api.yaml services/verification-service.yaml
+	@cp ../../../backend/verification-service/docs/api.yaml services/verification-service.yaml
 	@echo "📋 Copying wishlist-service API spec..."
-	@cp ../../backend/wishlist-service/docs/api.yaml services/wishlist-service.yaml
+	@cp ../../../backend/wishlist-service/docs/api.yaml services/wishlist-service.yaml
 	@echo "✅ API specs sync completed!"

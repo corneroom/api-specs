@@ -48,7 +48,7 @@ paths:
       operationId: bookingsList
       summary: Get all bookings for the authenticated user
       x-google-backend:
-        address: 'https://booking-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://booking-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     post:
       consumes:
@@ -102,7 +102,7 @@ paths:
       operationId: bookingsCreate
       summary: Create a booking (DEPRECATED)
       x-google-backend:
-        address: 'https://booking-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://booking-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /bookings/draft:
     get:
@@ -142,7 +142,7 @@ paths:
       operationId: bookingsGetDraft
       summary: Get draft booking for listing
       x-google-backend:
-        address: 'https://booking-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://booking-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /bookings/drafts:
     get:
@@ -174,7 +174,7 @@ paths:
       operationId: bookingsGetDrafts
       summary: Get all draft bookings for user
       x-google-backend:
-        address: 'https://booking-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://booking-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /bookings/heartbeat:
     get:
@@ -202,7 +202,7 @@ paths:
       operationId: bookingsHeartbeat
       summary: Heartbeat
       x-google-backend:
-        address: 'https://booking-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://booking-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /bookings/host:
     get:
@@ -241,7 +241,7 @@ paths:
       operationId: bookingsHost
       summary: Get all bookings where the authenticated user is the host
       x-google-backend:
-        address: 'https://booking-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://booking-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /bookings/initiate:
     post:
@@ -284,7 +284,7 @@ paths:
       operationId: bookingsInitiate
       summary: Initiate a booking (draft)
       x-google-backend:
-        address: 'https://booking-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://booking-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/bookings/{id}':
     delete:
@@ -330,7 +330,7 @@ paths:
       operationId: bookingsDelete
       summary: Delete a draft booking
       x-google-backend:
-        address: 'https://booking-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://booking-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     get:
       produces:
@@ -362,7 +362,7 @@ paths:
       operationId: bookingsGet
       summary: Get a booking by ID
       x-google-backend:
-        address: 'https://booking-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://booking-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/bookings/{id}/accept':
     patch:
@@ -407,7 +407,7 @@ paths:
       operationId: bookingsAccept
       summary: Accept a booking
       x-google-backend:
-        address: 'https://booking-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://booking-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/bookings/{id}/cancel':
     patch:
@@ -459,7 +459,7 @@ paths:
       operationId: bookingsCancel
       summary: Cancel a booking
       x-google-backend:
-        address: 'https://booking-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://booking-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     put:
       produces:
@@ -484,7 +484,7 @@ paths:
       operationId: cancelBooking
       summary: Cancel a booking
       x-google-backend:
-        address: 'https://community-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/bookings/{id}/complete':
     patch:
@@ -524,7 +524,7 @@ paths:
       operationId: bookingsComplete
       summary: Complete a booking
       x-google-backend:
-        address: 'https://booking-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://booking-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/bookings/{id}/finalize':
     patch:
@@ -576,7 +576,7 @@ paths:
       operationId: bookingsFinalize
       summary: Finalize a booking
       x-google-backend:
-        address: 'https://booking-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://booking-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/bookings/{id}/payment-intent':
     patch:
@@ -633,7 +633,7 @@ paths:
       operationId: bookingsUpdatePaymentIntent
       summary: Update draft booking with payment intent ID
       x-google-backend:
-        address: 'https://booking-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://booking-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/bookings/{id}/reject':
     patch:
@@ -690,7 +690,7 @@ paths:
       operationId: bookingsReject
       summary: Reject a booking
       x-google-backend:
-        address: 'https://booking-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://booking-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /community/bookings/my:
     get:
@@ -720,7 +720,7 @@ paths:
       operationId: getUserBookings
       summary: Get user's bookings
       x-google-backend:
-        address: 'https://community-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/community/comments/{id}':
     delete:
@@ -742,7 +742,7 @@ paths:
       operationId: deleteComment
       summary: Delete a comment
       x-google-backend:
-        address: 'https://community-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     put:
       consumes:
@@ -776,7 +776,7 @@ paths:
       operationId: updateComment
       summary: Update a comment
       x-google-backend:
-        address: 'https://community-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/community/events/{id}':
     get:
@@ -802,7 +802,7 @@ paths:
       operationId: getEvent
       summary: Get event details
       x-google-backend:
-        address: 'https://community-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /community/experiences:
     get:
@@ -838,7 +838,7 @@ paths:
       operationId: getExperiences
       summary: List experiences
       x-google-backend:
-        address: 'https://community-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     post:
       consumes:
@@ -868,7 +868,7 @@ paths:
       operationId: createExperience
       summary: Create a new experience
       x-google-backend:
-        address: 'https://community-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/community/experiences/{id}/book':
     post:
@@ -903,7 +903,7 @@ paths:
       operationId: bookExperience
       summary: Book an experience
       x-google-backend:
-        address: 'https://community-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /community/feed:
     get:
@@ -951,7 +951,7 @@ paths:
       operationId: getFeed
       summary: Get authenticated community feed
       x-google-backend:
-        address: 'https://community-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /community/guides:
     get:
@@ -987,7 +987,7 @@ paths:
       operationId: getGuides
       summary: List guides
       x-google-backend:
-        address: 'https://community-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     post:
       consumes:
@@ -1017,7 +1017,7 @@ paths:
       operationId: createGuide
       summary: Become a guide
       x-google-backend:
-        address: 'https://community-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /community/public/feed:
     get:
@@ -1060,7 +1060,7 @@ paths:
       operationId: getPublicFeed
       summary: Get public community feed
       x-google-backend:
-        address: 'https://community-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /community/reels:
     post:
@@ -1091,7 +1091,7 @@ paths:
       operationId: createReel
       summary: Create a new reel
       x-google-backend:
-        address: 'https://community-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /community/reels/my:
     get:
@@ -1113,7 +1113,7 @@ paths:
       operationId: getUserReels
       summary: Get current user's reels
       x-google-backend:
-        address: 'https://community-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/community/reels/{id}':
     delete:
@@ -1135,7 +1135,7 @@ paths:
       operationId: deleteReel
       summary: Delete a reel
       x-google-backend:
-        address: 'https://community-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/community/reels/{id}/comments':
     get:
@@ -1169,7 +1169,7 @@ paths:
       operationId: getReelComments
       summary: Get comments for a reel
       x-google-backend:
-        address: 'https://community-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     post:
       consumes:
@@ -1201,7 +1201,7 @@ paths:
       operationId: addReelComment
       summary: Add a comment to a reel
       x-google-backend:
-        address: 'https://community-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/community/reels/{id}/like':
     delete:
@@ -1227,7 +1227,7 @@ paths:
       operationId: unlikeReel
       summary: Unlike a reel
       x-google-backend:
-        address: 'https://community-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     put:
       produces:
@@ -1252,7 +1252,7 @@ paths:
       operationId: likeReel
       summary: Like a reel
       x-google-backend:
-        address: 'https://community-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /community/stories:
     post:
@@ -1283,7 +1283,7 @@ paths:
       operationId: createStory
       summary: Create a new story
       x-google-backend:
-        address: 'https://community-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /community/stories/my:
     get:
@@ -1305,7 +1305,7 @@ paths:
       operationId: getUserStories
       summary: Get current user's stories
       x-google-backend:
-        address: 'https://community-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/community/stories/{id}':
     delete:
@@ -1327,7 +1327,7 @@ paths:
       operationId: deleteStory
       summary: Delete a story
       x-google-backend:
-        address: 'https://community-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/community/stories/{id}/comments':
     get:
@@ -1361,7 +1361,7 @@ paths:
       operationId: getStoryComments
       summary: Get comments for a story
       x-google-backend:
-        address: 'https://community-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     post:
       consumes:
@@ -1393,7 +1393,7 @@ paths:
       operationId: addStoryComment
       summary: Add a comment to a story
       x-google-backend:
-        address: 'https://community-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/community/stories/{id}/like':
     delete:
@@ -1419,7 +1419,7 @@ paths:
       operationId: unlikeStory
       summary: Unlike a story
       x-google-backend:
-        address: 'https://community-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     put:
       produces:
@@ -1444,7 +1444,7 @@ paths:
       operationId: likeStory
       summary: Like a story
       x-google-backend:
-        address: 'https://community-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/community/stories/{id}/view':
     put:
@@ -1470,7 +1470,7 @@ paths:
       operationId: incrementStoryViews
       summary: Increment view count for a story
       x-google-backend:
-        address: 'https://community-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /community/travel-plans:
     get:
@@ -1503,7 +1503,7 @@ paths:
       operationId: getTravelPlans
       summary: Get user's travel plans
       x-google-backend:
-        address: 'https://community-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     post:
       consumes:
@@ -1533,7 +1533,7 @@ paths:
       operationId: createTravelPlan
       summary: Create a travel plan
       x-google-backend:
-        address: 'https://community-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /community/travel-plans/discover:
     get:
@@ -1569,7 +1569,7 @@ paths:
       operationId: getDiscoverablePlans
       summary: Discover travel plans
       x-google-backend:
-        address: 'https://community-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/community/travel-plans/{id}':
     delete:
@@ -1593,7 +1593,7 @@ paths:
       operationId: deleteTravelPlan
       summary: Delete travel plan
       x-google-backend:
-        address: 'https://community-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     get:
       produces:
@@ -1618,7 +1618,7 @@ paths:
       operationId: getTravelPlan
       summary: Get travel plan details
       x-google-backend:
-        address: 'https://community-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     put:
       consumes:
@@ -1652,7 +1652,7 @@ paths:
       operationId: updateTravelPlan
       summary: Update travel plan
       x-google-backend:
-        address: 'https://community-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/community/travel-plans/{id}/connect':
     post:
@@ -1687,7 +1687,7 @@ paths:
       operationId: connectToTravelPlan
       summary: Connect to travel plan
       x-google-backend:
-        address: 'https://community-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/community/travel-plans/{id}/connections':
     get:
@@ -1721,7 +1721,7 @@ paths:
       operationId: getPlanConnections
       summary: Get plan connections
       x-google-backend:
-        address: 'https://community-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/community/travel-plans/{id}/connections/{connectionId}':
     delete:
@@ -1751,7 +1751,7 @@ paths:
       operationId: removeConnection
       summary: Remove connection
       x-google-backend:
-        address: 'https://community-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/community/travel-plans/{id}/publish':
     post:
@@ -1779,7 +1779,7 @@ paths:
       operationId: publishTravelPlan
       summary: Publish travel plan
       x-google-backend:
-        address: 'https://community-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /conversations:
     get:
@@ -1837,7 +1837,7 @@ paths:
       operationId: listConversations
       summary: List user conversations
       x-google-backend:
-        address: 'https://chat-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://chat-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     post:
       consumes:
@@ -1882,7 +1882,7 @@ paths:
       operationId: createConversation
       summary: Create a new conversation
       x-google-backend:
-        address: 'https://chat-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://chat-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /conversations/heartbeat:
     get:
@@ -1910,7 +1910,7 @@ paths:
       operationId: conversationHeartBeat
       summary: Heartbeat
       x-google-backend:
-        address: 'https://chat-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://chat-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/conversations/{conversationId}':
     delete:
@@ -1949,7 +1949,7 @@ paths:
       operationId: archiveConversation
       summary: Archive conversation
       x-google-backend:
-        address: 'https://chat-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://chat-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     get:
       produces:
@@ -1994,7 +1994,7 @@ paths:
       operationId: getConversation
       summary: Get conversation details
       x-google-backend:
-        address: 'https://chat-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://chat-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     put:
       consumes:
@@ -2045,7 +2045,7 @@ paths:
       operationId: updateConversation
       summary: Update conversation
       x-google-backend:
-        address: 'https://chat-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://chat-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/conversations/{conversationId}/messages':
     get:
@@ -2113,7 +2113,7 @@ paths:
       operationId: getMessages
       summary: Get conversation messages
       x-google-backend:
-        address: 'https://chat-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://chat-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     post:
       consumes:
@@ -2169,7 +2169,7 @@ paths:
       operationId: sendMessage
       summary: Send a message
       x-google-backend:
-        address: 'https://chat-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://chat-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/conversations/{conversationId}/poll':
     get:
@@ -2234,7 +2234,7 @@ paths:
       operationId: pollMessages
       summary: Poll for new messages
       x-google-backend:
-        address: 'https://chat-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://chat-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/conversations/{conversationId}/read':
     put:
@@ -2279,7 +2279,7 @@ paths:
       operationId: markAllMessagesAsRead
       summary: Mark all messages as read
       x-google-backend:
-        address: 'https://chat-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://chat-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/conversations/{conversationId}/typing':
     post:
@@ -2325,7 +2325,7 @@ paths:
       operationId: sendTypingIndicator
       summary: Send typing indicator
       x-google-backend:
-        address: 'https://chat-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://chat-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/devices/anonymous/{device_id}/interests':
     post:
@@ -2412,7 +2412,7 @@ paths:
       operationId: registerAnonymousDeviceInterest
       summary: Register anonymous device interest in a listing
       x-google-backend:
-        address: 'https://user-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://user-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /documents:
     delete:
@@ -2471,7 +2471,7 @@ paths:
       operationId: documentsDeleteFiles
       summary: Delete files
       x-google-backend:
-        address: 'https://document-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://document-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     patch:
       consumes:
@@ -2531,7 +2531,7 @@ paths:
       operationId: documentsOverwriteFiles
       summary: Overwrite files
       x-google-backend:
-        address: 'https://document-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://document-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     post:
       consumes:
@@ -2603,7 +2603,7 @@ paths:
       operationId: documentsUploadFiles
       summary: Upload files
       x-google-backend:
-        address: 'https://document-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://document-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /documents/heartbeat:
     get:
@@ -2640,7 +2640,7 @@ paths:
       operationId: documentsHeartbeat
       summary: Heartbeat
       x-google-backend:
-        address: 'https://document-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://document-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /events:
     get:
@@ -2673,7 +2673,7 @@ paths:
       operationId: getEvents
       summary: List events
       x-google-backend:
-        address: 'https://community-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     post:
       consumes:
@@ -2703,7 +2703,7 @@ paths:
       operationId: createEvent
       summary: Create a new event
       x-google-backend:
-        address: 'https://community-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/events/{id}/join':
     post:
@@ -2731,7 +2731,7 @@ paths:
       operationId: joinEvent
       summary: Join an event
       x-google-backend:
-        address: 'https://community-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/experiences/{id}':
     delete:
@@ -2753,7 +2753,7 @@ paths:
       operationId: deleteExperience
       summary: Delete experience
       x-google-backend:
-        address: 'https://community-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     get:
       produces:
@@ -2778,7 +2778,7 @@ paths:
       operationId: getExperience
       summary: Get experience details
       x-google-backend:
-        address: 'https://community-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     put:
       consumes:
@@ -2810,7 +2810,7 @@ paths:
       operationId: updateExperience
       summary: Update experience
       x-google-backend:
-        address: 'https://community-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/guides/{id}':
     get:
@@ -2836,7 +2836,7 @@ paths:
       operationId: getGuide
       summary: Get guide profile
       x-google-backend:
-        address: 'https://community-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /health:
     get:
@@ -2887,7 +2887,7 @@ paths:
       operationId: healthCheck
       summary: Health check
       x-google-backend:
-        address: 'https://chat-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://chat-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /listings:
     get:
@@ -3183,7 +3183,7 @@ paths:
       operationId: listingsGetAllListings
       summary: Get all listings
       x-google-backend:
-        address: 'https://listing-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://listing-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     post:
       consumes:
@@ -3505,7 +3505,7 @@ paths:
       operationId: listingsCreateListing
       summary: Create a new listing (publish)
       x-google-backend:
-        address: 'https://listing-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://listing-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /listings/address:
     get:
@@ -3679,7 +3679,7 @@ paths:
       operationId: listingsAddressAutoComplete
       summary: Address auto complete
       x-google-backend:
-        address: 'https://listing-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://listing-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /listings/categories:
     get:
@@ -3736,7 +3736,7 @@ paths:
       operationId: categoriesGetAllCategories
       summary: Get all available categories
       x-google-backend:
-        address: 'https://listing-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://listing-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/listings/dashboard/{section}':
     get:
@@ -3856,7 +3856,7 @@ paths:
       operationId: dashboardSection
       summary: Get dashboard section data
       x-google-backend:
-        address: 'https://listing-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://listing-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /listings/drafts:
     post:
@@ -4198,7 +4198,7 @@ paths:
       operationId: listingsCreateDraft
       summary: Save listing draft
       x-google-backend:
-        address: 'https://listing-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://listing-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     put:
       consumes:
@@ -4527,7 +4527,7 @@ paths:
       operationId: listingsUpdateDraft
       summary: Update listing draft
       x-google-backend:
-        address: 'https://listing-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://listing-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /listings/grouped:
     get:
@@ -4640,7 +4640,7 @@ paths:
       operationId: listingsGetGroupedListings
       summary: Get grouped listings (sample for all groups)
       x-google-backend:
-        address: 'https://listing-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://listing-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /listings/heartbeat:
     get:
@@ -4745,7 +4745,7 @@ paths:
       operationId: listingsHeartbeat
       summary: Heartbeat
       x-google-backend:
-        address: 'https://listing-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://listing-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /listings/locations/detect:
     post:
@@ -4810,7 +4810,7 @@ paths:
       operationId: locationsDetect
       summary: Reverse geocode detected user location
       x-google-backend:
-        address: 'https://booking-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://booking-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /listings/locations/popular:
     get:
@@ -4870,7 +4870,7 @@ paths:
       operationId: locationsPopular
       summary: Get popular locations and countries
       x-google-backend:
-        address: 'https://booking-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://booking-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /listings/locations/search:
     get:
@@ -4943,7 +4943,7 @@ paths:
       operationId: locationsSearch
       summary: Location search and autocomplete
       x-google-backend:
-        address: 'https://booking-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://booking-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /listings/user:
     get:
@@ -5183,7 +5183,7 @@ paths:
       operationId: listingsGetAllListingsForCurrentUser
       summary: Get all listings for the authenticated user ("my listings")
       x-google-backend:
-        address: 'https://listing-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://listing-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/listings/{id}':
     delete:
@@ -5303,7 +5303,7 @@ paths:
       operationId: listingsDeleteListing
       summary: Delete a listing
       x-google-backend:
-        address: 'https://listing-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://listing-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     get:
       produces:
@@ -5485,7 +5485,7 @@ paths:
       operationId: listingsGetListing
       summary: Get a listing
       x-google-backend:
-        address: 'https://listing-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://listing-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     put:
       consumes:
@@ -5844,7 +5844,7 @@ paths:
       operationId: listingsUpdateListing
       summary: Update a listing
       x-google-backend:
-        address: 'https://listing-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://listing-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/listings/{id}/availability':
     get:
@@ -5955,7 +5955,7 @@ paths:
       operationId: listingsGetAvailability
       summary: Get listing availability
       x-google-backend:
-        address: 'https://listing-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://listing-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/listings/{id}/availability/calendar':
     get:
@@ -6003,7 +6003,7 @@ paths:
       operationId: listingsGetAvailabilityCalendar
       summary: Get listing availability calendar
       x-google-backend:
-        address: 'https://booking-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://booking-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/listings/{id}/blackout':
     post:
@@ -6126,7 +6126,7 @@ paths:
       operationId: listingsAddBlackoutDates
       summary: Add blackout dates to a listing
       x-google-backend:
-        address: 'https://listing-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://listing-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/listings/{id}/blackout-dates':
     get:
@@ -6205,7 +6205,7 @@ paths:
       operationId: listingsGetBlackoutDates
       summary: Get blackout dates for a listing
       x-google-backend:
-        address: 'https://listing-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://listing-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/listings/{id}/blackout/{blackout_id}':
     delete:
@@ -6253,7 +6253,7 @@ paths:
       operationId: listingsRemoveBlackoutDate
       summary: Remove a blackout date from a listing
       x-google-backend:
-        address: 'https://listing-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://listing-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/listings/{id}/report':
     post:
@@ -6402,7 +6402,7 @@ paths:
       operationId: listingsReportListing
       summary: Report a listing
       x-google-backend:
-        address: 'https://listing-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://listing-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/listings/{id}/weather/forecast':
     get:
@@ -6584,7 +6584,7 @@ paths:
       operationId: listingsGetListingWeather
       summary: Get weather forecast for a listing
       x-google-backend:
-        address: 'https://listing-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://listing-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/messages/{messageId}':
     get:
@@ -6625,7 +6625,7 @@ paths:
       operationId: getMessage
       summary: Get message details
       x-google-backend:
-        address: 'https://chat-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://chat-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     put:
       consumes:
@@ -6676,7 +6676,7 @@ paths:
       operationId: updateMessage
       summary: Update message
       x-google-backend:
-        address: 'https://chat-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://chat-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/messages/{messageId}/read':
     put:
@@ -6717,7 +6717,7 @@ paths:
       operationId: markMessageAsRead
       summary: Mark message as read
       x-google-backend:
-        address: 'https://chat-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://chat-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /payments/earnings:
     get:
@@ -6755,7 +6755,7 @@ paths:
       operationId: getEarnings
       summary: Get user earnings
       x-google-backend:
-        address: 'https://payment-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://payment-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /payments/heartbeat:
     get:
@@ -6795,7 +6795,7 @@ paths:
       operationId: paymentHeartbeat
       summary: Heartbeat
       x-google-backend:
-        address: 'https://payment-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://payment-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /payments/history:
     get:
@@ -6848,7 +6848,7 @@ paths:
       operationId: getTransactionHistory
       summary: Get transaction history
       x-google-backend:
-        address: 'https://payment-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://payment-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /payments/intents:
     post:
@@ -6897,7 +6897,7 @@ paths:
       operationId: createPaymentIntent
       summary: Create payment intent
       x-google-backend:
-        address: 'https://payment-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://payment-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/payments/intents/{id}':
     get:
@@ -6944,7 +6944,7 @@ paths:
       operationId: getPaymentIntent
       summary: Get payment intent
       x-google-backend:
-        address: 'https://payment-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://payment-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/payments/intents/{id}/use-payment-method':
     post:
@@ -7007,7 +7007,7 @@ paths:
       operationId: usePaymentMethod
       summary: Use payment method
       x-google-backend:
-        address: 'https://payment-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://payment-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /payments/methods:
     get:
@@ -7045,7 +7045,7 @@ paths:
       operationId: getPaymentMethods
       summary: Get user payment methods
       x-google-backend:
-        address: 'https://payment-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://payment-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     post:
       consumes:
@@ -7107,7 +7107,7 @@ paths:
       operationId: savePaymentMethod
       summary: Save payment method
       x-google-backend:
-        address: 'https://payment-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://payment-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/payments/methods/{id}':
     delete:
@@ -7166,7 +7166,7 @@ paths:
       operationId: removePaymentMethod
       summary: Remove payment method
       x-google-backend:
-        address: 'https://payment-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://payment-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     patch:
       consumes:
@@ -7238,7 +7238,7 @@ paths:
       operationId: setDefaultPaymentMethod
       summary: Set default payment method
       x-google-backend:
-        address: 'https://payment-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://payment-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/payments/methods/{id}/attach':
     post:
@@ -7306,7 +7306,7 @@ paths:
       operationId: attachPaymentMethod
       summary: Attach payment method
       x-google-backend:
-        address: 'https://payment-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://payment-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /payments/refunds:
     post:
@@ -7355,7 +7355,7 @@ paths:
       operationId: createRefund
       summary: Create refund
       x-google-backend:
-        address: 'https://payment-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://payment-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /payments/setup-intents:
     post:
@@ -7400,7 +7400,7 @@ paths:
       operationId: createSetupIntent
       summary: Create setup intent
       x-google-backend:
-        address: 'https://payment-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://payment-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/payments/setup-intents/{id}':
     get:
@@ -7447,7 +7447,7 @@ paths:
       operationId: getSetupIntent
       summary: Get setup intent
       x-google-backend:
-        address: 'https://payment-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://payment-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /reviews:
     get:
@@ -7510,7 +7510,7 @@ paths:
       operationId: listReviews
       summary: 'Get reviews with filters (author, target, type, category, etc.)'
       x-google-backend:
-        address: 'https://review-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://review-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     post:
       consumes:
@@ -7554,7 +7554,7 @@ paths:
       operationId: createReview
       summary: Create a new review (user or listing)
       x-google-backend:
-        address: 'https://review-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://review-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /reviews/heartbeat:
     get:
@@ -7586,7 +7586,7 @@ paths:
       operationId: getHeartbeat
       summary: Health check endpoint
       x-google-backend:
-        address: 'https://review-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://review-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/reviews/{id}':
     delete:
@@ -7620,7 +7620,7 @@ paths:
       operationId: deleteReview
       summary: Delete a review
       x-google-backend:
-        address: 'https://review-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://review-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     get:
       produces:
@@ -7653,7 +7653,7 @@ paths:
       operationId: getReviewById
       summary: Get a single review by ID
       x-google-backend:
-        address: 'https://review-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://review-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     patch:
       consumes:
@@ -7698,7 +7698,7 @@ paths:
       operationId: patchReview
       summary: 'Partially update a review (e.g., change comment, rating, etc.)'
       x-google-backend:
-        address: 'https://review-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://review-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/reviews/{id}/report':
     post:
@@ -7739,7 +7739,7 @@ paths:
       operationId: reportReview
       summary: Report an inappropriate review
       x-google-backend:
-        address: 'https://review-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://review-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/reviews/{id}/respond':
     post:
@@ -7779,7 +7779,7 @@ paths:
       operationId: respondToReview
       summary: Respond to a review
       x-google-backend:
-        address: 'https://review-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://review-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /users/heartbeat:
     get:
@@ -7899,7 +7899,7 @@ paths:
       operationId: userHeartbeat
       summary: User service heartbeat
       x-google-backend:
-        address: 'https://user-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://user-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /users/login/email:
     post:
@@ -8053,7 +8053,7 @@ paths:
       operationId: emailSignIn
       summary: Sign in a user via email
       x-google-backend:
-        address: 'https://user-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://user-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /users/login/otp/initiate:
     post:
@@ -8209,7 +8209,7 @@ paths:
       operationId: initiateOTPLogin
       summary: Initiate OTP-based passwordless login
       x-google-backend:
-        address: 'https://user-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://user-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /users/login/otp/verify:
     post:
@@ -8398,7 +8398,7 @@ paths:
       operationId: verifyOTPLogin
       summary: Verify OTP and complete passwordless login
       x-google-backend:
-        address: 'https://user-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://user-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /users/login/phone:
     post:
@@ -8552,7 +8552,7 @@ paths:
       operationId: phoneSignIn
       summary: Sign in a user via phone number
       x-google-backend:
-        address: 'https://user-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://user-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /users/me:
     delete:
@@ -8639,7 +8639,7 @@ paths:
       operationId: requestUserDeletion
       summary: Request user account deletion
       x-google-backend:
-        address: 'https://user-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://user-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     get:
       produces:
@@ -8721,7 +8721,7 @@ paths:
       operationId: getCurrentUser
       summary: Get current user profile
       x-google-backend:
-        address: 'https://user-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://user-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     patch:
       consumes:
@@ -8813,7 +8813,7 @@ paths:
       operationId: updateCurrentUser
       summary: Update current user profile
       x-google-backend:
-        address: 'https://user-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://user-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /users/me/avatar:
     delete:
@@ -8918,7 +8918,7 @@ paths:
       operationId: deleteCurrentUserAvatar
       summary: Delete current user's avatar
       x-google-backend:
-        address: 'https://user-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://user-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     patch:
       consumes:
@@ -9031,7 +9031,7 @@ paths:
       operationId: updateCurrentUserAvatar
       summary: Update current user's avatar
       x-google-backend:
-        address: 'https://user-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://user-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     post:
       consumes:
@@ -9137,7 +9137,7 @@ paths:
       operationId: changeCurrentUserPassword
       summary: Change current user's password
       x-google-backend:
-        address: 'https://user-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://user-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /users/me/devices:
     get:
@@ -9231,7 +9231,7 @@ paths:
       operationId: getCurrentUserDevices
       summary: Get current user's registered devices
       x-google-backend:
-        address: 'https://user-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://user-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     patch:
       consumes:
@@ -9335,7 +9335,7 @@ paths:
       operationId: updateCurrentUserDevice
       summary: Update device for current user
       x-google-backend:
-        address: 'https://user-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://user-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     post:
       consumes:
@@ -9423,7 +9423,7 @@ paths:
       operationId: addOrUpdateCurrentUserDevice
       summary: Add or update device for current user
       x-google-backend:
-        address: 'https://user-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://user-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/users/me/devices/{device_id}':
     delete:
@@ -9502,7 +9502,7 @@ paths:
       operationId: removeCurrentUserDevice
       summary: Remove device for current user
       x-google-backend:
-        address: 'https://user-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://user-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /users/me/email/add:
     patch:
@@ -9568,7 +9568,7 @@ paths:
       operationId: addCurrentUserEmail
       summary: Add a new email to the current user
       x-google-backend:
-        address: 'https://user-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://user-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /users/me/email/confirm:
     post:
@@ -9680,7 +9680,7 @@ paths:
       operationId: confirmCurrentUserEmail
       summary: Confirm current user's email
       x-google-backend:
-        address: 'https://user-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://user-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /users/me/email/verify:
     post:
@@ -9784,7 +9784,7 @@ paths:
       operationId: verifyCurrentUserEmail
       summary: Verify current user's email
       x-google-backend:
-        address: 'https://user-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://user-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /users/me/identity/verify:
     post:
@@ -9921,7 +9921,7 @@ paths:
       operationId: submitCurrentUserBiometricVerificationRequest
       summary: Submit biometric verification request for current user
       x-google-backend:
-        address: 'https://booking-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://booking-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /users/me/logout:
     post:
@@ -9999,7 +9999,7 @@ paths:
       operationId: logoutCurrentUser
       summary: Logout current user
       x-google-backend:
-        address: 'https://user-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://user-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /users/me/phone/add:
     patch:
@@ -10065,7 +10065,7 @@ paths:
       operationId: addCurrentUserPhone
       summary: Add a new phone number to the current user
       x-google-backend:
-        address: 'https://user-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://user-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /users/me/phone/confirm:
     post:
@@ -10166,7 +10166,7 @@ paths:
       operationId: confirmCurrentUserPhoneNumberVerification
       summary: Confirm current user's phone number verification
       x-google-backend:
-        address: 'https://user-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://user-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /users/me/phone/verify:
     post:
@@ -10273,7 +10273,7 @@ paths:
       operationId: initiateCurrentUserPhoneNumberVerification
       summary: Initiate phone number verification for the current user
       x-google-backend:
-        address: 'https://user-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://user-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /users/me/stats:
     get:
@@ -10425,7 +10425,7 @@ paths:
       operationId: getCurrentUserStats
       summary: Get current user statistics
       x-google-backend:
-        address: 'https://user-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://user-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /users/password/confirm:
     post:
@@ -10550,7 +10550,7 @@ paths:
       operationId: confirmPasswordReset
       summary: Confirm password reset
       x-google-backend:
-        address: 'https://user-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://user-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /users/password/reset:
     post:
@@ -10660,7 +10660,7 @@ paths:
       operationId: requestPasswordReset
       summary: Request password reset
       x-google-backend:
-        address: 'https://user-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://user-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /users/password/reset/verify:
     post:
@@ -10770,7 +10770,7 @@ paths:
       operationId: verifyPasswordResetOTP
       summary: Verify password reset OTP
       x-google-backend:
-        address: 'https://user-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://user-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /users/refresh:
     post:
@@ -10892,7 +10892,7 @@ paths:
       operationId: refreshToken
       summary: Refresh access token
       x-google-backend:
-        address: 'https://user-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://user-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /users/register/email:
     post:
@@ -11013,7 +11013,7 @@ paths:
       operationId: emailSignUp
       summary: User signup via email
       x-google-backend:
-        address: 'https://user-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://user-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /users/register/email/confirm:
     post:
@@ -11181,7 +11181,7 @@ paths:
       operationId: emailSignUpOTPConfirm
       summary: User signup via email confirmation
       x-google-backend:
-        address: 'https://user-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://user-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /users/register/otp/email:
     post:
@@ -11274,7 +11274,7 @@ paths:
       operationId: sendRegistrationEmailOTP
       summary: Resend registration email OTP
       x-google-backend:
-        address: 'https://user-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://user-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /users/register/otp/phone:
     post:
@@ -11366,7 +11366,7 @@ paths:
       operationId: sendRegistrationPhoneOTP
       summary: Resend registration Phone OTP
       x-google-backend:
-        address: 'https://user-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://user-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /users/register/phone:
     post:
@@ -11444,7 +11444,7 @@ paths:
       operationId: phoneSignUp
       summary: User signup via phone number
       x-google-backend:
-        address: 'https://user-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://user-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /users/register/phone/confirm:
     post:
@@ -11611,7 +11611,7 @@ paths:
       operationId: phoneSignUpOTPConfirm
       summary: User signup via phone number confirmation
       x-google-backend:
-        address: 'https://user-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://user-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /users/social/auth:
     post:
@@ -11762,7 +11762,7 @@ paths:
       operationId: socialAuth
       summary: User auth via social media
       x-google-backend:
-        address: 'https://user-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://user-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/users/{userId}/profile':
     get:
@@ -11892,7 +11892,7 @@ paths:
       operationId: getUserProfileById
       summary: Get user profile by ID
       x-google-backend:
-        address: 'https://user-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://user-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /verifications:
     get:
@@ -11936,7 +11936,7 @@ paths:
       operationId: listMyVerifications
       summary: Get user's verification history
       x-google-backend:
-        address: 'https://verification-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://verification-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /verifications/background:
     post:
@@ -12004,7 +12004,7 @@ paths:
       operationId: submitBackgroundVerification
       summary: Submit background verification request
       x-google-backend:
-        address: 'https://verification-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://verification-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /verifications/facematch:
     post:
@@ -12071,7 +12071,7 @@ paths:
       operationId: submitFacematchVerification
       summary: Submit facematch verification request
       x-google-backend:
-        address: 'https://verification-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://verification-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /verifications/location:
     post:
@@ -12138,7 +12138,7 @@ paths:
       operationId: submitLocationVerification
       summary: Submit location verification request
       x-google-backend:
-        address: 'https://verification-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://verification-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /verifications/voice:
     post:
@@ -12205,7 +12205,7 @@ paths:
       operationId: submitVoiceVerification
       summary: Submit voice verification request
       x-google-backend:
-        address: 'https://verification-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://verification-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/verifications/{verification_id}':
     get:
@@ -12247,7 +12247,7 @@ paths:
       operationId: getVerification
       summary: Get verification details
       x-google-backend:
-        address: 'https://verification-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://verification-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/verifications/{verification_id}/results':
     get:
@@ -12289,7 +12289,7 @@ paths:
       operationId: getVerificationResults
       summary: Get verification AI results
       x-google-backend:
-        address: 'https://verification-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://verification-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/webhooks/{provider}':
     post:
@@ -12334,7 +12334,7 @@ paths:
       operationId: handleProviderWebhook
       summary: Payment provider webhook
       x-google-backend:
-        address: 'https://payment-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://payment-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /wishlists:
     delete:
@@ -12380,7 +12380,7 @@ paths:
       operationId: removeListingFromWishlist
       summary: Remove a single listing from wishlist
       x-google-backend:
-        address: 'https://wishlist-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://wishlist-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     get:
       produces:
@@ -12417,7 +12417,7 @@ paths:
       operationId: getAllListingsInWishlist
       summary: Get all listings in wishlist for the authenticated user
       x-google-backend:
-        address: 'https://wishlist-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://wishlist-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     patch:
       consumes:
@@ -12460,7 +12460,7 @@ paths:
       operationId: moveListingBetweenTags
       summary: Move a single listing to a different tag
       x-google-backend:
-        address: 'https://wishlist-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://wishlist-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     post:
       consumes:
@@ -12507,7 +12507,7 @@ paths:
         Add a single listing to wishlist for the authenticated user (optionally
         with tag)
       x-google-backend:
-        address: 'https://wishlist-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://wishlist-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /wishlists/heartbeat:
     get:
@@ -12545,7 +12545,7 @@ paths:
       operationId: wishlistHeartbeat
       summary: Wishlist service heartbeat
       x-google-backend:
-        address: 'https://wishlist-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://wishlist-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /wishlists/tags:
     delete:
@@ -12591,7 +12591,7 @@ paths:
       operationId: deleteTagFromWishlist
       summary: Delete an entire tag and all its listings from wishlist
       x-google-backend:
-        address: 'https://wishlist-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://wishlist-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /ws:
     get:
@@ -12625,7 +12625,7 @@ paths:
       operationId: websocket
       summary: WebSocket connection
       x-google-backend:
-        address: 'https://chat-service-ee3nwblsmq-uc.a.run.app'
+        address: 'https://chat-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
 definitions:
   APIResponse:
@@ -14758,13 +14758,52 @@ definitions:
     properties:
       address:
         type: string
+      base_rate:
+        description: Original listing price per night at booking time
+        format: float
+        type: number
+      category_code:
+        description: Listing category code
+        type: string
+      category_name:
+        description: Listing category name
+        type: string
+      city:
+        description: City where the listing is located
+        type: string
+      country:
+        description: Country where the listing is located
+        type: string
       currency:
         example: USD
         type: string
+      flag:
+        description: Country flag emoji
+        type: string
       id:
+        type: string
+      instant_book:
+        description: Whether the listing allows instant booking
+        type: boolean
+      latitude:
+        description: Latitude coordinate of the listing location
+        format: float
+        type: number
+        x-nullable: true
+      longitude:
+        description: Longitude coordinate of the listing location
+        format: float
+        type: number
+        x-nullable: true
+      province:
+        description: Province/state where the listing is located
         type: string
       thumbnail:
         example: 'https://img.com/listing_123_space.jpg'
+        type: string
+      timezone:
+        description: Timezone of the listing location
+        example: America/Toronto
         type: string
       title:
         type: string

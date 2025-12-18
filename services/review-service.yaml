@@ -25,7 +25,7 @@ paths:
         This endpoint is used to check the health status of the API service.
       operationId: getHeartbeat
       x-google-backend:
-        address: https://review-service-ee3nwblsmq-uc.a.run.app
+        address: https://review-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       tags:
         - review
@@ -59,7 +59,7 @@ paths:
         - review
       operationId: listReviews
       x-google-backend:
-        address: https://review-service-ee3nwblsmq-uc.a.run.app
+        address: https://review-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []
@@ -128,7 +128,7 @@ paths:
         - review
       operationId: createReview
       x-google-backend:
-        address: https://review-service-ee3nwblsmq-uc.a.run.app
+        address: https://review-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []
@@ -224,7 +224,7 @@ paths:
         - review
       operationId: getReviewById
       x-google-backend:
-        address: https://review-service-ee3nwblsmq-uc.a.run.app
+        address: https://review-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []
@@ -262,7 +262,7 @@ paths:
         - review
       operationId: patchReview
       x-google-backend:
-        address: https://review-service-ee3nwblsmq-uc.a.run.app
+        address: https://review-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []
@@ -312,7 +312,7 @@ paths:
         - review
       operationId: deleteReview
       x-google-backend:
-        address: https://review-service-ee3nwblsmq-uc.a.run.app
+        address: https://review-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []
@@ -351,7 +351,7 @@ paths:
         - review
       operationId: reportReview
       x-google-backend:
-        address: https://review-service-ee3nwblsmq-uc.a.run.app
+        address: https://review-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []
@@ -396,7 +396,7 @@ paths:
         - review
       operationId: respondToReview
       x-google-backend:
-        address: https://review-service-ee3nwblsmq-uc.a.run.app
+        address: https://review-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       security:
         - jwtAuth: []

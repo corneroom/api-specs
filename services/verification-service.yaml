@@ -38,7 +38,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://verification-service-ee3nwblsmq-uc.a.run.app
+        address: https://verification-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       parameters:
         - name: limit
@@ -95,7 +95,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://verification-service-ee3nwblsmq-uc.a.run.app
+        address: https://verification-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       parameters:
         - name: Accept-Language
@@ -155,7 +155,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://verification-service-ee3nwblsmq-uc.a.run.app
+        address: https://verification-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       parameters:
         - name: Accept-Language
@@ -215,7 +215,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://verification-service-ee3nwblsmq-uc.a.run.app
+        address: https://verification-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       parameters:
         - name: Accept-Language
@@ -275,7 +275,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://verification-service-ee3nwblsmq-uc.a.run.app
+        address: https://verification-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       parameters:
         - name: Accept-Language
@@ -327,7 +327,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://verification-service-ee3nwblsmq-uc.a.run.app
+        address: https://verification-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       parameters:
         - name: verification_id
@@ -377,7 +377,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://verification-service-ee3nwblsmq-uc.a.run.app
+        address: https://verification-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       parameters:
         - name: verification_id
