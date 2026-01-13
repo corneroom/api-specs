@@ -69,14 +69,13 @@ paths:
             minimum: 1
             maximum: 100
             default: 20
-        - name: offset
+        - name: cursor
           in: query
-          description: Number of conversations to skip
+          description: Cursor token for pagination (conversation ID). Use the value from the previous response's `next_cursor` when `has_more` is true.
           required: false
           schema:
-            type: integer
-            minimum: 0
-            default: 0
+            type: string
+            example: "3b6a45ca-f555-46d6-95fa-62ffe4bb951a"
         - name: type
           in: query
           description: Filter conversations by type
@@ -86,18 +85,40 @@ paths:
             enum: [direct, group]
       responses:
         '200':
-          description: List of conversations
+          description: List of conversations (cursor-based pagination)
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/ListResponse'
-                  - type: object
+                type: object
+                required:
+                  - success
+                  - data
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
                     properties:
-                      data:
+                      conversations:
                         type: array
                         items:
                           $ref: '#/components/schemas/Conversation'
+                      total:
+                        type: integer
+                        description: Total number of conversations returned in this response
+                        example: 2
+                      has_more:
+                        type: boolean
+                        description: Whether there are more conversations beyond this page
+                        example: false
+                      next_cursor:
+                        type: string
+                        description: Cursor token for the next page; present when `has_more` is true
+                        example: "3b6a45ca-f555-46d6-95fa-62ffe4bb951a"
+                  message:
+                    type: string
+                    description: Optional success message
         '401':
           $ref: '#/components/responses/Unauthorized'
         '500':
@@ -138,6 +159,40 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '409':
           description: Conversation already exists
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /conversations/find:
+    post:
+      summary: Find an existing conversation
+      description: Find an existing direct conversation by participants and listing metadata
+      operationId: findConversation
+      x-google-backend:
+        address: https://chat-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      tags:
+        - conversations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FindConversationRequest'
+      responses:
+        '200':
+          description: Conversation found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Conversation'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
 
@@ -962,6 +1017,26 @@ components:
             description:
               type: string
               description: Conversation description
+
+    FindConversationRequest:
+      type: object
+      required:
+        - participants
+      properties:
+        participants:
+          type: array
+          items:
+            type: string
+          minItems: 2
+          description: List of user IDs (for direct conversations)
+          example: ["user_123", "user_456"]
+        metadata:
+          type: object
+          description: Optional metadata to match (e.g., listing_id)
+          additionalProperties: true
+          example:
+            listing_id: "MzqmgZXqwi5BraRNEKPA"
+            listing_title: "Beautiful Apartment in Montreal"
 
     UpdateConversationRequest:
       type: object

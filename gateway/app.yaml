@@ -4521,6 +4521,14 @@ paths:
                   format: int32
                 instant_book:
                   type: boolean
+                accept_same_day_booking:
+                  type: boolean
+                  description: >
+                    Allows same-day bookings (check-in and check-out on same
+                    date, different times).
+
+                    Default: false (opt-in model - hosts must explicitly
+                    enable).
                 photos:
                   type: array
                   items:
@@ -8664,24 +8672,12 @@ paths:
           schema:
             type: string
       requestBody:
-        description: Reason for cancellation
+        description: Cancellation request with actor and reason
         required: true
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                reason:
-                  type: string
-                  enum:
-                    - Change of travel plans
-                    - Guest asked to cancel
-                    - Guest did not show up
-                    - Guest did not have required payment
-                    - Accidental booking
-                    - Other
-              required:
-                - reason
+              $ref: '#/components/schemas/CancelBookingRequest'
       responses:
         '202':
           description: Booking cancelled
@@ -10974,14 +10970,15 @@ paths:
             minimum: 1
             maximum: 100
             default: 20
-        - name: offset
+        - name: cursor
           in: query
-          description: Number of conversations to skip
+          description: >-
+            Cursor token for pagination (conversation ID). Use the value from
+            the previous response's `next_cursor` when `has_more` is true.
           required: false
           schema:
-            type: integer
-            minimum: 0
-            default: 0
+            type: string
+            example: 3b6a45ca-f555-46d6-95fa-62ffe4bb951a
         - name: type
           in: query
           description: Filter conversations by type
@@ -10993,18 +10990,44 @@ paths:
               - group
       responses:
         '200':
-          description: List of conversations
+          description: List of conversations (cursor-based pagination)
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/ListResponse'
-                  - type: object
+                type: object
+                required:
+                  - success
+                  - data
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
                     properties:
-                      data:
+                      conversations:
                         type: array
                         items:
                           $ref: '#/components/schemas/Conversation'
+                      total:
+                        type: integer
+                        description: >-
+                          Total number of conversations returned in this
+                          response
+                        example: 2
+                      has_more:
+                        type: boolean
+                        description: Whether there are more conversations beyond this page
+                        example: false
+                      next_cursor:
+                        type: string
+                        description: >-
+                          Cursor token for the next page; present when
+                          `has_more` is true
+                        example: 3b6a45ca-f555-46d6-95fa-62ffe4bb951a
+                  message:
+                    type: string
+                    description: Optional success message
         '401':
           $ref: '#/components/responses/Unauthorized'
         '500':
@@ -11044,6 +11067,41 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '409':
           description: Conversation already exists
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /conversations/find:
+    post:
+      summary: Find an existing conversation
+      description: >-
+        Find an existing direct conversation by participants and listing
+        metadata
+      operationId: findConversation
+      x-google-backend:
+        address: https://chat-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      tags:
+        - conversations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FindConversationRequest'
+      responses:
+        '200':
+          description: Conversation found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Conversation'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /conversations/{conversationId}:
@@ -13610,9 +13668,10 @@ components:
                       - facematch
                       - background
                       - location
+                      - voice
                       - livevideo
                       - pose
-                      - badge
+                      - peer
                     example: facematch
                   timestamp:
                     type: string
@@ -14062,6 +14121,10 @@ components:
         id:
           type: string
           example: bkg_001
+        booking_code:
+          type: string
+          description: Human-friendly booking code (e.g., CR-8J3K2P)
+          example: CR-8J3K2P
         listing:
           $ref: '#/components/schemas/ListingInfo'
         guest:
@@ -14198,6 +14261,20 @@ components:
           type: string
         address:
           type: string
+        check_in_instructions:
+          type: string
+          description: Instructions for check-in (post-booking)
+        check_out_instructions:
+          type: string
+          description: Instructions for check-out (post-booking)
+        wifi_details:
+          $ref: '#/components/schemas/WifiDetail'
+        emergency_contact:
+          type: string
+          description: Emergency contact information for the listing
+        local_recommendations:
+          type: string
+          description: Local recommendations and tips for guests
         thumbnail:
           type: string
           example: https://img.com/listing_123_space.jpg
@@ -14248,6 +14325,15 @@ components:
         - title
         - address
         - thumbnail
+    WifiDetail:
+      type: object
+      properties:
+        network_name:
+          type: string
+        password:
+          type: string
+        notes:
+          type: string
     BookingsSplitResponse:
       type: object
       properties:
@@ -14484,6 +14570,49 @@ components:
         - check_out
         - guests
         - payment_intent_id
+    GuestCancellationReason:
+      type: string
+      description: Reason code for guest-initiated cancellations
+      enum:
+        - change_of_plans
+        - accidental_booking
+        - travel_issue
+        - price_or_payment_issue
+        - health_or_emergency
+        - other
+      example: change_of_plans
+    HostCancellationReason:
+      type: string
+      description: Reason code for host-initiated cancellations
+      enum:
+        - guest_asked_to_cancel
+        - guest_no_show
+        - guest_payment_issue
+        - property_issue
+        - host_schedule_issue
+        - safety_or_comfort_concern
+        - other
+      example: guest_asked_to_cancel
+    CancelBookingRequest:
+      type: object
+      description: Request body for cancelling a booking
+      properties:
+        actor:
+          type: string
+          enum:
+            - guest
+            - host
+          description: Who is cancelling the booking
+          example: guest
+        reason:
+          oneOf:
+            - $ref: '#/components/schemas/GuestCancellationReason'
+            - $ref: '#/components/schemas/HostCancellationReason'
+          description: Cancellation reason code (must match actor type)
+          example: change_of_plans
+      required:
+        - actor
+        - reason
     PublicReview:
       type: object
       description: Public review information for display (minimal, user-facing)
@@ -15654,6 +15783,27 @@ components:
             description:
               type: string
               description: Conversation description
+    FindConversationRequest:
+      type: object
+      required:
+        - participants
+      properties:
+        participants:
+          type: array
+          items:
+            type: string
+          minItems: 2
+          description: List of user IDs (for direct conversations)
+          example:
+            - user_123
+            - user_456
+        metadata:
+          type: object
+          description: Optional metadata to match (e.g., listing_id)
+          additionalProperties: true
+          example:
+            listing_id: MzqmgZXqwi5BraRNEKPA
+            listing_title: Beautiful Apartment in Montreal
     UpdateConversationRequest:
       type: object
       properties:

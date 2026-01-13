@@ -420,24 +420,12 @@ paths:
           name: id
           required: true
           type: string
-        - description: Reason for cancellation
+        - description: Cancellation request with actor and reason
           in: body
           name: body
           required: true
           schema:
-            properties:
-              reason:
-                enum:
-                  - Change of travel plans
-                  - Guest asked to cancel
-                  - Guest did not show up
-                  - Guest did not have required payment
-                  - Accidental booking
-                  - Other
-                type: string
-            required:
-              - reason
-            type: object
+            $ref: '#/definitions/CancelBookingRequest'
       responses:
         '202':
           description: Booking cancelled
@@ -1794,13 +1782,13 @@ paths:
           name: limit
           required: false
           type: integer
-        - default: 0
-          description: Number of conversations to skip
+        - description: >-
+            Cursor token for pagination (conversation ID). Use the value from
+            the previous response's `next_cursor` when `has_more` is true.
           in: query
-          minimum: 0
-          name: offset
+          name: cursor
           required: false
-          type: integer
+          type: string
         - description: Filter conversations by type
           enum:
             - direct
@@ -1811,16 +1799,40 @@ paths:
           type: string
       responses:
         '200':
-          description: List of conversations
+          description: List of conversations (cursor-based pagination)
           schema:
-            allOf:
-              - $ref: '#/definitions/ListResponse'
-              - properties:
-                  data:
+            properties:
+              data:
+                properties:
+                  conversations:
                     items:
                       $ref: '#/definitions/Conversation'
                     type: array
+                  has_more:
+                    description: Whether there are more conversations beyond this page
+                    example: false
+                    type: boolean
+                  next_cursor:
+                    description: >-
+                      Cursor token for the next page; present when `has_more` is
+                      true
+                    example: 3b6a45ca-f555-46d6-95fa-62ffe4bb951a
+                    type: string
+                  total:
+                    description: Total number of conversations returned in this response
+                    example: 2
+                    type: integer
                 type: object
+              message:
+                description: Optional success message
+                type: string
+              success:
+                example: true
+                type: boolean
+            required:
+              - success
+              - data
+            type: object
         '401':
           description: Unauthorized
           schema:
@@ -1881,6 +1893,51 @@ paths:
       description: Create a new conversation between users
       operationId: createConversation
       summary: Create a new conversation
+      x-google-backend:
+        address: 'https://chat-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /conversations/find:
+    post:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/FindConversationRequest'
+      responses:
+        '200':
+          description: Conversation found
+          schema:
+            $ref: '#/definitions/Conversation'
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '404':
+          description: Not found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '500':
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+        - jwtAuth: []
+      tags:
+        - conversations
+      description: >-
+        Find an existing direct conversation by participants and listing
+        metadata
+      operationId: findConversation
+      summary: Find an existing conversation
       x-google-backend:
         address: 'https://chat-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
@@ -3202,6 +3259,13 @@ paths:
                   id:
                     type: string
                 type: object
+              accept_same_day_booking:
+                description: >
+                  Allows same-day bookings (check-in and check-out on same date,
+                  different times).
+
+                  Default: false (opt-in model - hosts must explicitly enable).
+                type: boolean
               address:
                 properties:
                   city:
@@ -12880,6 +12944,10 @@ definitions:
         example: 49.99
         format: float
         type: number
+      booking_code:
+        description: 'Human-friendly booking code (e.g., CR-8J3K2P)'
+        example: CR-8J3K2P
+        type: string
       cancellation_policy:
         example: Flexible
         type: string
@@ -13143,6 +13211,23 @@ definitions:
       - upcoming
       - past
       - pagination
+    type: object
+  CancelBookingRequest:
+    description: Request body for cancelling a booking
+    properties:
+      actor:
+        description: Who is cancelling the booking
+        enum:
+          - guest
+          - host
+        example: guest
+        type: string
+      reason:
+        description: Cancellation reason code (must match actor type)
+        example: change_of_plans
+    required:
+      - actor
+      - reason
     type: object
   CommentListResponse:
     properties:
@@ -14086,9 +14171,10 @@ definitions:
                     - facematch
                     - background
                     - location
+                    - voice
                     - livevideo
                     - pose
-                    - badge
+                    - peer
                   example: facematch
                   type: string
               type: object
@@ -14370,6 +14456,27 @@ definitions:
       - guests
       - payment_intent_id
     type: object
+  FindConversationRequest:
+    properties:
+      metadata:
+        additionalProperties: true
+        description: 'Optional metadata to match (e.g., listing_id)'
+        example:
+          listing_id: MzqmgZXqwi5BraRNEKPA
+          listing_title: Beautiful Apartment in Montreal
+        type: object
+      participants:
+        description: List of user IDs (for direct conversations)
+        example:
+          - user_123
+          - user_456
+        items:
+          type: string
+        minItems: 2
+        type: array
+    required:
+      - participants
+    type: object
   GeoLocation:
     properties:
       accuracy:
@@ -14392,6 +14499,17 @@ definitions:
       - latitude
       - longitude
     type: object
+  GuestCancellationReason:
+    description: Reason code for guest-initiated cancellations
+    enum:
+      - change_of_plans
+      - accidental_booking
+      - travel_issue
+      - price_or_payment_issue
+      - health_or_emergency
+      - other
+    example: change_of_plans
+    type: string
   GuestReviewHostMetrics:
     properties:
       cleanliness:
@@ -14518,6 +14636,18 @@ definitions:
       - timestamp
       - version
     type: object
+  HostCancellationReason:
+    description: Reason code for host-initiated cancellations
+    enum:
+      - guest_asked_to_cancel
+      - guest_no_show
+      - guest_payment_issue
+      - property_issue
+      - host_schedule_issue
+      - safety_or_comfort_concern
+      - other
+    example: guest_asked_to_cancel
+    type: string
   HostReviewGuestMetrics:
     properties:
       cleanliness:
@@ -14768,6 +14898,12 @@ definitions:
       category_name:
         description: Listing category name
         type: string
+      check_in_instructions:
+        description: Instructions for check-in (post-booking)
+        type: string
+      check_out_instructions:
+        description: Instructions for check-out (post-booking)
+        type: string
       city:
         description: City where the listing is located
         type: string
@@ -14776,6 +14912,9 @@ definitions:
         type: string
       currency:
         example: USD
+        type: string
+      emergency_contact:
+        description: Emergency contact information for the listing
         type: string
       flag:
         description: Country flag emoji
@@ -14790,6 +14929,9 @@ definitions:
         format: float
         type: number
         x-nullable: true
+      local_recommendations:
+        description: Local recommendations and tips for guests
+        type: string
       longitude:
         description: Longitude coordinate of the listing location
         format: float
@@ -14807,6 +14949,8 @@ definitions:
         type: string
       title:
         type: string
+      wifi_details:
+        $ref: '#/definitions/WifiDetail'
     required:
       - id
       - title
@@ -16256,6 +16400,15 @@ definitions:
         type: object
     required:
       - audio_url
+    type: object
+  WifiDetail:
+    properties:
+      network_name:
+        type: string
+      notes:
+        type: string
+      password:
+        type: string
     type: object
 securityDefinitions:
   jwtAuth:
