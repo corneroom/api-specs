@@ -1910,19 +1910,17 @@ paths:
             $ref: '#/definitions/FindConversationRequest'
       responses:
         '200':
-          description: Conversation found
+          description: Conversation found or empty list if none
           schema:
-            $ref: '#/definitions/Conversation'
+            items:
+              $ref: '#/definitions/Conversation'
+            type: array
         '400':
           description: Bad request
           schema:
             $ref: '#/definitions/ErrorResponse'
         '401':
           description: Unauthorized
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        '404':
-          description: Not found
           schema:
             $ref: '#/definitions/ErrorResponse'
         '500':

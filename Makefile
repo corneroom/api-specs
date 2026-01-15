@@ -21,7 +21,7 @@ CONFIG_PATH ?= gateway/config.json
 SHORT_SHA := $(shell git rev-parse --short HEAD)
 TIMESTAMP := $(shell date +'%Y%m%d%H%M%S')
 
-gateway: build-swagger deploy-gateway ## Deploy API Gateway (build + deploy)
+gateway: clean sync build-swagger deploy-gateway ## Deploy API Gateway (build + deploy)
 
 build-swagger: ## Build OpenAPI specs to Swagger 2.0
 	@echo "🔨 Building OpenAPI specs to Swagger 2.0..."

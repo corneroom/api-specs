@@ -4583,7 +4583,7 @@ components:
                   type:
                     type: string
                     description: Type of verification
-                    enum: ["facematch", "background", "location", "livevideo", "pose", "badge"]
+                    enum: ["facematch", "background", "location", "voice", "livevideo", "pose", "peer"]
                     example: "facematch"
                   timestamp:
                     type: string

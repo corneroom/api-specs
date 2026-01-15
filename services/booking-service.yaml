@@ -816,6 +816,13 @@ components:
         id: { type: string }
         title: { type: string }
         address: { type: string }
+        # Post-booking / private listing fields
+        check_in_instructions: { type: string, description: "Instructions for check-in (post-booking)" }
+        check_out_instructions: { type: string, description: "Instructions for check-out (post-booking)" }
+        wifi_details:
+          $ref: "#/components/schemas/WifiDetail"
+        emergency_contact: { type: string, description: "Emergency contact information for the listing" }
+        local_recommendations: { type: string, description: "Local recommendations and tips for guests" }
         thumbnail: { type: string, example: "https://img.com/listing_123_space.jpg" }
         currency: { type: string, example: "USD" }
         latitude: 
@@ -841,6 +848,13 @@ components:
           format: float
           description: "Original listing price per night at booking time"
       required: [id, title, address, thumbnail]
+
+    WifiDetail:
+      type: object
+      properties:
+        network_name: { type: string }
+        password: { type: string }
+        notes: { type: string }
 
     BookingsSplitResponse:
       type: object

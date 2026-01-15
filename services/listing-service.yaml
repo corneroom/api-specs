@@ -158,6 +158,11 @@ paths:
                   format: int32
                 instant_book:
                   type: boolean
+                accept_same_day_booking:
+                  type: boolean
+                  description: |
+                    Allows same-day bookings (check-in and check-out on same date, different times).
+                    Default: false (opt-in model - hosts must explicitly enable).
                 photos:
                   type: array
                   items:

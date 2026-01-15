@@ -182,17 +182,17 @@ paths:
               $ref: '#/components/schemas/FindConversationRequest'
       responses:
         '200':
-          description: Conversation found
+          description: Conversation found or empty list if none
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Conversation'
+                type: array
+                items:
+                  $ref: '#/components/schemas/Conversation'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
 
