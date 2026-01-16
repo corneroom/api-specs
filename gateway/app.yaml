@@ -8504,8 +8504,8 @@ paths:
       summary: Get draft booking for listing
       description: >-
         Retrieve an existing draft booking for the authenticated user and
-        specified listing. Returns the most recent draft booking if one exists,
-        or 404 if none found.
+        specified listing. Returns the most recent draft booking if one exists.
+        If no draft exists, returns a successful response with null data.
       tags:
         - booking
       operationId: bookingsGetDraft
@@ -8520,19 +8520,13 @@ paths:
           description: Listing ID to check for draft booking
       responses:
         '200':
-          description: Draft booking found
+          description: Draft booking found or no draft exists (data may be null)
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponseBooking'
         '400':
           description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
-          description: No draft booking found
           content:
             application/json:
               schema:
@@ -14105,7 +14099,10 @@ components:
           type: boolean
           example: true
         data:
-          $ref: '#/components/schemas/Booking'
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/Booking'
+          nullable: true
         toast:
           type: string
           example: Booking processed successfully.

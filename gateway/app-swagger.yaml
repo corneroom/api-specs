@@ -116,15 +116,11 @@ paths:
           type: string
       responses:
         '200':
-          description: Draft booking found
+          description: Draft booking found or no draft exists (data may be null)
           schema:
             $ref: '#/definitions/ApiResponseBooking'
         '400':
           description: Bad Request
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        '404':
-          description: No draft booking found
           schema:
             $ref: '#/definitions/ErrorResponse'
         default:
@@ -137,8 +133,8 @@ paths:
         - booking
       description: >-
         Retrieve an existing draft booking for the authenticated user and
-        specified listing. Returns the most recent draft booking if one exists,
-        or 404 if none found.
+        specified listing. Returns the most recent draft booking if one exists.
+        If no draft exists, returns a successful response with null data.
       operationId: bookingsGetDraft
       summary: Get draft booking for listing
       x-google-backend:
@@ -12837,7 +12833,10 @@ definitions:
   ApiResponseBooking:
     properties:
       data:
-        $ref: '#/definitions/Booking'
+        allOf:
+          - $ref: '#/definitions/Booking'
+        type: object
+        x-nullable: true
       error:
         example: ''
         type: string
