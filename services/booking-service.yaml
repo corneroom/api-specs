@@ -629,56 +629,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-  /listings/{id}/availability/calendar:
-    get:
-      summary: Get listing availability calendar
-      description: Returns a list of unavailable dates for a listing within a specified date range. Used to disable unavailable dates in date pickers.
-      tags: [booking]
-      operationId: listingsGetAvailabilityCalendar
-      security: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-          description: Listing ID
-        - name: start_date
-          in: query
-          required: false
-          schema:
-            type: string
-            format: date
-          description: Start date for availability check (defaults to today)
-        - name: days
-          in: query
-          required: false
-          schema:
-            type: integer
-            default: 60
-            minimum: 1
-            maximum: 365
-          description: Number of days to check availability (default 60, max 365)
-      responses:
-        "200":
-          description: Availability calendar retrieved successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ApiResponseAvailabilityCalendar"
-        "400":
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        default:
-          description: Default error response
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
 components:
   securitySchemes:
     jwtAuth:
@@ -934,59 +884,6 @@ components:
           example: Please check your input and try again.
       required:
         - success
-
-    ApiResponseAvailabilityCalendar:
-      type: object
-      description: Standard API response for listing availability calendar.
-      properties:
-        success:
-          type: boolean
-          description: Indicates if the request was successful.
-          example: true
-        data:
-          $ref: "#/components/schemas/AvailabilityCalendar"
-        error:
-          type: string
-          description: Error message if request failed.
-          example: ""
-        toast:
-          type: string
-          description: Optional toast message for the client UI.
-          example: ""
-      required:
-        - success
-        - data
-
-    AvailabilityCalendar:
-      type: object
-      description: Listing availability calendar data.
-      properties:
-        listing_id:
-          type: string
-          description: Listing ID
-          example: "listing123"
-        start_date:
-          type: string
-          format: date
-          description: Start date of the availability check
-          example: "2024-01-01"
-        end_date:
-          type: string
-          format: date
-          description: End date of the availability check
-          example: "2024-03-01"
-        unavailable_dates:
-          type: array
-          items:
-            type: string
-            format: date
-          description: List of unavailable dates (YYYY-MM-DD format)
-          example: ["2024-01-15", "2024-01-16", "2024-02-10"]
-      required:
-        - listing_id
-        - start_date
-        - end_date
-        - unavailable_dates
 
     InitiateBookingRequest:
       type: object

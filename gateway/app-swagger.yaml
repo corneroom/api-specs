@@ -6048,20 +6048,29 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/ErrorResponse'
+        '401':
+          description: Unauthorized (missing or invalid token)
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '404':
+          description: Listing not found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
         default:
           description: Default error response
           schema:
             $ref: '#/definitions/ErrorResponse'
-      security: []
+      security:
+        - jwtAuth: []
       tags:
-        - booking
+        - listing
       description: >-
         Returns a list of unavailable dates for a listing within a specified
         date range. Used to disable unavailable dates in date pickers.
       operationId: listingsGetAvailabilityCalendar
       summary: Get listing availability calendar
       x-google-backend:
-        address: 'https://booking-service-981292602655.us-central1.run.app'
+        address: 'https://listing-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/listings/{id}/blackout':
     post:
