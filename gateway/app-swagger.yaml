@@ -5433,6 +5433,12 @@ paths:
                   rating:
                     format: double
                     type: number
+                  reviews_total:
+                    description: >-
+                      Combined total of listing and host (user) reviews returned
+                      by the listing endpoint.
+                    example: 6
+                    type: integer
                   thumbnail:
                     format: uri
                     type: string

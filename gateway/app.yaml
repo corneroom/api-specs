@@ -6278,7 +6278,9 @@ paths:
                         type: object
                       reviews_total:
                         type: integer
-                        description: Combined total of listing and host (user) reviews returned by the listing endpoint.
+                        description: >-
+                          Combined total of listing and host (user) reviews
+                          returned by the listing endpoint.
                         example: 6
                       house_rules:
                         type: array
