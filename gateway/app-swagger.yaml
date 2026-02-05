@@ -7522,6 +7522,110 @@ paths:
       x-google-backend:
         address: 'https://payment-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
+  /pricing/calculate:
+    get:
+      produces:
+        - application/json
+      parameters:
+        - description: Base price before fees and taxes
+          format: float
+          in: query
+          name: subtotal
+          required: true
+          type: number
+        - default: US
+          description: ISO country code
+          in: query
+          name: region_code
+          type: string
+      responses:
+        '200':
+          description: Pricing breakdown calculated successfully
+          schema:
+            $ref: '#/definitions/PricingBreakdown'
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        default:
+          description: Default error response
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security: []
+      tags:
+        - pricing
+      description: Calculates pricing breakdown using URL query parameters
+      operationId: pricingCalculateBreakdownFromURL
+      summary: Calculate pricing breakdown from URL parameters
+      x-google-backend:
+        address: 'https://booking-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+    post:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - description: Pricing calculation request
+          in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/PricingBreakdownRequest'
+      responses:
+        '200':
+          description: Pricing breakdown calculated successfully
+          schema:
+            $ref: '#/definitions/PricingBreakdown'
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        default:
+          description: Default error response
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security: []
+      tags:
+        - pricing
+      description: Calculates the full pricing breakdown including service fees and taxes
+      operationId: pricingCalculateBreakdown
+      summary: Calculate pricing breakdown
+      x-google-backend:
+        address: 'https://booking-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /pricing/rates:
+    get:
+      produces:
+        - application/json
+      parameters:
+        - default: US
+          description: 'ISO country code (e.g., "US", "CA", "GB")'
+          in: query
+          name: region_code
+          type: string
+      responses:
+        '200':
+          description: Pricing rates retrieved successfully
+          schema:
+            $ref: '#/definitions/PricingRates'
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        default:
+          description: Default error response
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security: []
+      tags:
+        - pricing
+      description: Returns service fee and tax rates for a specific region code
+      operationId: pricingGetRates
+      summary: Get pricing rates for a region
+      x-google-backend:
+        address: 'https://booking-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
   /reviews:
     get:
       produces:
@@ -13019,6 +13123,20 @@ definitions:
         example: 4.5
         format: float
         type: number
+      rejection_message:
+        description: Host's message when rejecting the booking
+        example: This booking doesn't work for my schedule.
+        type: string
+      rejection_reason:
+        description: Host's reason for rejecting the booking
+        enum:
+          - Listing is no longer available
+          - Going on vacation
+          - Traveling for work
+          - Guest is not a good fit
+          - Other
+        example: Going on vacation
+        type: string
       review_create_deadline:
         description: Deadline for submitting reviews
         format: date-time
@@ -14716,6 +14834,14 @@ definitions:
         description: ID of the listing to book
         example: lst_123456
         type: string
+      notes:
+        description: >-
+          Optional message from guest to host. If provided, will be stored in
+          draft booking.
+        example: >-
+          Hi, I'm looking forward to staying at your place! I have a couple of
+          questions about parking.
+        type: string
     required:
       - listing_id
     type: object
@@ -15271,6 +15397,80 @@ definitions:
     required:
       - destinations
       - countries
+    type: object
+  PricingBreakdown:
+    description: Complete pricing breakdown with fees and taxes
+    properties:
+      service_fee:
+        description: Service fee amount
+        example: 10
+        format: float
+        type: number
+      service_fee_rate:
+        description: Service fee rate used in calculation
+        example: 0.1
+        format: float
+        type: number
+      subtotal:
+        description: Base price before fees
+        example: 100
+        format: float
+        type: number
+      tax_rate:
+        description: Tax rate used in calculation
+        example: 0.08
+        format: float
+        type: number
+      taxes:
+        description: Tax amount
+        example: 8
+        format: float
+        type: number
+      total:
+        description: Total amount including all fees
+        example: 118
+        format: float
+        type: number
+    required:
+      - subtotal
+      - service_fee
+      - taxes
+      - total
+      - service_fee_rate
+      - tax_rate
+    type: object
+  PricingBreakdownRequest:
+    description: Request for pricing calculation
+    properties:
+      region_code:
+        default: US
+        description: ISO country code for regional pricing
+        example: CA
+        type: string
+      subtotal:
+        description: Base price before fees and taxes
+        example: 100
+        format: float
+        type: number
+    required:
+      - subtotal
+    type: object
+  PricingRates:
+    description: Pricing rates for a specific region
+    properties:
+      service_fee_rate:
+        description: Service fee rate as decimal (0.10 = 10%)
+        example: 0.1
+        format: float
+        type: number
+      tax_rate:
+        description: Tax rate as decimal (0.08 = 8%)
+        example: 0.08
+        format: float
+        type: number
+    required:
+      - service_fee_rate
+      - tax_rate
     type: object
   PublicReview:
     description: 'Public review information for display (minimal, user-facing)'

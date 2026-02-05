@@ -15,6 +15,8 @@ info:
 tags:
   - name: booking
     description: Booking operations
+  - name: pricing
+    description: Pricing and fee calculation operations
 
 servers:
   - url: https://app-x-staging-gateway-8ua0taf7.uc.gateway.dev/api/v1
@@ -629,6 +631,108 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /pricing/rates:
+    get:
+      summary: Get pricing rates for a region
+      description: Returns service fee and tax rates for a specific region code
+      tags: [pricing]
+      operationId: pricingGetRates
+      security: []
+      parameters:
+        - name: region_code
+          in: query
+          schema: { type: string, default: "US" }
+          description: ISO country code (e.g., "US", "CA", "GB")
+      responses:
+        "200":
+          description: Pricing rates retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PricingRates"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /pricing/calculate:
+    post:
+      summary: Calculate pricing breakdown
+      description: Calculates the full pricing breakdown including service fees and taxes
+      tags: [pricing]
+      operationId: pricingCalculateBreakdown
+      security: []
+      requestBody:
+        description: Pricing calculation request
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PricingBreakdownRequest"
+      responses:
+        "200":
+          description: Pricing breakdown calculated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PricingBreakdown"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    get:
+      summary: Calculate pricing breakdown from URL parameters
+      description: Calculates pricing breakdown using URL query parameters
+      tags: [pricing]
+      operationId: pricingCalculateBreakdownFromURL
+      security: []
+      parameters:
+        - name: subtotal
+          in: query
+          required: true
+          schema: { type: number, format: float }
+          description: Base price before fees and taxes
+        - name: region_code
+          in: query
+          schema: { type: string, default: "US" }
+          description: ISO country code
+      responses:
+        "200":
+          description: Pricing breakdown calculated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PricingBreakdown"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
 components:
   securitySchemes:
     jwtAuth:
@@ -724,6 +828,22 @@ components:
           example: draft
         guests: { type: integer, example: 2 }
         notes: { type: string, example: "Guest arriving late." }
+        rejection_message:
+          type: string
+          description: Host's message when rejecting the booking
+          example: "This booking doesn't work for my schedule."
+        rejection_reason:
+          type: string
+          description: Host's reason for rejecting the booking
+          enum:
+            [
+              "Listing is no longer available",
+              "Going on vacation",
+              "Traveling for work",
+              "Guest is not a good fit",
+              "Other"
+            ]
+          example: "Going on vacation"
         created_at:
           { type: string, format: date-time, example: "2025-09-02T12:00:00Z" }
         time_zone: { type: string, example: "America/New_York" }
@@ -913,6 +1033,10 @@ components:
           minimum: 1
           description: Optional number of guests. If provided, will be stored in draft booking.
           example: 2
+        notes:
+          type: string
+          description: Optional message from guest to host. If provided, will be stored in draft booking.
+          example: "Hi, I'm looking forward to staying at your place! I have a couple of questions about parking."
       required:
         - listing_id
 
@@ -992,3 +1116,81 @@ components:
       required:
         - actor
         - reason
+
+    # Pricing schemas
+    PricingRates:
+      type: object
+      description: Pricing rates for a specific region
+      properties:
+        service_fee_rate:
+          type: number
+          format: float
+          description: Service fee rate as decimal (0.10 = 10%)
+          example: 0.10
+        tax_rate:
+          type: number
+          format: float
+          description: Tax rate as decimal (0.08 = 8%)
+          example: 0.08
+      required:
+        - service_fee_rate
+        - tax_rate
+
+    PricingBreakdownRequest:
+      type: object
+      description: Request for pricing calculation
+      properties:
+        subtotal:
+          type: number
+          format: float
+          description: Base price before fees and taxes
+          example: 100.00
+        region_code:
+          type: string
+          description: ISO country code for regional pricing
+          default: "US"
+          example: "CA"
+      required:
+        - subtotal
+
+    PricingBreakdown:
+      type: object
+      description: Complete pricing breakdown with fees and taxes
+      properties:
+        subtotal:
+          type: number
+          format: float
+          description: Base price before fees
+          example: 100.00
+        service_fee:
+          type: number
+          format: float
+          description: Service fee amount
+          example: 10.00
+        taxes:
+          type: number
+          format: float
+          description: Tax amount
+          example: 8.00
+        total:
+          type: number
+          format: float
+          description: Total amount including all fees
+          example: 118.00
+        service_fee_rate:
+          type: number
+          format: float
+          description: Service fee rate used in calculation
+          example: 0.10
+        tax_rate:
+          type: number
+          format: float
+          description: Tax rate used in calculation
+          example: 0.08
+      required:
+        - subtotal
+        - service_fee
+        - taxes
+        - total
+        - service_fee_rate
+        - tax_rate
