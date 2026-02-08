@@ -826,6 +826,10 @@ components:
             - confirmed: Payment successful, booking is active
             - completed: Booking period ended, final payment processing triggered
           example: draft
+        status_text:
+          type: string
+          description: Localized, human-readable status text for display in UI
+          example: "Confirmed"
         guests: { type: integer, example: 2 }
         notes: { type: string, example: "Guest arriving late." }
         rejection_message:

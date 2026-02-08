@@ -3337,6 +3337,24 @@ paths:
                 type: array
               instant_book:
                 type: boolean
+              location:
+                description: >-
+                  Optional client-provided location coordinates. If not
+                  provided, the backend will geocode the address. If provided
+                  and valid, these coordinates take precedence over geocoding.
+                properties:
+                  latitude:
+                    description: Latitude coordinate (WGS84)
+                    format: double
+                    type: number
+                  longitude:
+                    description: Longitude coordinate (WGS84)
+                    format: double
+                    type: number
+                required:
+                  - latitude
+                  - longitude
+                type: object
               max_guests:
                 format: int32
                 type: integer
@@ -13177,6 +13195,10 @@ definitions:
           - confirmed
           - completed
         example: draft
+        type: string
+      status_text:
+        description: 'Localized, human-readable status text for display in UI'
+        example: Confirmed
         type: string
       time_zone:
         example: America/New_York

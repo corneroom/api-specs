@@ -4585,6 +4585,24 @@ paths:
                     - city
                     - country
                     - postal_code
+                location:
+                  type: object
+                  description: >-
+                    Optional client-provided location coordinates. If not
+                    provided, the backend will geocode the address. If provided
+                    and valid, these coordinates take precedence over geocoding.
+                  properties:
+                    latitude:
+                      type: number
+                      format: double
+                      description: Latitude coordinate (WGS84)
+                    longitude:
+                      type: number
+                      format: double
+                      description: Longitude coordinate (WGS84)
+                  required:
+                    - latitude
+                    - longitude
                 baggage_drop:
                   type: boolean
                   description: >-
@@ -14379,6 +14397,10 @@ components:
             - completed: Booking period ended, final payment processing
             triggered
           example: draft
+        status_text:
+          type: string
+          description: Localized, human-readable status text for display in UI
+          example: Confirmed
         guests:
           type: integer
           example: 2
