@@ -342,6 +342,10 @@ paths:
                       rating:
                         type: number
                         format: double
+                      view_count:
+                        type: integer
+                        format: int64
+                        description: Number of times the listing has been viewed
                       instant_book:
                         type: boolean
                       active:
@@ -635,6 +639,10 @@ paths:
                         rating:
                           type: number
                           format: double
+                        view_count:
+                          type: integer
+                          format: int64
+                          description: Number of times the listing has been viewed
                         instant_book:
                           type: boolean
                         active:
@@ -1858,6 +1866,10 @@ paths:
                       rating:
                         type: number
                         format: double
+                      view_count:
+                        type: integer
+                        format: int64
+                        description: Number of times the listing has been viewed
                       instant_book:
                         type: boolean
                       active:
@@ -3919,6 +3931,10 @@ components:
         rating:
           type: number
           format: double
+        view_count:
+          type: integer
+          format: int64
+          description: Number of times the listing has been viewed
         instant_book:
           type: boolean
         active:

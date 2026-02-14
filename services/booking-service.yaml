@@ -848,6 +848,20 @@ components:
               "Other"
             ]
           example: "Going on vacation"
+        cancelled_by:
+          type: string
+          description: Who cancelled the booking
+          enum: ["GUEST", "HOST", "SYSTEM"]
+          example: "GUEST"
+        cancellation_reason:
+          type: string
+          description: Reason for cancellation
+          example: "change_of_plans"
+        cancelled_at:
+          type: string
+          format: date-time
+          description: When the booking was cancelled
+          example: "2025-09-02T12:00:00Z"
         created_at:
           { type: string, format: date-time, example: "2025-09-02T12:00:00Z" }
         time_zone: { type: string, example: "America/New_York" }
@@ -871,6 +885,11 @@ components:
           type: string
           format: date-time
           description: Deadline for submitting reviews
+        cancel_after:
+          type: string
+          format: date-time
+          description: Timestamp when pending booking should be auto-cancelled if no host response
+          example: "2025-09-02T14:00:00Z"
 
       required: [id, listing, guest, host, check_in, check_out]
 

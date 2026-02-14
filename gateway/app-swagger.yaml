@@ -3109,6 +3109,10 @@ paths:
                     verified:
                       description: Indicates if the listing has been verified
                       type: boolean
+                    view_count:
+                      description: Number of times the listing has been viewed
+                      format: int64
+                      type: integer
                   type: object
                 type: array
               page:
@@ -3476,6 +3480,10 @@ paths:
                   verified:
                     description: Indicates if the listing has been verified
                     type: boolean
+                  view_count:
+                    description: Number of times the listing has been viewed
+                    format: int64
+                    type: integer
                 type: object
               success:
                 type: boolean
@@ -5466,6 +5474,10 @@ paths:
                   updated_at:
                     format: date-time
                     type: string
+                  view_count:
+                    description: Number of times the listing has been viewed
+                    format: int64
+                    type: integer
                 type: object
               success:
                 type: boolean
@@ -13082,8 +13094,32 @@ definitions:
         description: 'Human-friendly booking code (e.g., CR-8J3K2P)'
         example: CR-8J3K2P
         type: string
+      cancel_after:
+        description: >-
+          Timestamp when pending booking should be auto-cancelled if no host
+          response
+        example: '2025-09-02T14:00:00Z'
+        format: date-time
+        type: string
       cancellation_policy:
         example: Flexible
+        type: string
+      cancellation_reason:
+        description: Reason for cancellation
+        example: change_of_plans
+        type: string
+      cancelled_at:
+        description: When the booking was cancelled
+        example: '2025-09-02T12:00:00Z'
+        format: date-time
+        type: string
+      cancelled_by:
+        description: Who cancelled the booking
+        enum:
+          - GUEST
+          - HOST
+          - SYSTEM
+        example: GUEST
         type: string
       check_in:
         format: date-time
@@ -15025,6 +15061,10 @@ definitions:
       verified:
         description: Indicates if the listing has been verified
         type: boolean
+      view_count:
+        description: Number of times the listing has been viewed
+        format: int64
+        type: integer
     required:
       - id
       - title
