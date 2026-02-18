@@ -4302,6 +4302,146 @@ paths:
                 required:
                   - success
                   - error
+  /users/me/notifications:
+    get:
+      description: List notifications for the current user (paginated).
+      summary: List notifications
+      tags:
+        - user
+      operationId: listNotifications
+      x-google-backend:
+        address: https://user-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      parameters:
+        - name: limit
+          in: query
+          description: Max items to return (default 20, max 100)
+          schema:
+            type: integer
+            default: 20
+        - name: cursor
+          in: query
+          description: Pagination cursor from previous response
+          schema:
+            type: string
+        - name: read
+          in: query
+          description: Filter by read status (false = unread only)
+          schema:
+            type: string
+            enum: ["true", "false"]
+      responses:
+        "200":
+          description: List of notifications
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Notification'
+                      next_cursor:
+                        type: string
+        "401":
+          description: Unauthorized
+    delete:
+      description: Delete all notifications for the current user.
+      summary: Delete all notifications
+      tags:
+        - user
+      operationId: deleteAllNotifications
+      x-google-backend:
+        address: https://user-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      responses:
+        "200":
+          description: Success
+        "401":
+          description: Unauthorized
+  /users/me/notifications/read-all:
+    patch:
+      description: Mark all notifications as read.
+      summary: Mark all notifications read
+      tags:
+        - user
+      operationId: markAllNotificationsReadAlt
+      x-google-backend:
+        address: https://user-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      responses:
+        "200":
+          description: Success
+        "401":
+          description: Unauthorized
+  /users/me/notifications/{notification_id}:
+    patch:
+      description: Mark a notification as read.
+      summary: Mark notification read
+      tags:
+        - user
+      operationId: markNotificationRead
+      x-google-backend:
+        address: https://user-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      parameters:
+        - name: notification_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [read]
+              properties:
+                read:
+                  type: boolean
+                  example: true
+      responses:
+        "200":
+          description: Success
+        "401":
+          description: Unauthorized
+    delete:
+      description: Delete a single notification.
+      summary: Delete notification
+      tags:
+        - user
+      operationId: deleteNotification
+      x-google-backend:
+        address: https://user-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      parameters:
+        - name: notification_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Success
+        "401":
+          description: Unauthorized
 servers:
   - url: https://project-x-staging-gateway-8ua0taf7.uc.gateway.dev/api/v1
 
@@ -4314,6 +4454,36 @@ components:
 
 
   schemas:
+    Notification:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Notification ID
+        user_id:
+          type: string
+          description: User ID
+        type:
+          type: string
+          description: Notification type (e.g. booking_confirmed, message_sent)
+        title:
+          type: string
+          description: Notification title
+        body:
+          type: string
+          description: Notification body
+        data:
+          type: object
+          additionalProperties:
+            type: string
+          description: Additional data for navigation
+        created_at:
+          type: string
+          format: date-time
+          description: Creation timestamp
+        read:
+          type: boolean
+          description: Whether the notification has been read
     # Enhanced nested profile update request
     EnhancedProfileUpdateRequest:
       type: object

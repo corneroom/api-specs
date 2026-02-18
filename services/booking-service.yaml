@@ -890,6 +890,14 @@ components:
           format: date-time
           description: Timestamp when pending booking should be auto-cancelled if no host response
           example: "2025-09-02T14:00:00Z"
+        can_guest_cancel:
+          type: boolean
+          description: Whether the guest can cancel this booking (based on check-in date and listing timezone)
+          example: true
+        can_host_cancel:
+          type: boolean
+          description: Whether the host can cancel this booking (based on booking status)
+          example: true
 
       required: [id, listing, guest, host, check_in, check_out]
 
@@ -1136,6 +1144,10 @@ components:
             - $ref: "#/components/schemas/HostCancellationReason"
           description: Cancellation reason code (must match actor type)
           example: change_of_plans
+        reason_label:
+          type: string
+          description: Human-readable reason label for push notifications (e.g. "I can no longer afford this trip"). Optional; when omitted, notifications may show the code or omit the reason.
+          example: "I can no longer afford this trip"
       required:
         - actor
         - reason

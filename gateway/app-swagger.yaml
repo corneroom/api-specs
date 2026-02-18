@@ -10208,6 +10208,147 @@ paths:
       x-google-backend:
         address: 'https://user-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
+  /users/me/notifications:
+    delete:
+      parameters: []
+      responses:
+        '200':
+          description: Success
+        '401':
+          description: Unauthorized
+      security:
+        - jwtAuth: []
+      tags:
+        - user
+      description: Delete all notifications for the current user.
+      operationId: deleteAllNotifications
+      summary: Delete all notifications
+      x-google-backend:
+        address: 'https://user-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+    get:
+      produces:
+        - application/json
+      parameters:
+        - default: 20
+          description: 'Max items to return (default 20, max 100)'
+          in: query
+          name: limit
+          type: integer
+        - description: Pagination cursor from previous response
+          in: query
+          name: cursor
+          type: string
+        - description: Filter by read status (false = unread only)
+          enum:
+            - 'true'
+            - 'false'
+          in: query
+          name: read
+          type: string
+      responses:
+        '200':
+          description: List of notifications
+          schema:
+            properties:
+              data:
+                properties:
+                  items:
+                    items:
+                      $ref: '#/definitions/Notification'
+                    type: array
+                  next_cursor:
+                    type: string
+                type: object
+              success:
+                example: true
+                type: boolean
+            type: object
+        '401':
+          description: Unauthorized
+      security:
+        - jwtAuth: []
+      tags:
+        - user
+      description: List notifications for the current user (paginated).
+      operationId: listNotifications
+      summary: List notifications
+      x-google-backend:
+        address: 'https://user-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /users/me/notifications/read-all:
+    patch:
+      parameters: []
+      responses:
+        '200':
+          description: Success
+        '401':
+          description: Unauthorized
+      security:
+        - jwtAuth: []
+      tags:
+        - user
+      description: Mark all notifications as read.
+      operationId: markAllNotificationsReadAlt
+      summary: Mark all notifications read
+      x-google-backend:
+        address: 'https://user-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/users/me/notifications/{notification_id}':
+    delete:
+      parameters:
+        - in: path
+          name: notification_id
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Success
+        '401':
+          description: Unauthorized
+      security:
+        - jwtAuth: []
+      tags:
+        - user
+      description: Delete a single notification.
+      operationId: deleteNotification
+      summary: Delete notification
+      x-google-backend:
+        address: 'https://user-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+    patch:
+      consumes:
+        - application/json
+      parameters:
+        - in: path
+          name: notification_id
+          required: true
+          type: string
+        - in: body
+          name: body
+          schema:
+            properties:
+              read:
+                example: true
+                type: boolean
+            required:
+              - read
+            type: object
+      responses:
+        '200':
+          description: Success
+        '401':
+          description: Unauthorized
+      security:
+        - jwtAuth: []
+      tags:
+        - user
+      description: Mark a notification as read.
+      operationId: markNotificationRead
+      summary: Mark notification read
+      x-google-backend:
+        address: 'https://user-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
   /users/me/phone/add:
     patch:
       consumes:
@@ -13094,6 +13235,16 @@ definitions:
         description: 'Human-friendly booking code (e.g., CR-8J3K2P)'
         example: CR-8J3K2P
         type: string
+      can_guest_cancel:
+        description: >-
+          Whether the guest can cancel this booking (based on check-in date and
+          listing timezone)
+        example: true
+        type: boolean
+      can_host_cancel:
+        description: Whether the host can cancel this booking (based on booking status)
+        example: true
+        type: boolean
       cancel_after:
         description: >-
           Timestamp when pending booking should be auto-cancelled if no host
@@ -13413,6 +13564,13 @@ definitions:
       reason:
         description: Cancellation reason code (must match actor type)
         example: change_of_plans
+      reason_label:
+        description: >-
+          Human-readable reason label for push notifications (e.g. "I can no
+          longer afford this trip"). Optional; when omitted, notifications may
+          show the code or omit the reason.
+        example: I can no longer afford this trip
+        type: string
     required:
       - actor
       - reason
@@ -15324,6 +15482,36 @@ definitions:
       - from_tag
       - to_tag
       - listing_id
+    type: object
+  Notification:
+    properties:
+      body:
+        description: Notification body
+        type: string
+      created_at:
+        description: Creation timestamp
+        format: date-time
+        type: string
+      data:
+        additionalProperties:
+          type: string
+        description: Additional data for navigation
+        type: object
+      id:
+        description: Notification ID
+        type: string
+      read:
+        description: Whether the notification has been read
+        type: boolean
+      title:
+        description: Notification title
+        type: string
+      type:
+        description: 'Notification type (e.g. booking_confirmed, message_sent)'
+        type: string
+      user_id:
+        description: User ID
+        type: string
     type: object
   Pagination:
     properties:

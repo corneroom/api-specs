@@ -2,6 +2,8 @@
 
 A centralized system for managing, validating, converting, and publishing OpenAPI documentation for microservices.
 
+> **⚠️ Do not manually edit generated specs**: The files in `gateway/` (e.g. `app.yaml`, `app-swagger.yaml`) and `services/` are generated or synced from backend service `docs/api.yaml` files. To add or change API endpoints, edit the source spec in the backend service (e.g. `backend/user-service/docs/api.yaml`), then run `make sync` and `make build-swagger` (or `make gateway`) from this directory.
+
 ## Project Overview
 
 This repository serves as a central hub for OpenAPI/Swagger specifications across multiple microservices. It provides:
