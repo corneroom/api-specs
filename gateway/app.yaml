@@ -14535,6 +14535,13 @@ components:
           type: number
           format: float
           example: 49.99
+        total_paid:
+          type: number
+          format: float
+          description: >-
+            Actual amount captured from Stripe (set when payment succeeds). Use
+            for "Total Paid" display.
+          example: 49.99
         currency:
           type: string
           example: USD
@@ -14762,6 +14769,10 @@ components:
           type: number
           format: float
           description: Original listing price per night at booking time
+        rating:
+          type: number
+          format: float
+          description: Listing rating from reviews (updated on review_created)
       required:
         - id
         - title

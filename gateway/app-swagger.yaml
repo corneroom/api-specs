@@ -13390,6 +13390,13 @@ definitions:
       time_zone:
         example: America/New_York
         type: string
+      total_paid:
+        description: >-
+          Actual amount captured from Stripe (set when payment succeeds). Use
+          for "Total Paid" display.
+        example: 49.99
+        format: float
+        type: number
     required:
       - id
       - listing
@@ -15298,6 +15305,10 @@ definitions:
       province:
         description: Province/state where the listing is located
         type: string
+      rating:
+        description: Listing rating from reviews (updated on review_created)
+        format: float
+        type: number
       thumbnail:
         example: 'https://img.com/listing_123_space.jpg'
         type: string

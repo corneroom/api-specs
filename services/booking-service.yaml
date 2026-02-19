@@ -794,6 +794,11 @@ components:
         check_out: { type: string, format: date-time }
         rate: { type: number, format: float, example: 9.99 }
         amount: { type: number, format: float, example: 49.99 }
+        total_paid:
+          type: number
+          format: float
+          description: Actual amount captured from Stripe (set when payment succeeds). Use for "Total Paid" display.
+          example: 49.99
         currency: { type: string, example: "USD" }
         rating: { type: number, format: float, example: 4.5 }
         days: { type: integer, example: 4 }
@@ -946,6 +951,10 @@ components:
           type: number
           format: float
           description: "Original listing price per night at booking time"
+        rating:
+          type: number
+          format: float
+          description: "Listing rating from reviews (updated on review_created)"
       required: [id, title, address, thumbnail]
 
     WifiDetail:
