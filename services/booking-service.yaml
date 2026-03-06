@@ -19,7 +19,7 @@ tags:
     description: Pricing and fee calculation operations
 
 servers:
-  - url: https://app-x-staging-gateway-8ua0taf7.uc.gateway.dev/api/v1
+  - url: https://app-staging-gateway-cissa23j.uc.gateway.dev/api/v1
 
 x-google-backend:
   address: https://booking-service-981292602655.us-central1.run.app
@@ -912,6 +912,7 @@ components:
         id: { type: string }
         name: { type: string }
         avatar: { type: string }
+        facematch_verified: { type: boolean, description: "Whether user has approved facematch verification" }
       required: [id, name, avatar]
 
     ListingInfo:

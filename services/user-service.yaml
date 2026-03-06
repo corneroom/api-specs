@@ -4443,7 +4443,7 @@ paths:
         "401":
           description: Unauthorized
 servers:
-  - url: https://project-x-staging-gateway-8ua0taf7.uc.gateway.dev/api/v1
+  - url: https://app-staging-gateway-cissa23j.uc.gateway.dev/api/v1
 
 components:
   securitySchemes:

@@ -25,7 +25,7 @@ info:
     url: https://opensource.org/licenses/MIT
 
 servers:
-  - url: https://project-x-staging-gateway-8ua0taf7.uc.gateway.dev/api/v1
+  - url: https://app-staging-gateway-cissa23j.uc.gateway.dev/api/v1
 
 tags:
   - name: payment
@@ -1153,9 +1153,9 @@ components:
           example: "CAD"
         status:
           type: string
-          description: Refund status
-          enum: [pending, succeeded, failed, canceled]
-          example: "succeeded"
+          enum: [pending, completed, failed, cancelled]
+          description: "pending=awaiting payment; completed=paid; failed=payment failed; cancelled=abandoned"
+          example: "completed"
         reason:
           type: string
           description: Refund reason

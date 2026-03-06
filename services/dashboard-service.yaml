@@ -12,7 +12,7 @@ info:
     url: https://opensource.org/licenses/MIT
   version: 1.0.0
 servers:
-- url: https://project-x-dashboard-staging-gateway-8ua0taf7.uc.gateway.dev/api/v1
+- url: https://dashboard-staging-gateway-cissa23j.uc.gateway.dev/api/v1
 tags:
 - name: heartbeat
   description: dashboard heartbeat
@@ -2005,6 +2005,60 @@ paths:
         address: https://dashboard-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       x-codegen-request-body-name: notification
+  /dashboard/verifications:
+    get:
+      tags:
+      - dashboard
+      summary: List verifications
+      description: Retrieve a list of verification records for admin review.
+      operationId: listVerifications
+      parameters:
+      - name: status
+        in: query
+        schema:
+          type: string
+          enum: [pending, approved, rejected, verified, needs_review, processing, failed]
+      - name: page
+        in: query
+        schema:
+          type: integer
+          default: 1
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          default: 50
+      responses:
+        "200":
+          description: List of verifications
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      verifications:
+                        type: array
+                        items:
+                          type: object
+                      total:
+                        type: integer
+                      page:
+                        type: integer
+                      limit:
+                        type: integer
+                      pages:
+                        type: integer
+        "400":
+          description: Bad request
+          content: {}
+      security:
+      - jwtAuth: []
+      x-google-backend:
+        address: https://dashboard-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/settings:
     get:
       tags:
@@ -5542,6 +5596,30 @@ components:
             message:
               type: string
               example: Not found
+    FeatureToggleItem:
+      type: object
+      required: [enabled, label]
+      properties:
+        enabled: { type: boolean }
+        label: { type: string }
+    ApiKeyItem:
+      type: object
+      required: [value, label]
+      properties:
+        value: { type: string }
+        label: { type: string }
+    NotificationTemplateItem:
+      type: object
+      required: [body, label]
+      properties:
+        body: { type: string }
+        label: { type: string }
+    WebhookItem:
+      type: object
+      required: [url, label]
+      properties:
+        url: { type: string }
+        label: { type: string }
     SettingsResponse:
       type: object
       properties:
@@ -5550,11 +5628,19 @@ components:
         feature_toggles:
           type: object
           additionalProperties:
-            type: boolean
+            $ref: '#/components/schemas/FeatureToggleItem'
         notification_templates:
           type: object
           additionalProperties:
-            type: string
+            $ref: '#/components/schemas/NotificationTemplateItem'
+        api_keys:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/ApiKeyItem'
+        webhooks:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/WebhookItem'
         updated_at:
           type: string
           format: date-time
@@ -5566,11 +5652,19 @@ components:
         feature_toggles:
           type: object
           additionalProperties:
-            type: boolean
+            $ref: '#/components/schemas/FeatureToggleItem'
         notification_templates:
           type: object
           additionalProperties:
-            type: string
+            $ref: '#/components/schemas/NotificationTemplateItem'
+        api_keys:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/ApiKeyItem'
+        webhooks:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/WebhookItem'
     UserAdminUpdateRequest:
       type: object
       properties:
@@ -6893,6 +6987,6 @@ components:
       scheme: bearer
       bearerFormat: JWT
 x-google-endpoints:
-- name: project-x-dashboard-staging-gateway-8ua0taf7.uc.gateway.dev
+- name: dashboard-staging-gateway-cissa23j.uc.gateway.dev
   allowCors: true
 x-original-swagger-version: "2.0"

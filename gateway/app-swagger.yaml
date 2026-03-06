@@ -6,7 +6,7 @@ info:
     url: 'https://opensource.org/licenses/MIT'
   title: App API Gateway
   version: 1.0.0
-host: app-staging-gateway-8ua0taf7.uc.gateway.dev
+host: app-staging-gateway-cissa23j.uc.gateway.dev
 basePath: /api/v1
 schemes:
   - https
@@ -936,6 +936,7 @@ paths:
       summary: Get authenticated community feed
       x-google-backend:
         address: 'https://community-service-981292602655.us-central1.run.app'
+        deadline: 60
         path_translation: APPEND_PATH_TO_ADDRESS
   /community/guides:
     get:
@@ -1045,6 +1046,7 @@ paths:
       summary: Get public community feed
       x-google-backend:
         address: 'https://community-service-981292602655.us-central1.run.app'
+        deadline: 60
         path_translation: APPEND_PATH_TO_ADDRESS
   /community/reels:
     post:
@@ -4831,6 +4833,183 @@ paths:
       x-google-backend:
         address: 'https://listing-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
+  '/listings/host/{host_id}':
+    get:
+      produces:
+        - application/json
+      parameters:
+        - description: Host user ID
+          in: path
+          name: host_id
+          required: true
+          type: string
+        - default: 1
+          description: Page number (starts at 1)
+          in: query
+          minimum: 1
+          name: page
+          required: false
+          type: integer
+        - default: 10
+          description: Number of items per page
+          in: query
+          maximum: 100
+          minimum: 1
+          name: limit
+          required: false
+          type: integer
+      responses:
+        '200':
+          description: Public host listing cards
+          schema:
+            properties:
+              data:
+                items:
+                  properties:
+                    accept_same_day_booking:
+                      type: boolean
+                    currency:
+                      type: string
+                    id:
+                      type: string
+                    instant_book:
+                      type: boolean
+                    location:
+                      properties:
+                        city:
+                          type: string
+                        country:
+                          type: string
+                        flag:
+                          type: string
+                      type: object
+                    max_guests:
+                      type: integer
+                    price:
+                      format: double
+                      type: number
+                    rating:
+                      format: double
+                      type: number
+                    status:
+                      type: string
+                    thumbnail:
+                      format: uri
+                      type: string
+                    title:
+                      type: string
+                  type: object
+                type: array
+              success:
+                example: true
+                type: boolean
+              toast:
+                example: ''
+                type: string
+            type: object
+        '400':
+          description: Invalid host ID
+          schema:
+            properties:
+              error:
+                example: host_id is required
+                type: string
+              success:
+                example: false
+                type: boolean
+              toast:
+                example: Host ID is required
+                type: string
+            type: object
+        '401':
+          description: Unauthorized (missing or invalid token)
+          schema:
+            description: Standard error response model for failed requests.
+            properties:
+              error:
+                description: Error message describing the failure.
+                example: Invalid booking ID.
+                type: string
+              success:
+                description: Indicates if the request was successful.
+                example: false
+                type: boolean
+              toast:
+                description: Optional toast message for the client UI.
+                example: Unable to process your request.
+                type: string
+            required:
+              - success
+              - error
+            type: object
+        '404':
+          description: Not found
+          schema:
+            description: Standard error response model for failed requests.
+            properties:
+              error:
+                description: Error message describing the failure.
+                example: Invalid booking ID.
+                type: string
+              success:
+                description: Indicates if the request was successful.
+                example: false
+                type: boolean
+              toast:
+                description: Optional toast message for the client UI.
+                example: Unable to process your request.
+                type: string
+            required:
+              - success
+              - error
+            type: object
+        '500':
+          description: Internal server error
+          schema:
+            properties:
+              error:
+                example: Failed to get host listings
+                type: string
+              success:
+                example: false
+                type: boolean
+              toast:
+                example: 'Oops! Something went wrong, please try again later'
+                type: string
+            type: object
+        default:
+          description: Default error response
+          schema:
+            description: Standard error response model for failed requests.
+            properties:
+              error:
+                description: Error message describing the failure.
+                example: Invalid booking ID.
+                type: string
+              success:
+                description: Indicates if the request was successful.
+                example: false
+                type: boolean
+              toast:
+                description: Optional toast message for the client UI.
+                example: Unable to process your request.
+                type: string
+            required:
+              - success
+              - error
+            type: object
+      security: []
+      tags:
+        - listing
+      description: >-
+        Returns a minimal, public-safe listing card payload for the specified
+        host. This endpoint is intended for public profile screens and does not
+        include full address fields (street, postal code, unit number).
+      operationId: listingsGetPublicHostListings
+      summary: Get public listing cards for a host profile
+      x-google-backend:
+        address: 'https://listing-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
   /listings/locations/detect:
     post:
       consumes:
@@ -5193,69 +5372,6 @@ paths:
               - success
               - error
             type: object
-        '401':
-          description: Unauthorized (missing or invalid token)
-          schema:
-            description: Standard error response model for failed requests.
-            properties:
-              error:
-                description: Error message describing the failure.
-                example: Invalid booking ID.
-                type: string
-              success:
-                description: Indicates if the request was successful.
-                example: false
-                type: boolean
-              toast:
-                description: Optional toast message for the client UI.
-                example: Unable to process your request.
-                type: string
-            required:
-              - success
-              - error
-            type: object
-        '404':
-          description: Not found
-          schema:
-            description: Standard error response model for failed requests.
-            properties:
-              error:
-                description: Error message describing the failure.
-                example: Invalid booking ID.
-                type: string
-              success:
-                description: Indicates if the request was successful.
-                example: false
-                type: boolean
-              toast:
-                description: Optional toast message for the client UI.
-                example: Unable to process your request.
-                type: string
-            required:
-              - success
-              - error
-            type: object
-        default:
-          description: Default error response
-          schema:
-            description: Standard error response model for failed requests.
-            properties:
-              error:
-                description: Error message describing the failure.
-                example: Invalid booking ID.
-                type: string
-              success:
-                description: Indicates if the request was successful.
-                example: false
-                type: boolean
-              toast:
-                description: Optional toast message for the client UI.
-                example: Unable to process your request.
-                type: string
-            required:
-              - success
-              - error
-            type: object
       security:
         - jwtAuth: []
       tags:
@@ -5266,6 +5382,101 @@ paths:
         in the UI.
       operationId: listingsGetAllListingsForCurrentUser
       summary: Get all listings for the authenticated user ("my listings")
+      x-google-backend:
+        address: 'https://listing-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/listings/user/{id}':
+    get:
+      produces:
+        - application/json
+      parameters:
+        - description: Listing ID
+          in: path
+          name: id
+          required: true
+          type: string
+      responses:
+        '200':
+          description: The host-owned listing detail
+          schema:
+            properties:
+              data:
+                properties:
+                  active:
+                    type: boolean
+                  id:
+                    type: string
+                  pending_revision:
+                    properties:
+                      status:
+                        type: string
+                      submitted_at:
+                        format: date-time
+                        type: string
+                      submitted_by:
+                        type: string
+                      updated_at:
+                        format: date-time
+                        type: string
+                      updated_fields:
+                        items:
+                          type: string
+                        type: array
+                      updates:
+                        additionalProperties: true
+                        type: object
+                    type: object
+                    x-nullable: true
+                  status:
+                    type: string
+                  title:
+                    type: string
+                type: object
+              success:
+                type: boolean
+              toast:
+                type: string
+            required:
+              - success
+              - data
+            type: object
+        '401':
+          description: Unauthorized
+          schema:
+            properties:
+              error:
+                type: string
+              success:
+                type: boolean
+            required:
+              - success
+              - error
+            type: object
+        '404':
+          description: Listing not found for host
+          schema:
+            properties:
+              error:
+                type: string
+              success:
+                type: boolean
+            required:
+              - success
+              - error
+            type: object
+      security:
+        - jwtAuth: []
+      tags:
+        - listing
+      description: >
+        Returns full listing detail for the authenticated host's own listing.
+
+        Unlike the public detail endpoint, this allows inactive listings (for
+        example under review),
+
+        but still blocks deleted and admin-suspended listings.
+      operationId: listingsGetOwnListingById
+      summary: Get host-owned listing detail by ID
       x-google-backend:
         address: 'https://listing-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
@@ -5935,6 +6146,11 @@ paths:
 
         When updating the address, the system will automatically geocode the new
         address and update coordinates.
+
+        For live listings (`active=true` with status `active` or `approved`),
+        changes are queued as a single `pending_revision`
+
+        for admin review and do not immediately replace live fields.
       operationId: listingsUpdateListing
       summary: Update a listing
       x-google-backend:
@@ -15923,13 +16139,15 @@ definitions:
         example: customer_request
         type: string
       status:
-        description: Refund status
+        description: >-
+          pending=awaiting payment; completed=paid; failed=payment failed;
+          cancelled=abandoned
         enum:
           - pending
-          - succeeded
+          - completed
           - failed
-          - canceled
-        example: succeeded
+          - cancelled
+        example: completed
         type: string
     required:
       - id
@@ -16590,6 +16808,9 @@ definitions:
     properties:
       avatar:
         type: string
+      facematch_verified:
+        description: Whether user has approved facematch verification
+        type: boolean
       id:
         type: string
       name:

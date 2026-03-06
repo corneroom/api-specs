@@ -20,7 +20,7 @@ info:
     url: https://www.apache.org/licenses/LICENSE-2.0
 
 servers:
-  - url: https://app-x-staging-gateway-8ua0taf7.uc.gateway.dev/api/v1
+  - url: https://app-staging-gateway-cissa23j.uc.gateway.dev/api/v1
 
 security:
   - jwtAuth: []

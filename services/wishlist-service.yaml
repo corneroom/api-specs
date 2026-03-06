@@ -299,7 +299,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 servers:
-  - url: https://app-x-staging-gateway-8ua0taf7.uc.gateway.dev/api/v1
+  - url: https://app-staging-gateway-cissa23j.uc.gateway.dev/api/v1
 components:
   schemas:
     APIResponse:

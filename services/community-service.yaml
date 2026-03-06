@@ -469,6 +469,7 @@ paths:
       x-google-backend:
         address: https://community-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
+        deadline: 60.0  # Feed may call Strapi; allow 60s before gateway timeout
       parameters:
         - in: query
           name: page
@@ -517,6 +518,7 @@ paths:
       x-google-backend:
         address: https://community-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
+        deadline: 60.0  # Feed may call Strapi; allow 60s before gateway timeout
       parameters:
         - in: query
           name: page

@@ -6,7 +6,7 @@ info:
     url: 'https://opensource.org/licenses/MIT'
   title: Dashboard API Gateway
   version: 1.0.0
-host: dashboard-staging-gateway-8ua0taf7.uc.gateway.dev
+host: dashboard-staging-gateway-cissa23j.uc.gateway.dev
 basePath: /api/v1
 schemes:
   - https
@@ -4012,6 +4012,63 @@ paths:
       x-google-backend:
         address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/verifications:
+    get:
+      produces:
+        - application/json
+      parameters:
+        - enum:
+            - pending
+            - approved
+            - rejected
+            - verified
+            - needs_review
+            - processing
+            - failed
+          in: query
+          name: status
+          type: string
+        - default: 1
+          in: query
+          name: page
+          type: integer
+        - default: 50
+          in: query
+          name: limit
+          type: integer
+      responses:
+        '200':
+          description: List of verifications
+          schema:
+            properties:
+              data:
+                properties:
+                  limit:
+                    type: integer
+                  page:
+                    type: integer
+                  pages:
+                    type: integer
+                  total:
+                    type: integer
+                  verifications:
+                    items:
+                      type: object
+                    type: array
+                type: object
+            type: object
+        '400':
+          description: Bad request
+      security:
+        - jwtAuth: []
+      tags:
+        - dashboard
+      description: Retrieve a list of verification records for admin review.
+      operationId: listVerifications
+      summary: List verifications
+      x-google-backend:
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
   '/dashboard/{proxy}':
     options:
       parameters:
@@ -4257,6 +4314,16 @@ definitions:
                 type: integer
             type: object
         type: object
+    type: object
+  ApiKeyItem:
+    properties:
+      label:
+        type: string
+      value:
+        type: string
+    required:
+      - value
+      - label
     type: object
   Booking:
     properties:
@@ -4829,6 +4896,16 @@ definitions:
     required:
       - error
       - status
+    type: object
+  FeatureToggleItem:
+    properties:
+      enabled:
+        type: boolean
+      label:
+        type: string
+    required:
+      - enabled
+      - label
     type: object
   FeaturedContentItem:
     properties:
@@ -5461,6 +5538,16 @@ definitions:
     required:
       - message
     type: object
+  NotificationTemplateItem:
+    properties:
+      body:
+        type: string
+      label:
+        type: string
+    required:
+      - body
+      - label
+    type: object
   OverviewMetricsResponse:
     properties:
       data:
@@ -5981,31 +6068,47 @@ definitions:
     type: object
   SettingsResponse:
     properties:
+      api_keys:
+        additionalProperties:
+          $ref: '#/definitions/ApiKeyItem'
+        type: object
       feature_toggles:
         additionalProperties:
-          type: boolean
+          $ref: '#/definitions/FeatureToggleItem'
         type: object
       maintenance_mode:
         type: boolean
       notification_templates:
         additionalProperties:
-          type: string
+          $ref: '#/definitions/NotificationTemplateItem'
         type: object
       updated_at:
         format: date-time
         type: string
+      webhooks:
+        additionalProperties:
+          $ref: '#/definitions/WebhookItem'
+        type: object
     type: object
   SettingsUpdateRequest:
     properties:
+      api_keys:
+        additionalProperties:
+          $ref: '#/definitions/ApiKeyItem'
+        type: object
       feature_toggles:
         additionalProperties:
-          type: boolean
+          $ref: '#/definitions/FeatureToggleItem'
         type: object
       maintenance_mode:
         type: boolean
       notification_templates:
         additionalProperties:
-          type: string
+          $ref: '#/definitions/NotificationTemplateItem'
+        type: object
+      webhooks:
+        additionalProperties:
+          $ref: '#/definitions/WebhookItem'
         type: object
     type: object
   StoryResponse:
@@ -6607,6 +6710,16 @@ definitions:
       - reason
       - suspended_by
       - suspended_at
+    type: object
+  WebhookItem:
+    properties:
+      label:
+        type: string
+      url:
+        type: string
+    required:
+      - url
+      - label
     type: object
 securityDefinitions:
   jwtAuth:

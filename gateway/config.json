@@ -7,7 +7,7 @@
       "description": "API Gateway for client-facing application endpoints.......",
       "version": "1.0.0",
       "hosts": [
-        { "url": "https://app-staging-gateway-8ua0taf7.uc.gateway.dev/api/v1", "description": "Staging" }
+        { "url": "https://app-staging-gateway-cissa23j.uc.gateway.dev/api/v1", "description": "Staging" }
       ],
       "basePath": "/api/v1",
       "services": [
@@ -34,7 +34,7 @@
       "description": "API Gateway for admin dashboard endpoints",
       "version": "1.0.0",
       "hosts": [
-        { "url": "https://dashboard-staging-gateway-8ua0taf7.uc.gateway.dev/api/v1", "description": "Staging" }
+        { "url": "https://dashboard-staging-gateway-cissa23j.uc.gateway.dev/api/v1", "description": "Staging" }
       ],
       "basePath": "/api/v1",
       "services": [

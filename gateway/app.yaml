@@ -7,7 +7,7 @@ info:
     name: MIT
     url: https://opensource.org/licenses/MIT
 servers:
-  - url: https://app-staging-gateway-8ua0taf7.uc.gateway.dev/api/v1
+  - url: https://app-staging-gateway-cissa23j.uc.gateway.dev/api/v1
     description: Staging
 paths:
   /users/heartbeat:
@@ -6568,6 +6568,11 @@ paths:
 
         When updating the address, the system will automatically geocode the new
         address and update coordinates.
+
+        For live listings (`active=true` with status `active` or `approved`),
+        changes are queued as a single `pending_revision`
+
+        for admin review and do not immediately replace live fields.
       tags:
         - listing
       operationId: listingsUpdateListing
@@ -7427,6 +7432,211 @@ paths:
                 required:
                   - success
                   - error
+  /listings/user/{id}:
+    get:
+      summary: Get host-owned listing detail by ID
+      description: >
+        Returns full listing detail for the authenticated host's own listing.
+
+        Unlike the public detail endpoint, this allows inactive listings (for
+        example under review),
+
+        but still blocks deleted and admin-suspended listings.
+      tags:
+        - listing
+      operationId: listingsGetOwnListingById
+      x-google-backend:
+        address: https://listing-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: Listing ID
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The host-owned listing detail
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  toast:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      title:
+                        type: string
+                      status:
+                        type: string
+                      active:
+                        type: boolean
+                      pending_revision:
+                        type: object
+                        nullable: true
+                        properties:
+                          updates:
+                            type: object
+                            additionalProperties: true
+                          updated_fields:
+                            type: array
+                            items:
+                              type: string
+                          status:
+                            type: string
+                          submitted_by:
+                            type: string
+                          submitted_at:
+                            type: string
+                            format: date-time
+                          updated_at:
+                            type: string
+                            format: date-time
+                required:
+                  - success
+                  - data
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  error:
+                    type: string
+                required:
+                  - success
+                  - error
+        '404':
+          description: Listing not found for host
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  error:
+                    type: string
+                required:
+                  - success
+                  - error
+  /listings/host/{host_id}:
+    get:
+      summary: Get public listing cards for a host profile
+      description: >-
+        Returns a minimal, public-safe listing card payload for the specified
+        host. This endpoint is intended for public profile screens and does not
+        include full address fields (street, postal code, unit number).
+      security: []
+      tags:
+        - listing
+      operationId: listingsGetPublicHostListings
+      x-google-backend:
+        address: https://listing-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: host_id
+          in: path
+          required: true
+          description: Host user ID
+          schema:
+            type: string
+        - name: page
+          in: query
+          required: false
+          description: Page number (starts at 1)
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          required: false
+          description: Number of items per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+      responses:
+        '200':
+          description: Public host listing cards
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  toast:
+                    type: string
+                    example: ''
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        title:
+                          type: string
+                        thumbnail:
+                          type: string
+                          format: uri
+                        price:
+                          type: number
+                          format: double
+                        currency:
+                          type: string
+                        rating:
+                          type: number
+                          format: double
+                        instant_book:
+                          type: boolean
+                        accept_same_day_booking:
+                          type: boolean
+                        max_guests:
+                          type: integer
+                        status:
+                          type: string
+                        location:
+                          type: object
+                          properties:
+                            city:
+                              type: string
+                            country:
+                              type: string
+                            flag:
+                              type: string
+        '400':
+          description: Invalid host ID
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: host_id is required
+                  toast:
+                    type: string
+                    example: Host ID is required
         '401':
           description: Unauthorized (missing or invalid token)
           content:
@@ -7473,6 +7683,22 @@ paths:
                 required:
                   - success
                   - error
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: Failed to get host listings
+                  toast:
+                    type: string
+                    example: Oops! Something went wrong, please try again later
         default:
           description: Default error response
           content:
@@ -12328,6 +12554,7 @@ paths:
       x-google-backend:
         address: https://community-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
+        deadline: 60
       parameters:
         - in: query
           name: page
@@ -12378,6 +12605,7 @@ paths:
       x-google-backend:
         address: https://community-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
+        deadline: 60
       parameters:
         - in: query
           name: page
@@ -14697,6 +14925,9 @@ components:
           type: string
         avatar:
           type: string
+        facematch_verified:
+          type: boolean
+          description: Whether user has approved facematch verification
       required:
         - id
         - name
@@ -15890,13 +16121,15 @@ components:
           example: CAD
         status:
           type: string
-          description: Refund status
           enum:
             - pending
-            - succeeded
+            - completed
             - failed
-            - canceled
-          example: succeeded
+            - cancelled
+          description: >-
+            pending=awaiting payment; completed=paid; failed=payment failed;
+            cancelled=abandoned
+          example: completed
         reason:
           type: string
           description: Refund reason
