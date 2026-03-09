@@ -575,12 +575,12 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-  /bookings/{id}/payment-intent:
+  /bookings/{id}/transaction:
     patch:
-      summary: Update draft booking with payment intent ID
-      description: Updates a draft booking with payment intent ID. This allows the payment intent to be restored when the user continues the booking after hot reload.
+      summary: Update draft booking with transaction ID
+      description: Updates a draft booking with transaction ID from payment-service. This allows the transaction to be restored when the user continues the booking after hot reload.
       tags: [booking]
-      operationId: bookingsUpdatePaymentIntent
+      operationId: bookingsUpdateTransaction
       security: [{ jwtAuth: [] }]
       parameters:
         - name: id
@@ -588,17 +588,17 @@ paths:
           required: true
           schema: { type: string }
       requestBody:
-        description: Payment intent ID to associate with draft booking
+        description: Transaction ID to associate with draft booking (from payment-service CreatePaymentIntent)
         required: true
         content:
           application/json:
             schema:
               type: object
               properties:
-                payment_intent_id:
+                transaction_id:
                   type: string
-                  description: Stripe payment intent ID
-              required: [payment_intent_id]
+                  description: Payment-service transaction document ID
+              required: [transaction_id]
       responses:
         "200":
           description: Booking updated successfully
@@ -803,10 +803,15 @@ components:
         rating: { type: number, format: float, example: 4.5 }
         days: { type: integer, example: 4 }
         payment_id: { type: string, example: pay_001 }
-        payment_intent_id:
+        transaction_id:
           type: string
-          description: Stripe payment intent ID (for draft bookings)
-          example: "pi_1234567890"
+          description: Payment-service transaction document ID (links to successful payment)
+          example: "txn_abc123"
+        payment_status:
+          type: string
+          enum: [pending, authorized, paid, failed, refunded]
+          description: Payment status for the booking
+          example: "pending"
         status:
           type: string
           enum:
@@ -1100,10 +1105,10 @@ components:
           minimum: 1
           description: Number of guests
           example: 2
-        payment_intent_id:
+        transaction_id:
           type: string
-          description: Stripe payment intent ID. Used to verify/charge the payment. Actual payment confirmation happens via Stripe webhook.
-          example: "pi_1234567890"
+          description: Payment-service transaction document ID from CreatePaymentIntent. Actual payment confirmation happens via Stripe webhook.
+          example: "txn_abc123"
         notes:
           type: string
           description: Optional notes for the booking
@@ -1112,7 +1117,7 @@ components:
         - check_in
         - check_out
         - guests
-        - payment_intent_id
+        - transaction_id
 
     GuestCancellationReason:
       type: string

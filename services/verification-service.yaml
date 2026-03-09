@@ -463,7 +463,9 @@ components:
         back_image_url:
           type: string
           format: uri
-          description: URL of the back side of the ID document
+          description: |
+            URL of the back side of the ID document.
+            Optional for passport (single-page document); required for driver's license and national ID.
         selfie_image_url:
           type: string
           format: uri
@@ -479,7 +481,6 @@ components:
       required:
         - document_type
         - front_image_url
-        - back_image_url
         - selfie_image_url
 
     LocationSubmissionRequest:
@@ -493,7 +494,11 @@ components:
           default: {}
         metadata:
           type: object
-          description: Additional metadata
+          description: |
+            Additional metadata. For Option C (POI + photo) flow:
+            - photo_url: URL of uploaded POI photo
+            - poi_name: Name of selected landmark
+            - poi_place_id: Google Places place_id
           default: {}
       required:
         - location

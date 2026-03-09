@@ -562,63 +562,6 @@ paths:
       x-google-backend:
         address: 'https://booking-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
-  '/bookings/{id}/payment-intent':
-    patch:
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      parameters:
-        - in: path
-          name: id
-          required: true
-          type: string
-        - description: Payment intent ID to associate with draft booking
-          in: body
-          name: body
-          required: true
-          schema:
-            properties:
-              payment_intent_id:
-                description: Stripe payment intent ID
-                type: string
-            required:
-              - payment_intent_id
-            type: object
-      responses:
-        '200':
-          description: Booking updated successfully
-          schema:
-            $ref: '#/definitions/ApiResponseBooking'
-        '400':
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        '401':
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        '403':
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        '404':
-          description: Booking not found
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-      security:
-        - jwtAuth: []
-      tags:
-        - booking
-      description: >-
-        Updates a draft booking with payment intent ID. This allows the payment
-        intent to be restored when the user continues the booking after hot
-        reload.
-      operationId: bookingsUpdatePaymentIntent
-      summary: Update draft booking with payment intent ID
-      x-google-backend:
-        address: 'https://booking-service-981292602655.us-central1.run.app'
-        path_translation: APPEND_PATH_TO_ADDRESS
   '/bookings/{id}/reject':
     patch:
       consumes:
@@ -673,6 +616,65 @@ paths:
       description: Reject a booking by its ID.
       operationId: bookingsReject
       summary: Reject a booking
+      x-google-backend:
+        address: 'https://booking-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/bookings/{id}/transaction':
+    patch:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+        - description: >-
+            Transaction ID to associate with draft booking (from payment-service
+            CreatePaymentIntent)
+          in: body
+          name: body
+          required: true
+          schema:
+            properties:
+              transaction_id:
+                description: Payment-service transaction document ID
+                type: string
+            required:
+              - transaction_id
+            type: object
+      responses:
+        '200':
+          description: Booking updated successfully
+          schema:
+            $ref: '#/definitions/ApiResponseBooking'
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '403':
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '404':
+          description: Booking not found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+        - jwtAuth: []
+      tags:
+        - booking
+      description: >-
+        Updates a draft booking with transaction ID from payment-service. This
+        allows the transaction to be restored when the user continues the
+        booking after hot reload.
+      operationId: bookingsUpdateTransaction
+      summary: Update draft booking with transaction ID
       x-google-backend:
         address: 'https://booking-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
@@ -13532,9 +13534,15 @@ definitions:
       payment_id:
         example: pay_001
         type: string
-      payment_intent_id:
-        description: Stripe payment intent ID (for draft bookings)
-        example: pi_1234567890
+      payment_status:
+        description: Payment status for the booking
+        enum:
+          - pending
+          - authorized
+          - paid
+          - failed
+          - refunded
+        example: pending
         type: string
       rate:
         example: 9.99
@@ -13613,6 +13621,10 @@ definitions:
         example: 49.99
         format: float
         type: number
+      transaction_id:
+        description: Payment-service transaction document ID (links to successful payment)
+        example: txn_abc123
+        type: string
     required:
       - id
       - listing
@@ -14948,7 +14960,11 @@ definitions:
   FacematchSubmissionRequest:
     properties:
       back_image_url:
-        description: URL of the back side of the ID document
+        description: >
+          URL of the back side of the ID document.
+
+          Optional for passport (single-page document); required for driver's
+          license and national ID.
         format: uri
         type: string
       device_info:
@@ -14977,7 +14993,6 @@ definitions:
     required:
       - document_type
       - front_image_url
-      - back_image_url
       - selfie_image_url
     type: object
   FeedResponse:
@@ -15013,17 +15028,17 @@ definitions:
         description: Optional notes for the booking
         example: 'Arriving late, will be there around 6 PM'
         type: string
-      payment_intent_id:
+      transaction_id:
         description: >-
-          Stripe payment intent ID. Used to verify/charge the payment. Actual
-          payment confirmation happens via Stripe webhook.
-        example: pi_1234567890
+          Payment-service transaction document ID from CreatePaymentIntent.
+          Actual payment confirmation happens via Stripe webhook.
+        example: txn_abc123
         type: string
     required:
       - check_in
       - check_out
       - guests
-      - payment_intent_id
+      - transaction_id
     type: object
   FindConversationRequest:
     properties:
@@ -15606,7 +15621,11 @@ definitions:
         $ref: '#/definitions/GeoLocation'
       metadata:
         default: {}
-        description: Additional metadata
+        description: |
+          Additional metadata. For Option C (POI + photo) flow:
+          - photo_url: URL of uploaded POI photo
+          - poi_name: Name of selected landmark
+          - poi_place_id: Google Places place_id
         type: object
     required:
       - location
