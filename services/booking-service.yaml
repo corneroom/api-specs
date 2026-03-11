@@ -824,6 +824,7 @@ components:
               unpaid,
               confirmed,
               completed,
+              suspended,
             ]
           description: |
             Booking status lifecycle:
@@ -835,6 +836,7 @@ components:
             - unpaid: Payment required but not completed (payment failed, canceled, or requires action)
             - confirmed: Payment successful, booking is active
             - completed: Booking period ended, final payment processing triggered
+            - suspended: Admin-suspended (temporarily on hold)
           example: draft
         status_text:
           type: string
@@ -1240,6 +1242,14 @@ components:
           format: float
           description: Tax rate used in calculation
           example: 0.08
+        platform_fee_rationale:
+          type: string
+          description: Localized explanation for platform fee. Present when service_fee > 0.
+          example: "We charge a small fee to keep the platform running and support hosts & guests."
+        free_listing_fee_note:
+          type: string
+          description: Localized note for free-listing platform fee. Present when subtotal = 0 and service_fee > 0.
+          example: "Even for free stays, a small platform fee applies to cover operations."
       required:
         - subtotal
         - service_fee
