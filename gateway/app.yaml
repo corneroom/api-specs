@@ -14923,6 +14923,11 @@ components:
           type: boolean
           description: Whether the host can cancel this booking (based on booking status)
           example: true
+        pricing_breakdown:
+          $ref: '#/components/schemas/PricingBreakdown'
+          description: >-
+            Computed pricing breakdown (subtotal, fees, taxes, total). Present
+            when booking has amount (dates selected).
       required:
         - id
         - listing
