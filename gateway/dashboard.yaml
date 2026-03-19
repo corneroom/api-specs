@@ -3449,6 +3449,37 @@ paths:
       x-google-backend:
         address: https://dashboard-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/user-roles/{userId}/role-names:
+    get:
+      tags:
+        - user-roles
+      summary: Get user role names
+      description: Retrieve the role names for a specific user.
+      operationId: getUserRoleNames
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User names
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserRoleNamesResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error400Response'
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://dashboard-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/user-roles/{userId}:
     get:
       tags:
@@ -3619,6 +3650,45 @@ paths:
                     type: string
                     example: Roles removed successfully
                   removedRoles:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/UserRole'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error400Response'
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://dashboard-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/user-roles/role/{roleId}/users:
+    get:
+      tags:
+        - user-roles
+      summary: Get users with role
+      description: Get all users assigned to a specific role.
+      operationId: getUsersWithRole
+      parameters:
+        - name: roleId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of users with the role
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  data:
                     type: array
                     items:
                       $ref: '#/components/schemas/UserRole'
@@ -6281,6 +6351,19 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/UserRole'
+    UserRoleNamesResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: ok
+        roleNames:
+          type: array
+          items:
+            type: string
+          example:
+            - admin
+            - moderator
     BulkRoleAssignRequest:
       type: object
       required:

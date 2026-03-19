@@ -1250,6 +1250,10 @@ components:
           type: string
           description: Localized note for free-listing platform fee. Present when subtotal = 0 and service_fee > 0.
           example: "Even for free stays, a small platform fee applies to cover operations."
+        currency:
+          type: string
+          description: ISO 4217 currency code (e.g. usd, vnd, eur) for display. Present when attached to a booking.
+          example: "vnd"
       required:
         - subtotal
         - service_fee

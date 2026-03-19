@@ -9627,6 +9627,18 @@ paths:
           schema:
             type: string
           description: Filter by review category (e.g., couchsurf, workspace)
+        - name: role
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - host
+              - guest
+          description: >
+            Filter user-type reviews by the target's role. 'host' returns
+            reviews of the target as a host (guest_review_host=true). 'guest'
+            returns reviews of the target as a guest (host_review_guest=true).
         - name: page
           in: query
           required: false
@@ -15363,6 +15375,12 @@ components:
           example: >-
             Even for free stays, a small platform fee applies to cover
             operations.
+        currency:
+          type: string
+          description: >-
+            ISO 4217 currency code (e.g. usd, vnd, eur) for display. Present
+            when attached to a booking.
+          example: vnd
       required:
         - subtotal
         - service_fee

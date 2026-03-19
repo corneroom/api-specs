@@ -3442,6 +3442,42 @@ paths:
       x-google-backend:
         address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/user-roles/role/{roleId}/users':
+    get:
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: roleId
+          required: true
+          type: string
+      responses:
+        '200':
+          description: List of users with the role
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/UserRole'
+                type: array
+              status:
+                example: ok
+                type: string
+            type: object
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/Error400Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - user-roles
+      description: Get all users assigned to a specific role.
+      operationId: getUsersWithRole
+      summary: Get users with role
+      x-google-backend:
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
   '/dashboard/user-roles/{userId}':
     get:
       produces:
@@ -3467,6 +3503,34 @@ paths:
       description: Retrieve all roles assigned to a specific user.
       operationId: getUserRoles
       summary: Get user roles
+      x-google-backend:
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/user-roles/{userId}/role-names':
+    get:
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          type: string
+      responses:
+        '200':
+          description: User names
+          schema:
+            $ref: '#/definitions/UserRoleNamesResponse'
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/Error400Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - user-roles
+      description: Retrieve the role names for a specific user.
+      operationId: getUserRoleNames
+      summary: Get user role names
       x-google-backend:
         address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
@@ -6649,6 +6713,19 @@ definitions:
     required:
       - userId
       - roleId
+    type: object
+  UserRoleNamesResponse:
+    properties:
+      roleNames:
+        example:
+          - admin
+          - moderator
+        items:
+          type: string
+        type: array
+      status:
+        example: ok
+        type: string
     type: object
   UserRoleResponse:
     properties:

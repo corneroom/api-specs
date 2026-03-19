@@ -7902,6 +7902,17 @@ paths:
           name: category
           required: false
           type: string
+        - description: >
+            Filter user-type reviews by the target's role. 'host' returns
+            reviews of the target as a host (guest_review_host=true). 'guest'
+            returns reviews of the target as a guest (host_review_guest=true).
+          enum:
+            - host
+            - guest
+          in: query
+          name: role
+          required: false
+          type: string
         - default: 1
           in: query
           name: page
@@ -15905,6 +15916,12 @@ definitions:
   PricingBreakdown:
     description: Complete pricing breakdown with fees and taxes
     properties:
+      currency:
+        description: >-
+          ISO 4217 currency code (e.g. usd, vnd, eur) for display. Present when
+          attached to a booking.
+        example: vnd
+        type: string
       free_listing_fee_note:
         description: >-
           Localized note for free-listing platform fee. Present when subtotal =
