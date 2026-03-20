@@ -3608,6 +3608,39 @@ paths:
         address: https://dashboard-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
 
+  /dashboard/user-roles/assignment/{userRoleId}/extend:
+    post:
+      tags:
+        - user-roles
+      summary: Extend role assignment expiry
+      description: Set or extend the expiry date of a role assignment. Defaults to 1 year from today if expires_at is omitted.
+      operationId: extendRoleExpiry
+      parameters:
+        - name: userRoleId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                expires_at:
+                  type: string
+                  format: date-time
+                  description: ISO date string for the new expiry date. Defaults to 1 year from today if omitted.
+      responses:
+        "200":
+          description: Role assignment expiry updated
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://dashboard-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+
   /dashboard/user-roles/bulk-assign:
     post:
       tags:
