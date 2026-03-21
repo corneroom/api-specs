@@ -187,5 +187,5 @@ sync: ## Sync API specs from backend services to services/ directory
 	@echo "✅ API specs sync completed!"
 auth: ## Authenticate with Google Cloud using Application Default Credentials
 	@echo "🔐 Setting up Google Cloud Application Default Credentials..."
-	@gcloud auth application-default login
+	@gcloud auth application-default login --project="$(PROJECT_ID)"
 	@echo "✅ Authentication complete!"
