@@ -4597,6 +4597,147 @@ paths:
       x-google-backend:
         address: https://dashboard-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/messages/audit:
+    get:
+      tags:
+      - message-audit
+      summary: List audit messages
+      operationId: listAuditMessages
+      parameters:
+      - name: status
+        in: query
+        schema:
+          type: string
+      - name: flagged
+        in: query
+        schema:
+          type: string
+      - name: category
+        in: query
+        schema:
+          type: string
+      - name: startDate
+        in: query
+        schema:
+          type: string
+      - name: endDate
+        in: query
+        schema:
+          type: string
+      - name: search
+        in: query
+        schema:
+          type: string
+      - name: limit
+        in: query
+        schema:
+          type: integer
+      - name: offset
+        in: query
+        schema:
+          type: integer
+      responses:
+        "200":
+          description: List of audit messages
+      security:
+      - jwtAuth: []
+      x-google-backend:
+        address: https://dashboard-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/messages/audit/stats:
+    get:
+      tags:
+      - message-audit
+      summary: Get audit flag statistics
+      operationId: getAuditStats
+      responses:
+        "200":
+          description: Flag statistics
+      security:
+      - jwtAuth: []
+      x-google-backend:
+        address: https://dashboard-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/messages/audit/{id}:
+    get:
+      tags:
+      - message-audit
+      summary: Get single audit message
+      operationId: getAuditMessage
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Audit message detail
+      security:
+      - jwtAuth: []
+      x-google-backend:
+        address: https://dashboard-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/messages/audit/{id}/flag:
+    patch:
+      tags:
+      - message-audit
+      summary: Manually flag a message
+      operationId: flagAuditMessage
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Message flagged
+      security:
+      - jwtAuth: []
+      x-google-backend:
+        address: https://dashboard-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/messages/audit/{id}/dismiss:
+    patch:
+      tags:
+      - message-audit
+      summary: Dismiss a flag
+      operationId: dismissAuditFlag
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Flag dismissed
+      security:
+      - jwtAuth: []
+      x-google-backend:
+        address: https://dashboard-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/messages/audit/{id}/escalate:
+    patch:
+      tags:
+      - message-audit
+      summary: Escalate a flagged message
+      operationId: escalateAuditMessage
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Message escalated
+      security:
+      - jwtAuth: []
+      x-google-backend:
+        address: https://dashboard-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
 components:
   schemas:
     BookingAnalyticsResponse:
