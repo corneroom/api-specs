@@ -2036,6 +2036,108 @@ paths:
       x-google-backend:
         address: https://dashboard-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/verifications/{verificationId}/status:
+    put:
+      tags:
+        - dashboard
+      summary: Update verification status
+      description: >-
+        Admin approves or rejects a pending verification. Updates the
+        verification record and publishes a verification.approved or
+        verification.rejected event so user-service updates the user record.
+      operationId: updateVerificationStatus
+      parameters:
+        - name: verificationId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The verification record ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+              properties:
+                status:
+                  type: string
+                  enum:
+                    - approved
+                    - rejected
+                rejection_reason:
+                  type: string
+                  description: Required when status is rejected
+      responses:
+        '200':
+          description: Status updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  verification_id:
+                    type: string
+                  status:
+                    type: string
+                  pubsub_message_id:
+                    type: string
+        '400':
+          description: Bad request
+          content: {}
+        '404':
+          description: Verification not found
+          content: {}
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://dashboard-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/verifications/{userId}:
+    delete:
+      tags:
+        - dashboard
+      summary: Clear user verifications
+      description: >-
+        Delete all verification records for a user so they can re-submit.
+        Publishes a verification.cleared event to notify downstream services.
+      operationId: clearUserVerifications
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The user ID whose verifications should be cleared
+      responses:
+        '200':
+          description: Verifications cleared successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  deleted:
+                    type: integer
+                  pubsub_message_id:
+                    type: string
+        '400':
+          description: Bad request
+          content: {}
+        '404':
+          description: User not found
+          content: {}
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://dashboard-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/settings:
     get:
       tags:
@@ -2471,6 +2573,36 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error400Response'
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://dashboard-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/analytics/dashboard2:
+    get:
+      tags:
+        - analytics
+      summary: Get dashboard v2 metrics
+      description: Retrieve enhanced dashboard metrics for the command center view.
+      operationId: getDashboard2
+      responses:
+        '200':
+          description: Dashboard v2 metrics
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://dashboard-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/analytics/activity-heatmap:
+    get:
+      tags:
+        - analytics
+      summary: Get activity heatmap data
+      description: Retrieve activity heatmap data showing platform usage patterns.
+      operationId: getActivityHeatmap
+      responses:
+        '200':
+          description: Activity heatmap data
       security:
         - jwtAuth: []
       x-google-backend:

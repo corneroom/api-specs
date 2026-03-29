@@ -11,6 +11,22 @@ basePath: /api/v1
 schemes:
   - https
 paths:
+  /dashboard/analytics/activity-heatmap:
+    get:
+      parameters: []
+      responses:
+        '200':
+          description: Activity heatmap data
+      security:
+        - jwtAuth: []
+      tags:
+        - analytics
+      description: Retrieve activity heatmap data showing platform usage patterns.
+      operationId: getActivityHeatmap
+      summary: Get activity heatmap data
+      x-google-backend:
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/analytics/booking:
     get:
       produces:
@@ -53,6 +69,22 @@ paths:
         and user metrics.
       operationId: getBookingAnalytics
       summary: Get booking analytics
+      x-google-backend:
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/analytics/dashboard2:
+    get:
+      parameters: []
+      responses:
+        '200':
+          description: Dashboard v2 metrics
+      security:
+        - jwtAuth: []
+      tags:
+        - analytics
+      description: Retrieve enhanced dashboard metrics for the command center view.
+      operationId: getDashboard2
+      summary: Get dashboard v2 metrics
       x-google-backend:
         address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
@@ -4296,6 +4328,103 @@ paths:
       description: Retrieve a list of verification records for admin review.
       operationId: listVerifications
       summary: List verifications
+      x-google-backend:
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/verifications/{userId}':
+    delete:
+      produces:
+        - application/json
+      parameters:
+        - description: The user ID whose verifications should be cleared
+          in: path
+          name: userId
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Verifications cleared successfully
+          schema:
+            properties:
+              deleted:
+                type: integer
+              message:
+                type: string
+              pubsub_message_id:
+                type: string
+            type: object
+        '400':
+          description: Bad request
+        '404':
+          description: User not found
+      security:
+        - jwtAuth: []
+      tags:
+        - dashboard
+      description: >-
+        Delete all verification records for a user so they can re-submit.
+        Publishes a verification.cleared event to notify downstream services.
+      operationId: clearUserVerifications
+      summary: Clear user verifications
+      x-google-backend:
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/verifications/{verificationId}/status':
+    put:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - description: The verification record ID
+          in: path
+          name: verificationId
+          required: true
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            properties:
+              rejection_reason:
+                description: Required when status is rejected
+                type: string
+              status:
+                enum:
+                  - approved
+                  - rejected
+                type: string
+            required:
+              - status
+            type: object
+      responses:
+        '200':
+          description: Status updated successfully
+          schema:
+            properties:
+              message:
+                type: string
+              pubsub_message_id:
+                type: string
+              status:
+                type: string
+              verification_id:
+                type: string
+            type: object
+        '400':
+          description: Bad request
+        '404':
+          description: Verification not found
+      security:
+        - jwtAuth: []
+      tags:
+        - dashboard
+      description: >-
+        Admin approves or rejects a pending verification. Updates the
+        verification record and publishes a verification.approved or
+        verification.rejected event so user-service updates the user record.
+      operationId: updateVerificationStatus
+      summary: Update verification status
       x-google-backend:
         address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS

@@ -1,0 +1,332 @@
+openapi: 3.0.0
+info:
+  title: Project X - Reward Service API
+  description: API specification for the Reward service - referral codes and rewards
+  version: 1.0.0
+  contact:
+    name: project-x-api
+    url: https://www.inspiredtech.ca
+    email: info@aircouch.com
+  termsOfService: https://www.inspiredtech.ca/terms
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+tags:
+  - name: reward
+    description: Reward and referral operations
+paths:
+  /rewards/heartbeat:
+    get:
+      summary: Reward service heartbeat
+      description: Health check endpoint for the reward service to verify it is running and accessible.
+      tags:
+        - reward
+      operationId: rewardHeartbeat
+      x-google-backend:
+        address: https://reward-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      responses:
+        "200":
+          description: Heartbeat
+          content:
+            application/json:
+              schema:
+                type: string
+                example: OK
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized (missing or invalid token)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security: []
+  /rewards/me/referral:
+    get:
+      summary: Get current user's referral code
+      description: Retrieves the referral code for the currently authenticated user.
+      tags:
+        - reward
+      operationId: getMyReferralCode
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://reward-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      responses:
+        "200":
+          description: User's referral code
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReferralCodeResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized (missing or invalid token)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /rewards/me/referrals:
+    get:
+      summary: List people I referred
+      description: Retrieves a paginated list of users referred by the currently authenticated user.
+      tags:
+        - reward
+      operationId: getMyReferrals
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://reward-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: page
+          in: query
+          description: Page number for pagination
+          required: false
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+        - name: limit
+          in: query
+          description: Number of items per page
+          required: false
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+            maximum: 100
+      responses:
+        "200":
+          description: List of referred users
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReferralsListResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized (missing or invalid token)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /rewards/referral/apply:
+    post:
+      summary: Apply a referral code
+      description: Applies a referral code to the currently authenticated user's account.
+      tags:
+        - reward
+      operationId: applyReferralCode
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://reward-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApplyReferralRequest"
+        description: Referral code to apply
+        required: true
+      responses:
+        "200":
+          description: Referral applied successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApplyReferralResponse"
+        "400":
+          description: Invalid or already used referral code
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized (missing or invalid token)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: User already has a referral applied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+servers:
+  - url: https://app-staging-gateway-cissa23j.uc.gateway.dev/api/v1
+components:
+  schemas:
+    ReferralCodeResponse:
+      type: object
+      description: Response containing the user's referral code.
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "TIGE-A1B2"
+            created_at:
+              type: string
+              format: date-time
+              example: "2026-01-15T12:00:00Z"
+          required:
+            - code
+            - created_at
+      required:
+        - success
+        - data
+    ReferralsListResponse:
+      type: object
+      description: Paginated list of users referred by the current user.
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            referrals:
+              type: array
+              items:
+                type: object
+                properties:
+                  user_id:
+                    type: string
+                  referred_at:
+                    type: string
+                    format: date-time
+                  status:
+                    type: string
+                    example: "active"
+            total:
+              type: integer
+              example: 25
+            page:
+              type: integer
+              example: 1
+            limit:
+              type: integer
+              example: 10
+          required:
+            - referrals
+            - total
+            - page
+            - limit
+      required:
+        - success
+        - data
+    ApplyReferralRequest:
+      type: object
+      properties:
+        code:
+          type: string
+          example: "TIGE-A1B2"
+      required:
+        - code
+    ApplyReferralResponse:
+      type: object
+      description: Response after successfully applying a referral code.
+      properties:
+        success:
+          type: boolean
+          example: true
+        toast:
+          type: string
+          example: "Referral applied successfully!"
+      required:
+        - success
+        - toast
+    ErrorResponse:
+      type: object
+      description: Standard error response model for failed requests.
+      properties:
+        success:
+          type: boolean
+          description: Indicates if the request was successful.
+          example: false
+        error:
+          type: string
+          description: Error message describing the failure.
+          example: Invalid request parameters.
+        toast:
+          type: string
+          description: Optional toast message for the client UI.
+          example: Please check your input and try again.
+      required:
+        - success
+        - error
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

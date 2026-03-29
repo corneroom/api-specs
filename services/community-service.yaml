@@ -1389,6 +1389,312 @@ paths:
           description: Comment deleted successfully
         '404':
           description: Comment not found
+
+  # ─── Hangouts ───
+  /community/hangouts:
+    post:
+      operationId: createHangout
+      summary: Create a hangout
+      description: Create a new hangout with a confirmed activity, place, and time
+      tags:
+        - hangouts
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateHangoutRequest'
+      responses:
+        '201':
+          description: Hangout created successfully
+        '400':
+          description: Invalid request
+        '401':
+          description: Unauthorized
+    get:
+      operationId: getHangouts
+      summary: Discover hangouts
+      description: List public hangouts, optionally filtered by activity
+      tags:
+        - hangouts
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 20
+        - in: query
+          name: activity
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of hangouts
+  /community/hangouts/my:
+    get:
+      operationId: getMyHangouts
+      summary: Get my hangouts
+      description: List hangouts hosted by the authenticated user
+      tags:
+        - hangouts
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: List of hosted hangouts
+        '401':
+          description: Unauthorized
+  /community/hangouts/{id}:
+    get:
+      operationId: getHangout
+      summary: Get hangout detail
+      description: Get a single hangout by ID
+      tags:
+        - hangouts
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Hangout detail
+        '404':
+          description: Hangout not found
+  /community/hangouts/{id}/cancel:
+    post:
+      operationId: cancelHangout
+      summary: Cancel a hangout
+      description: Cancel a hangout (host only)
+      tags:
+        - hangouts
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Hangout cancelled
+        '403':
+          description: Not the host
+  /community/hangouts/{id}/join:
+    post:
+      operationId: joinHangout
+      summary: Join a hangout
+      description: Join an open hangout directly
+      tags:
+        - hangouts
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Joined successfully
+        '400':
+          description: Hangout full or requires approval
+  /community/hangouts/{id}/leave:
+    post:
+      operationId: leaveHangout
+      summary: Leave a hangout
+      description: Leave a hangout you have joined
+      tags:
+        - hangouts
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Left the hangout
+  /community/hangouts/{id}/request:
+    post:
+      operationId: requestToJoinHangout
+      summary: Request to join
+      description: Send a join request for approval-based hangouts
+      tags:
+        - hangouts
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JoinRequestInput'
+      responses:
+        '201':
+          description: Join request created
+        '400':
+          description: Already requested or already a participant
+  /community/hangouts/{id}/requests:
+    get:
+      operationId: getJoinRequests
+      summary: Get join requests
+      description: List join requests for a hangout (host only)
+      tags:
+        - hangouts
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: List of join requests
+        '403':
+          description: Not the host
+  /community/hangouts/{id}/requests/{requestId}/respond:
+    post:
+      operationId: respondToJoinRequest
+      summary: Respond to join request
+      description: Accept or decline a join request (host only)
+      tags:
+        - hangouts
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: requestId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+              properties:
+                status:
+                  type: string
+                  enum: [accepted, declined]
+      responses:
+        '200':
+          description: Request responded to
+        '400':
+          description: Invalid status or hangout full
+  /community/hangouts/{id}/participants:
+    get:
+      operationId: getParticipants
+      summary: Get participants
+      description: List participants for a hangout
+      tags:
+        - hangouts
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: List of participants
 components:
   securitySchemes:
     jwtAuth:
@@ -2330,3 +2636,64 @@ components:
               required:
                 - connections
                 - pagination
+    # ─── Hangout Schemas ───
+    CreateHangoutRequest:
+      type: object
+      required:
+        - title
+        - description
+        - activity
+        - location
+        - time
+        - capacity
+      properties:
+        title:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+          maxLength: 2000
+        activity:
+          type: string
+          description: Activity type (coffee, drinks, food, coworking, sports, hiking, etc.)
+        location:
+          type: string
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+        time:
+          type: string
+          format: date-time
+        capacity:
+          type: integer
+          minimum: 2
+        join_policy:
+          type: string
+          enum: [open, approval]
+          default: approval
+        is_public:
+          type: boolean
+          default: true
+        tags:
+          type: array
+          items:
+            type: string
+        host_name:
+          type: string
+        host_avatar:
+          type: string
+        host_bio:
+          type: string
+    JoinRequestInput:
+      type: object
+      properties:
+        message:
+          type: string
+          maxLength: 500
+        name:
+          type: string
+        avatar:
+          type: string

@@ -20,7 +20,8 @@
         "document-service",
         "chat-service",
         "community-service",
-        "verification-service"
+        "verification-service",
+        "reward-service"
       ],
       "sdkConfig": {
         "enabled": true,

@@ -184,6 +184,8 @@ sync: ## Sync API specs from backend services to services/ directory
 	@cp ../../../backend/verification-service/docs/api.yaml services/verification-service.yaml
 	@echo "📋 Copying wishlist-service API spec..."
 	@cp ../../../backend/wishlist-service/docs/api.yaml services/wishlist-service.yaml
+	@echo "📋 Copying reward-service API spec..."
+	@cp ../../../backend/reward-service/docs/api.yaml services/reward-service.yaml
 	@echo "✅ API specs sync completed!"
 auth: ## Authenticate with Google Cloud using Application Default Credentials
 	@echo "🔐 Setting up Google Cloud Application Default Credentials..."

@@ -1006,6 +1006,298 @@ paths:
       x-google-backend:
         address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
+  /community/hangouts:
+    get:
+      parameters:
+        - default: 1
+          in: query
+          name: page
+          type: integer
+        - default: 20
+          in: query
+          name: limit
+          type: integer
+        - in: query
+          name: activity
+          type: string
+      responses:
+        '200':
+          description: List of hangouts
+      security:
+        - jwtAuth: []
+      tags:
+        - hangouts
+      description: 'List public hangouts, optionally filtered by activity'
+      operationId: getHangouts
+      summary: Discover hangouts
+      x-google-backend:
+        address: 'https://community-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+    post:
+      consumes:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/CreateHangoutRequest'
+      responses:
+        '201':
+          description: Hangout created successfully
+        '400':
+          description: Invalid request
+        '401':
+          description: Unauthorized
+      security:
+        - jwtAuth: []
+      tags:
+        - hangouts
+      description: 'Create a new hangout with a confirmed activity, place, and time'
+      operationId: createHangout
+      summary: Create a hangout
+      x-google-backend:
+        address: 'https://community-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /community/hangouts/my:
+    get:
+      parameters:
+        - default: 1
+          in: query
+          name: page
+          type: integer
+        - default: 20
+          in: query
+          name: limit
+          type: integer
+      responses:
+        '200':
+          description: List of hosted hangouts
+        '401':
+          description: Unauthorized
+      security:
+        - jwtAuth: []
+      tags:
+        - hangouts
+      description: List hangouts hosted by the authenticated user
+      operationId: getMyHangouts
+      summary: Get my hangouts
+      x-google-backend:
+        address: 'https://community-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/community/hangouts/{id}':
+    get:
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Hangout detail
+        '404':
+          description: Hangout not found
+      security:
+        - jwtAuth: []
+      tags:
+        - hangouts
+      description: Get a single hangout by ID
+      operationId: getHangout
+      summary: Get hangout detail
+      x-google-backend:
+        address: 'https://community-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/community/hangouts/{id}/cancel':
+    post:
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Hangout cancelled
+        '403':
+          description: Not the host
+      security:
+        - jwtAuth: []
+      tags:
+        - hangouts
+      description: Cancel a hangout (host only)
+      operationId: cancelHangout
+      summary: Cancel a hangout
+      x-google-backend:
+        address: 'https://community-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/community/hangouts/{id}/join':
+    post:
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Joined successfully
+        '400':
+          description: Hangout full or requires approval
+      security:
+        - jwtAuth: []
+      tags:
+        - hangouts
+      description: Join an open hangout directly
+      operationId: joinHangout
+      summary: Join a hangout
+      x-google-backend:
+        address: 'https://community-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/community/hangouts/{id}/leave':
+    post:
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Left the hangout
+      security:
+        - jwtAuth: []
+      tags:
+        - hangouts
+      description: Leave a hangout you have joined
+      operationId: leaveHangout
+      summary: Leave a hangout
+      x-google-backend:
+        address: 'https://community-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/community/hangouts/{id}/participants':
+    get:
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+        - default: 1
+          in: query
+          name: page
+          type: integer
+        - default: 20
+          in: query
+          name: limit
+          type: integer
+      responses:
+        '200':
+          description: List of participants
+      security:
+        - jwtAuth: []
+      tags:
+        - hangouts
+      description: List participants for a hangout
+      operationId: getParticipants
+      summary: Get participants
+      x-google-backend:
+        address: 'https://community-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/community/hangouts/{id}/request':
+    post:
+      consumes:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+        - in: body
+          name: body
+          schema:
+            $ref: '#/definitions/JoinRequestInput'
+      responses:
+        '201':
+          description: Join request created
+        '400':
+          description: Already requested or already a participant
+      security:
+        - jwtAuth: []
+      tags:
+        - hangouts
+      description: Send a join request for approval-based hangouts
+      operationId: requestToJoinHangout
+      summary: Request to join
+      x-google-backend:
+        address: 'https://community-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/community/hangouts/{id}/requests':
+    get:
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+        - default: 1
+          in: query
+          name: page
+          type: integer
+        - default: 20
+          in: query
+          name: limit
+          type: integer
+      responses:
+        '200':
+          description: List of join requests
+        '403':
+          description: Not the host
+      security:
+        - jwtAuth: []
+      tags:
+        - hangouts
+      description: List join requests for a hangout (host only)
+      operationId: getJoinRequests
+      summary: Get join requests
+      x-google-backend:
+        address: 'https://community-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/community/hangouts/{id}/requests/{requestId}/respond':
+    post:
+      consumes:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+        - in: path
+          name: requestId
+          required: true
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            properties:
+              status:
+                enum:
+                  - accepted
+                  - declined
+                type: string
+            required:
+              - status
+            type: object
+      responses:
+        '200':
+          description: Request responded to
+        '400':
+          description: Invalid status or hangout full
+      security:
+        - jwtAuth: []
+      tags:
+        - hangouts
+      description: Accept or decline a join request (host only)
+      operationId: respondToJoinRequest
+      summary: Respond to join request
+      x-google-backend:
+        address: 'https://community-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
   /community/public/feed:
     get:
       produces:
@@ -8217,6 +8509,181 @@ paths:
       x-google-backend:
         address: 'https://review-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
+  /rewards/heartbeat:
+    get:
+      produces:
+        - application/json
+      parameters: []
+      responses:
+        '200':
+          description: Heartbeat
+          schema:
+            example: OK
+            type: string
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '401':
+          description: Unauthorized (missing or invalid token)
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '404':
+          description: Not found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        default:
+          description: Default error response
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security: []
+      tags:
+        - reward
+      description: >-
+        Health check endpoint for the reward service to verify it is running and
+        accessible.
+      operationId: rewardHeartbeat
+      summary: Reward service heartbeat
+      x-google-backend:
+        address: 'https://reward-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /rewards/me/referral:
+    get:
+      produces:
+        - application/json
+      parameters: []
+      responses:
+        '200':
+          description: User's referral code
+          schema:
+            $ref: '#/definitions/ReferralCodeResponse'
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '401':
+          description: Unauthorized (missing or invalid token)
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '404':
+          description: Not found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        default:
+          description: Default error response
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+        - jwtAuth: []
+      tags:
+        - reward
+      description: Retrieves the referral code for the currently authenticated user.
+      operationId: getMyReferralCode
+      summary: Get current user's referral code
+      x-google-backend:
+        address: 'https://reward-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /rewards/me/referrals:
+    get:
+      produces:
+        - application/json
+      parameters:
+        - default: 1
+          description: Page number for pagination
+          in: query
+          minimum: 1
+          name: page
+          required: false
+          type: integer
+        - default: 10
+          description: Number of items per page
+          in: query
+          maximum: 100
+          minimum: 1
+          name: limit
+          required: false
+          type: integer
+      responses:
+        '200':
+          description: List of referred users
+          schema:
+            $ref: '#/definitions/ReferralsListResponse'
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '401':
+          description: Unauthorized (missing or invalid token)
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '404':
+          description: Not found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        default:
+          description: Default error response
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+        - jwtAuth: []
+      tags:
+        - reward
+      description: >-
+        Retrieves a paginated list of users referred by the currently
+        authenticated user.
+      operationId: getMyReferrals
+      summary: List people I referred
+      x-google-backend:
+        address: 'https://reward-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /rewards/referral/apply:
+    post:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - description: Referral code to apply
+          in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/ApplyReferralRequest'
+      responses:
+        '200':
+          description: Referral applied successfully
+          schema:
+            $ref: '#/definitions/ApplyReferralResponse'
+        '400':
+          description: Invalid or already used referral code
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '401':
+          description: Unauthorized (missing or invalid token)
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '404':
+          description: Not found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '409':
+          description: User already has a referral applied
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        default:
+          description: Default error response
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+        - jwtAuth: []
+      tags:
+        - reward
+      description: Applies a referral code to the currently authenticated user's account.
+      operationId: applyReferralCode
+      summary: Apply a referral code
+      x-google-backend:
+        address: 'https://reward-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
   /users/heartbeat:
     get:
       produces:
@@ -13393,6 +13860,27 @@ definitions:
       - success
       - data
     type: object
+  ApplyReferralRequest:
+    properties:
+      code:
+        example: TIGE-A1B2
+        type: string
+    required:
+      - code
+    type: object
+  ApplyReferralResponse:
+    description: Response after successfully applying a referral code.
+    properties:
+      success:
+        example: true
+        type: boolean
+      toast:
+        example: Referral applied successfully!
+        type: string
+    required:
+      - success
+      - toast
+    type: object
   AvailabilityCalendar:
     description: Listing availability calendar data.
     properties:
@@ -14129,6 +14617,58 @@ definitions:
       - languages
       - specialties
     type: object
+  CreateHangoutRequest:
+    properties:
+      tags:
+        items:
+          type: string
+        type: array
+      activity:
+        description: 'Activity type (coffee, drinks, food, coworking, sports, hiking, etc.)'
+        type: string
+      capacity:
+        minimum: 2
+        type: integer
+      description:
+        maxLength: 2000
+        type: string
+      host_avatar:
+        type: string
+      host_bio:
+        type: string
+      host_name:
+        type: string
+      is_public:
+        default: true
+        type: boolean
+      join_policy:
+        default: approval
+        enum:
+          - open
+          - approval
+        type: string
+      latitude:
+        format: double
+        type: number
+      location:
+        type: string
+      longitude:
+        format: double
+        type: number
+      time:
+        format: date-time
+        type: string
+      title:
+        maxLength: 200
+        type: string
+    required:
+      - title
+      - description
+      - activity
+      - location
+      - time
+      - capacity
+    type: object
   CreatePaymentIntentRequest:
     properties:
       amount:
@@ -14818,7 +15358,7 @@ definitions:
     properties:
       error:
         description: Error message describing the failure.
-        example: Failed to parse request body
+        example: Invalid request parameters.
         properties:
           code:
             description: Error code
@@ -14838,7 +15378,7 @@ definitions:
         required:
           - code
           - message
-        type: object
+        type: string
       message:
         description: User-friendly error message
         example: Please check your input and try again
@@ -15317,6 +15857,16 @@ definitions:
         type: string
     required:
       - listing_id
+    type: object
+  JoinRequestInput:
+    properties:
+      avatar:
+        type: string
+      message:
+        maxLength: 500
+        type: string
+      name:
+        type: string
     type: object
   LikeResponse:
     properties:
@@ -16162,6 +16712,69 @@ definitions:
               - public
             type: object
         type: object
+  ReferralCodeResponse:
+    description: Response containing the user's referral code.
+    properties:
+      data:
+        properties:
+          code:
+            example: TIGE-A1B2
+            type: string
+          created_at:
+            example: '2026-01-15T12:00:00Z'
+            format: date-time
+            type: string
+        required:
+          - code
+          - created_at
+        type: object
+      success:
+        example: true
+        type: boolean
+    required:
+      - success
+      - data
+    type: object
+  ReferralsListResponse:
+    description: Paginated list of users referred by the current user.
+    properties:
+      data:
+        properties:
+          limit:
+            example: 10
+            type: integer
+          page:
+            example: 1
+            type: integer
+          referrals:
+            items:
+              properties:
+                referred_at:
+                  format: date-time
+                  type: string
+                status:
+                  example: active
+                  type: string
+                user_id:
+                  type: string
+              type: object
+            type: array
+          total:
+            example: 25
+            type: integer
+        required:
+          - referrals
+          - total
+          - page
+          - limit
+        type: object
+      success:
+        example: true
+        type: boolean
+    required:
+      - success
+      - data
+    type: object
   RefundResponse:
     properties:
       amount:
