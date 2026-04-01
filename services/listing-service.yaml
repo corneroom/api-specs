@@ -4193,6 +4193,12 @@ components:
           description: |
             Allows same-day bookings (check-in and check-out on same date, different times).
             Default: false (opt-in model).
+        pricing_type:
+          type: string
+          description: |
+            Pricing model for the listing. Derived from category if not explicitly set.
+          enum: [nightly, daily, slot]
+          default: nightly
       required:
         - id
         - title

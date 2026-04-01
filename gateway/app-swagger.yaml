@@ -273,12 +273,83 @@ paths:
         - jwtAuth: []
       tags:
         - booking
-      description: >-
+      description: >
         Creates a draft booking with minimal information. Guest ID is extracted
-        from JWT token. Returns a booking ID that can be used to create a
-        payment intent and finalize the booking later.
+        from JWT token.
+
+        Returns a booking ID that can be used to create a payment intent and
+        finalize the booking later.
+
+
+        For slot-based bookings, provide `slots` array and `slot_date` instead
+        of check_in/check_out.
+
+        The listing must have pricing_type="slot". Amount is calculated as
+        listing.price * number of slots.
       operationId: bookingsInitiate
       summary: Initiate a booking (draft)
+      x-google-backend:
+        address: 'https://booking-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /bookings/slots:
+    get:
+      produces:
+        - application/json
+      parameters:
+        - description: Listing ID to check slot availability
+          in: query
+          name: listing_id
+          required: true
+          type: string
+        - description: Date to check slot availability (YYYY-MM-DD)
+          in: query
+          name: date
+          required: true
+          type: string
+          x-example: '2026-04-01'
+        - default: 60
+          description: >-
+            Duration of each slot in minutes (default 60). Sent from mobile app
+            via Remote Config.
+          in: query
+          name: slot_duration_minutes
+          required: false
+          type: integer
+      responses:
+        '200':
+          description: Slot availability retrieved successfully
+          schema:
+            $ref: '#/definitions/SlotAvailabilityResponse'
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        default:
+          description: Default error response
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+        - jwtAuth: []
+      tags:
+        - booking
+      description: >
+        Returns available time slots for a listing on a given date. Slots are
+        generated from
+
+        the listing's operating hours (check_in = open, check_out = close) at
+        the specified duration.
+
+        If the requested date is today in the listing's timezone, slots starting
+        less than 1 hour from now are excluded.
+
+        Slots that are already booked (pricing_type="slot") are marked as
+        unavailable.
+      operationId: bookingsSlots
+      summary: Get slot availability for a listing
       x-google-backend:
         address: 'https://booking-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
@@ -14008,6 +14079,30 @@ definitions:
       discount_code:
         example: SUMMER25
         type: string
+      display_amount:
+        description: >-
+          Total converted to guest's display currency at booking time
+          (snapshot).
+        example: 65.99
+        format: float
+        type: number
+      display_currency:
+        description: >-
+          Guest's locale currency ISO 4217 code (e.g. "CAD"). Only set when
+          different from listing charge currency.
+        example: CAD
+        type: string
+      exchange_rate:
+        description: >-
+          Exchange rate used at booking time: 1 charge_currency = X
+          display_currency.
+        example: 1.35
+        format: double
+        type: number
+      exchange_rate_date:
+        description: Date the exchange rate was sourced (e.g. "2026-03-20").
+        example: '2026-03-20'
+        type: string
       guest:
         $ref: '#/definitions/User'
       guest_review_host:
@@ -14030,6 +14125,10 @@ definitions:
       notes:
         example: Guest arriving late.
         type: string
+      num_slots:
+        description: Number of slots booked
+        example: 3
+        type: integer
       payment_id:
         example: pay_001
         type: string
@@ -14048,6 +14147,10 @@ definitions:
         description: >-
           Computed pricing breakdown (subtotal, fees, taxes, total). Present
           when booking has amount (dates selected).
+      pricing_type:
+        description: Pricing type for the booking (e.g. "slot" for slot-based bookings)
+        example: slot
+        type: string
       rate:
         example: 9.99
         format: float
@@ -14077,6 +14180,18 @@ definitions:
       review_edit_deadline:
         description: Deadline for editing reviews
         format: date-time
+        type: string
+      slot_date:
+        description: Date of slot booking (e.g. "2026-04-01")
+        example: '2026-04-01'
+        type: string
+      slot_end:
+        description: 'Last slot end time (e.g. "12:00")'
+        example: '12:00'
+        type: string
+      slot_start:
+        description: 'First slot start time (e.g. "09:00")'
+        example: '09:00'
         type: string
       status:
         description: >
@@ -15578,6 +15693,10 @@ definitions:
         example: '2025-09-18T11:00:00Z'
         format: date-time
         type: string
+      display_currency:
+        description: Guest's preferred display currency ISO 4217 code (e.g. "CAD").
+        example: CAD
+        type: string
       guests:
         description: Number of guests
         example: 2
@@ -15855,6 +15974,31 @@ definitions:
           Hi, I'm looking forward to staying at your place! I have a couple of
           questions about parking.
         type: string
+      slot_date:
+        description: >-
+          Date for slot-based booking (YYYY-MM-DD). Required when slots are
+          provided.
+        example: '2026-04-01'
+        type: string
+      slots:
+        description: >-
+          Optional array of time slots for slot-based bookings. When provided
+          with slot_date, creates a slot booking.
+        items:
+          properties:
+            end:
+              description: 'Slot end time (HH:MM)'
+              example: '10:00'
+              type: string
+            start:
+              description: 'Slot start time (HH:MM)'
+              example: '09:00'
+              type: string
+          required:
+            - start
+            - end
+          type: object
+        type: array
     required:
       - listing_id
     type: object
@@ -16001,6 +16145,16 @@ definitions:
       price:
         format: double
         type: number
+      pricing_type:
+        default: nightly
+        description: >
+          Pricing model for the listing. Derived from category if not explicitly
+          set.
+        enum:
+          - nightly
+          - daily
+          - slot
+        type: string
       rating:
         format: double
         type: number
@@ -17142,6 +17296,48 @@ definitions:
       - id
       - client_secret
       - status
+    type: object
+  SlotAvailabilityResponse:
+    description: Response for slot availability query
+    properties:
+      date:
+        description: The requested date
+        example: '2026-04-01'
+        type: string
+      listing_id:
+        description: The listing ID
+        example: abc123
+        type: string
+      slot_duration_minutes:
+        description: Duration of each slot in minutes
+        example: 60
+        type: integer
+      slots:
+        items:
+          properties:
+            available:
+              description: Whether the slot is available for booking
+              example: true
+              type: boolean
+            end:
+              description: 'Slot end time (HH:MM)'
+              example: '10:00'
+              type: string
+            start:
+              description: 'Slot start time (HH:MM)'
+              example: '09:00'
+              type: string
+          required:
+            - start
+            - end
+            - available
+          type: object
+        type: array
+    required:
+      - date
+      - slot_duration_minutes
+      - listing_id
+      - slots
     type: object
   StoryListResponse:
     properties:

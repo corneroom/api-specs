@@ -2695,6 +2695,175 @@ paths:
       x-google-backend:
         address: https://dashboard-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/payouts:
+    get:
+      tags:
+        - payouts
+      summary: List payouts
+      description: Retrieve payouts with optional filtering by status and host.
+      operationId: listPayouts
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum:
+              - pending
+              - ready
+              - processing
+              - completed
+              - failed
+              - blocked
+          description: Filter by payout status
+        - name: host_id
+          in: query
+          schema:
+            type: string
+          description: Filter by host ID
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: List of payouts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      type: object
+                  total:
+                    type: integer
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error400Response'
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://dashboard-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/payouts/{payoutId}:
+    get:
+      tags:
+        - payouts
+      summary: Get payout details
+      description: Retrieve details of a single payout.
+      operationId: getPayoutDetails
+      parameters:
+        - name: payoutId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Payout details
+          content:
+            application/json:
+              schema:
+                type: object
+        '404':
+          description: Payout not found
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://dashboard-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/payouts/{payoutId}/approve:
+    put:
+      tags:
+        - payouts
+      summary: Approve a payout
+      description: Approve a pending payout, moving it to ready status for processing.
+      operationId: approvePayout
+      parameters:
+        - name: payoutId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Payout approved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error400Response'
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://dashboard-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/payouts/{payoutId}/reject:
+    put:
+      tags:
+        - payouts
+      summary: Reject a payout
+      description: Reject a payout with optional reason, moving it to blocked status.
+      operationId: rejectPayout
+      parameters:
+        - name: payoutId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                rejection_reason:
+                  type: string
+      responses:
+        '200':
+          description: Payout rejected
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error400Response'
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://dashboard-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/reports/overview:
     get:
       tags:
