@@ -4643,6 +4643,15 @@ components:
               type: boolean
               description: Whether the user has any active listings (is a host)
               example: true
+            stripe_account_id:
+              type: string
+              description: Stripe Connect Express account ID
+              example: "acct_1234567890"
+            stripe_connect_status:
+              type: string
+              description: Stripe Connect onboarding and account status
+              enum: ["pending", "active", "restricted", "disabled"]
+              example: "active"
             basic_info:
               type: object
               properties:

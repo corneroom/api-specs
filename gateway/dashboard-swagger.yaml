@@ -4488,23 +4488,58 @@ paths:
       x-google-backend:
         address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
-  '/dashboard/verifications/{userId}':
-    delete:
+  '/dashboard/verifications/user/{userId}':
+    get:
       produces:
         - application/json
       parameters:
-        - description: The user ID whose verifications should be cleared
-          in: path
+        - in: path
+          name: userId
+          required: true
+          type: string
+        - default: 1
+          in: query
+          name: page
+          required: false
+          type: integer
+        - default: 10
+          in: query
+          name: limit
+          required: false
+          type: integer
+      responses:
+        '200':
+          description: User verification history
+          schema:
+            type: object
+        '400':
+          description: Bad request
+      security:
+        - jwtAuth: []
+      tags:
+        - dashboard
+      description: >-
+        Returns all verification submissions for a user, including soft-deleted
+        records. Newest first, paginated.
+      operationId: getUserVerificationHistory
+      summary: Get user verification history
+      x-google-backend:
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/verifications/{userId}/request-reverification':
+    post:
+      produces:
+        - application/json
+      parameters:
+        - in: path
           name: userId
           required: true
           type: string
       responses:
         '200':
-          description: Verifications cleared successfully
+          description: Re-verification requested
           schema:
             properties:
-              deleted:
-                type: integer
               message:
                 type: string
               pubsub_message_id:
@@ -4512,17 +4547,16 @@ paths:
             type: object
         '400':
           description: Bad request
-        '404':
-          description: User not found
       security:
         - jwtAuth: []
       tags:
         - dashboard
       description: >-
-        Delete all verification records for a user so they can re-submit.
-        Publishes a verification.cleared event to notify downstream services.
-      operationId: clearUserVerifications
-      summary: Clear user verifications
+        Publishes a verification.requested event so user-service resets the
+        user's status and the mobile app prompts re-submission. Does not modify
+        existing records.
+      operationId: requestReVerification
+      summary: Request user re-verification
       x-google-backend:
         address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS

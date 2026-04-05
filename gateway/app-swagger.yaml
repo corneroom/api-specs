@@ -8133,6 +8133,110 @@ paths:
       x-google-backend:
         address: 'https://payment-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
+  /payouts/connect/dashboard-link:
+    post:
+      produces:
+        - application/json
+      parameters: []
+      responses:
+        '200':
+          description: Dashboard link created
+          schema:
+            $ref: '#/definitions/ConnectDashboardLinkResponse'
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '404':
+          description: No Connect account found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '500':
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+        - jwtAuth: []
+      tags:
+        - payout
+      description: Generates a login link for the host's Stripe Express dashboard.
+      operationId: createConnectDashboardLink
+      summary: Create Stripe Express dashboard link
+      x-google-backend:
+        address: 'https://payment-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /payouts/connect/onboarding:
+    post:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            properties:
+              email:
+                description: Host's email for Stripe account
+                format: email
+                type: string
+            required:
+              - email
+            type: object
+      responses:
+        '200':
+          description: Onboarding link created
+          schema:
+            $ref: '#/definitions/ConnectOnboardingResponse'
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '500':
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+        - jwtAuth: []
+      tags:
+        - payout
+      description: >-
+        Creates a Stripe Connect Express account (or re-uses existing) and
+        returns an onboarding URL for the host to complete setup.
+      operationId: createConnectOnboarding
+      summary: Create Stripe Connect onboarding link
+      x-google-backend:
+        address: 'https://payment-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /payouts/connect/status:
+    get:
+      produces:
+        - application/json
+      parameters: []
+      responses:
+        '200':
+          description: Connect status retrieved
+          schema:
+            $ref: '#/definitions/ConnectStatusResponse'
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '500':
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+        - jwtAuth: []
+      tags:
+        - payout
+      description: Returns the current Connect account status for the authenticated host.
+      operationId: getConnectStatus
+      summary: Get Stripe Connect account status
+      x-google-backend:
+        address: 'https://payment-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
   /pricing/calculate:
     get:
       produces:
@@ -14476,6 +14580,64 @@ definitions:
       - created_at
       - updated_at
     type: object
+  ConnectDashboardLinkResponse:
+    properties:
+      data:
+        properties:
+          url:
+            description: Login link for Stripe Express dashboard
+            format: uri
+            type: string
+        type: object
+      success:
+        type: boolean
+    required:
+      - success
+      - data
+    type: object
+  ConnectOnboardingResponse:
+    properties:
+      data:
+        properties:
+          account_id:
+            description: Stripe Connect account ID
+            type: string
+          onboarding_url:
+            description: URL to redirect host to for onboarding
+            format: uri
+            type: string
+        type: object
+      success:
+        type: boolean
+    required:
+      - success
+      - data
+    type: object
+  ConnectStatusResponse:
+    properties:
+      data:
+        properties:
+          account_id:
+            description: Stripe Connect account ID
+            type: string
+          connected:
+            description: Whether the account is fully active
+            type: boolean
+          status:
+            description: Current Connect account status
+            enum:
+              - active
+              - pending
+              - restricted
+              - not_connected
+            type: string
+        type: object
+      success:
+        type: boolean
+    required:
+      - success
+      - data
+    type: object
   ConnectToPlanRequest:
     properties:
       message:
@@ -15362,6 +15524,19 @@ definitions:
               why_host_travel:
                 type: string
             type: object
+          stripe_account_id:
+            description: Stripe Connect Express account ID
+            example: acct_1234567890
+            type: string
+          stripe_connect_status:
+            description: Stripe Connect onboarding and account status
+            enum:
+              - pending
+              - active
+              - restricted
+              - disabled
+            example: active
+            type: string
           system_info:
             properties:
               created_at:

@@ -2097,25 +2097,25 @@ paths:
       x-google-backend:
         address: https://dashboard-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
-  /dashboard/verifications/{userId}:
-    delete:
+  /dashboard/verifications/{userId}/request-reverification:
+    post:
       tags:
         - dashboard
-      summary: Clear user verifications
+      summary: Request user re-verification
       description: >-
-        Delete all verification records for a user so they can re-submit.
-        Publishes a verification.cleared event to notify downstream services.
-      operationId: clearUserVerifications
+        Publishes a verification.requested event so user-service resets the
+        user's status and the mobile app prompts re-submission. Does not modify
+        existing records.
+      operationId: requestReVerification
       parameters:
         - name: userId
           in: path
           required: true
           schema:
             type: string
-          description: The user ID whose verifications should be cleared
       responses:
         '200':
-          description: Verifications cleared successfully
+          description: Re-verification requested
           content:
             application/json:
               schema:
@@ -2123,15 +2123,52 @@ paths:
                 properties:
                   message:
                     type: string
-                  deleted:
-                    type: integer
                   pubsub_message_id:
                     type: string
         '400':
           description: Bad request
           content: {}
-        '404':
-          description: User not found
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://dashboard-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/verifications/user/{userId}:
+    get:
+      tags:
+        - dashboard
+      summary: Get user verification history
+      description: >-
+        Returns all verification submissions for a user, including soft-deleted
+        records. Newest first, paginated.
+      operationId: getUserVerificationHistory
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: User verification history
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Bad request
           content: {}
       security:
         - jwtAuth: []
