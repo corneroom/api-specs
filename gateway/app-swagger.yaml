@@ -7992,6 +7992,109 @@ paths:
       x-google-backend:
         address: 'https://payment-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
+  /payments/paypal/link-complete:
+    post:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            properties:
+              authorization_code:
+                description: OAuth authorization code from PayPal
+                type: string
+            required:
+              - authorization_code
+            type: object
+      responses:
+        '201':
+          description: PayPal account linked successfully
+          schema:
+            properties:
+              data:
+                properties:
+                  payment_method_id:
+                    type: string
+                  status:
+                    enum:
+                      - linked
+                    type: string
+                  type:
+                    enum:
+                      - paypal
+                    type: string
+                type: object
+              success:
+                type: boolean
+            type: object
+        '400':
+          description: Bad request (missing authorization code)
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '500':
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+        - jwtAuth: []
+      tags:
+        - payment
+      description: Completes the PayPal OAuth flow and saves the payment method
+      operationId: completePayPalLink
+      summary: Complete PayPal account linking
+      x-google-backend:
+        address: 'https://payment-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /payments/paypal/link-init:
+    post:
+      produces:
+        - application/json
+      parameters: []
+      responses:
+        '200':
+          description: PayPal authorization URL generated successfully
+          schema:
+            properties:
+              data:
+                properties:
+                  auth_url:
+                    description: PayPal OAuth authorization URL
+                    type: string
+                  expires_in:
+                    description: Token expiration time in seconds
+                    type: number
+                type: object
+              success:
+                type: boolean
+            type: object
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '500':
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+        - jwtAuth: []
+      tags:
+        - payment
+      description: >-
+        Generates a PayPal OAuth authorization URL for the user to authorize
+        payment method linking
+      operationId: initiatePayPalLink
+      summary: Initiate PayPal account linking
+      x-google-backend:
+        address: 'https://payment-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
   /payments/refunds:
     post:
       consumes:
@@ -15858,6 +15961,14 @@ definitions:
   FinalizeBookingRequest:
     description: Full booking details to finalize a draft booking
     properties:
+      amount:
+        description: >-
+          Optional amount for reconciliation safeguard, particularly for
+          slot-based bookings. Backend can verify this matches the calculated
+          pricing.
+        example: 50
+        format: double
+        type: number
       check_in:
         description: Check-in date and time
         example: '2025-09-15T14:00:00Z'

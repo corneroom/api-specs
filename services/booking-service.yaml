@@ -1235,6 +1235,11 @@ components:
           type: string
           description: "Guest's preferred display currency ISO 4217 code (e.g. \"CAD\")."
           example: "CAD"
+        amount:
+          type: number
+          format: double
+          description: Optional amount for reconciliation safeguard, particularly for slot-based bookings. Backend can verify this matches the calculated pricing.
+          example: 50.00
       required:
         - check_in
         - check_out

@@ -843,6 +843,111 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /payments/paypal/link-init:
+    post:
+      summary: Initiate PayPal account linking
+      description: Generates a PayPal OAuth authorization URL for the user to authorize payment method linking
+      tags:
+        - payment
+      operationId: initiatePayPalLink
+      x-google-backend:
+        address: https://payment-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security: [{ jwtAuth: [] }]
+      responses:
+        "200":
+          description: PayPal authorization URL generated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      auth_url:
+                        type: string
+                        description: PayPal OAuth authorization URL
+                      expires_in:
+                        type: number
+                        description: Token expiration time in seconds
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /payments/paypal/link-complete:
+    post:
+      summary: Complete PayPal account linking
+      description: Completes the PayPal OAuth flow and saves the payment method
+      tags:
+        - payment
+      operationId: completePayPalLink
+      x-google-backend:
+        address: https://payment-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security: [{ jwtAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - authorization_code
+              properties:
+                authorization_code:
+                  type: string
+                  description: OAuth authorization code from PayPal
+      responses:
+        "201":
+          description: PayPal account linked successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      payment_method_id:
+                        type: string
+                      type:
+                        type: string
+                        enum: [paypal]
+                      status:
+                        type: string
+                        enum: [linked]
+        "400":
+          description: Bad request (missing authorization code)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /payouts/connect/onboarding:
     post:
