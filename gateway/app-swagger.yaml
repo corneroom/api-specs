@@ -709,11 +709,17 @@ paths:
           required: true
           schema:
             properties:
-              transaction_id:
-                description: Payment-service transaction document ID
+              payment_reference:
+                description: >-
+                  Provider-specific payment reference (pi_xxx for Stripe, auth
+                  code for PayPal, etc.)
+                type: string
+              provider:
+                description: 'Payment provider name (stripe, paypal, apple_pay, etc.)'
                 type: string
             required:
-              - transaction_id
+              - payment_reference
+              - provider
             type: object
       responses:
         '200':
@@ -3306,6 +3312,59 @@ paths:
       summary: Health check
       x-google-backend:
         address: 'https://chat-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/internal/users/{userId}/verifications/{type}':
+    patch:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - description: User ID
+          in: path
+          name: userId
+          required: true
+          type: string
+        - description: 'Verification type (facematch, location, voice, background)'
+          in: path
+          name: type
+          required: true
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            properties:
+              status:
+                description: Verification status
+                enum:
+                  - pending
+                  - processing
+                  - approved
+                  - rejected
+                  - failed
+                  - needs_review
+                type: string
+            required:
+              - status
+            type: object
+      responses:
+        '200':
+          description: Verification status updated successfully
+          schema:
+            $ref: '#/definitions/APIResponse'
+        '400':
+          description: Invalid request
+        '500':
+          description: Server error
+      security: []
+      tags:
+        - internal
+      description: Update verification status for a user (service-to-service only)
+      operationId: updateVerificationStatus
+      summary: Update verification status
+      x-google-backend:
+        address: 'https://user-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /listings:
     get:
@@ -7413,7 +7472,6 @@ paths:
           enum:
             - stripe
             - paypal
-            - apple_pay
           in: header
           name: X-Payment-Provider
           required: false
@@ -7451,7 +7509,6 @@ paths:
           enum:
             - stripe
             - paypal
-            - apple_pay
           in: header
           name: X-Payment-Provider
           required: false
@@ -7491,7 +7548,6 @@ paths:
           enum:
             - stripe
             - paypal
-            - apple_pay
           in: header
           name: X-Payment-Provider
           required: false
@@ -7546,7 +7602,6 @@ paths:
           enum:
             - stripe
             - paypal
-            - apple_pay
           in: header
           name: X-Payment-Provider
           required: false
@@ -7593,7 +7648,6 @@ paths:
           enum:
             - stripe
             - paypal
-            - apple_pay
           in: header
           name: X-Payment-Provider
           required: false
@@ -7630,6 +7684,72 @@ paths:
       x-google-backend:
         address: 'https://payment-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
+  '/payments/intents/{id}/confirm':
+    post:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - default: stripe
+          description: Payment provider (stripe or paypal)
+          enum:
+            - stripe
+            - paypal
+          in: header
+          name: X-Payment-Provider
+          required: false
+          type: string
+        - description: Payment intent ID
+          in: path
+          name: id
+          required: true
+          type: string
+        - in: body
+          name: body
+          required: false
+          schema:
+            properties:
+              payment_method_id:
+                description: Payment method ID (optional)
+                type: string
+              provider:
+                description: Payment provider (overrides header if provided)
+                enum:
+                  - stripe
+                  - paypal
+                type: string
+            type: object
+      responses:
+        '200':
+          description: Payment intent confirmed successfully
+          schema:
+            $ref: '#/definitions/PaymentIntentResponse'
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '500':
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+        - jwtAuth: []
+      tags:
+        - payment
+      description: >-
+        Confirms a payment intent. Used by PayPal after the user approves the
+        order in the PayPal browser flow. Also supports Stripe when a payment
+        method ID is provided.
+      operationId: confirmPaymentIntent
+      summary: Confirm payment intent
+      x-google-backend:
+        address: 'https://payment-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
   '/payments/intents/{id}/use-payment-method':
     post:
       consumes:
@@ -7642,7 +7762,6 @@ paths:
           enum:
             - stripe
             - paypal
-            - apple_pay
           in: header
           name: X-Payment-Provider
           required: false
@@ -7703,7 +7822,6 @@ paths:
           enum:
             - stripe
             - paypal
-            - apple_pay
           in: header
           name: X-Payment-Provider
           required: false
@@ -7742,7 +7860,6 @@ paths:
           enum:
             - stripe
             - paypal
-            - apple_pay
           in: header
           name: X-Payment-Provider
           required: false
@@ -7803,7 +7920,6 @@ paths:
           enum:
             - stripe
             - paypal
-            - apple_pay
           in: header
           name: X-Payment-Provider
           required: false
@@ -7863,7 +7979,6 @@ paths:
           enum:
             - stripe
             - paypal
-            - apple_pay
           in: header
           name: X-Payment-Provider
           required: false
@@ -7936,7 +8051,6 @@ paths:
           enum:
             - stripe
             - paypal
-            - apple_pay
           in: header
           name: X-Payment-Provider
           required: false
@@ -8107,7 +8221,6 @@ paths:
           enum:
             - stripe
             - paypal
-            - apple_pay
           in: header
           name: X-Payment-Provider
           required: false
@@ -8154,7 +8267,6 @@ paths:
           enum:
             - stripe
             - paypal
-            - apple_pay
           in: header
           name: X-Payment-Provider
           required: false
@@ -8199,7 +8311,6 @@ paths:
           enum:
             - stripe
             - paypal
-            - apple_pay
           in: header
           name: X-Payment-Provider
           required: false
@@ -13620,11 +13731,10 @@ paths:
       produces:
         - text/plain
       parameters:
-        - description: 'Payment provider (stripe, paypal, apple_pay)'
+        - description: 'Payment provider (stripe, paypal)'
           enum:
             - stripe
             - paypal
-            - apple_pay
           in: path
           name: provider
           required: true
@@ -14338,6 +14448,16 @@ definitions:
         type: integer
       payment_id:
         example: pay_001
+        type: string
+      payment_provider:
+        description: 'Payment provider name (stripe, paypal, apple_pay, etc.)'
+        example: stripe
+        type: string
+      payment_reference:
+        description: >-
+          Provider-specific payment reference (pi_xxx for Stripe, auth code for
+          PayPal, etc.)
+        example: pi_1234567890abcdef
         type: string
       payment_status:
         description: Payment status for the booking
@@ -15083,6 +15203,19 @@ definitions:
       listing_id:
         description: Listing ID
         example: listing_789
+        type: string
+      payment_method_id:
+        description: >-
+          Payment method ID (optional - if provided, attach and confirm
+          automatically)
+        example: pm_1234567890
+        type: string
+      provider:
+        default: stripe
+        description: 'Payment provider (optional, defaults to stripe)'
+        enum:
+          - stripe
+          - paypal
         type: string
     required:
       - booking_id
@@ -15992,17 +16125,22 @@ definitions:
         description: Optional notes for the booking
         example: 'Arriving late, will be there around 6 PM'
         type: string
-      transaction_id:
+      payment_reference:
         description: >-
-          Payment-service transaction document ID from CreatePaymentIntent.
-          Actual payment confirmation happens via Stripe webhook.
-        example: txn_abc123
+          Provider-specific payment reference (pi_xxx for Stripe, auth code for
+          PayPal, etc.)
+        example: pi_1234567890abcdef
+        type: string
+      provider:
+        description: 'Payment provider name (stripe, paypal, apple_pay, etc.)'
+        example: stripe
         type: string
     required:
       - check_in
       - check_out
       - guests
-      - transaction_id
+      - payment_reference
+      - provider
     type: object
   FindConversationRequest:
     properties:
@@ -16797,6 +16935,10 @@ definitions:
         example: 150
         format: float
         type: number
+      approval_url:
+        description: PayPal approval URL (only present for PayPal orders)
+        example: 'https://www.sandbox.paypal.com/checkoutnow?token=ORDER_ID'
+        type: string
       booking_id:
         description: Associated booking ID
         example: booking_123
@@ -16817,6 +16959,13 @@ definitions:
       id:
         description: Payment intent ID
         example: pi_1234567890
+        type: string
+      provider:
+        description: Payment provider
+        enum:
+          - stripe
+          - paypal
+        example: stripe
         type: string
       status:
         description: Payment intent status

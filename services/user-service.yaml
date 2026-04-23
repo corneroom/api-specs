@@ -4442,6 +4442,60 @@ paths:
           description: Success
         "401":
           description: Unauthorized
+  /internal/users/{userId}/verifications/{type}:
+    patch:
+      description: Update verification status for a user (service-to-service only)
+      summary: Update verification status
+      operationId: updateVerificationStatus
+      tags:
+        - internal
+      x-google-backend:
+        address: https://user-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: User ID
+          schema:
+            type: string
+        - name: type
+          in: path
+          required: true
+          description: Verification type (facematch, location, voice, background)
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  description: Verification status
+                  enum:
+                    - pending
+                    - processing
+                    - approved
+                    - rejected
+                    - failed
+                    - needs_review
+              required:
+                - status
+      responses:
+        "200":
+          description: Verification status updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/APIResponse"
+        "400":
+          description: Invalid request
+        "500":
+          description: Server error
+      security: []
 servers:
   - url: https://app-staging-gateway-cissa23j.uc.gateway.dev/api/v1
 

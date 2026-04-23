@@ -4515,6 +4515,60 @@ paths:
           description: Success
         '401':
           description: Unauthorized
+  /internal/users/{userId}/verifications/{type}:
+    patch:
+      description: Update verification status for a user (service-to-service only)
+      summary: Update verification status
+      operationId: updateVerificationStatus
+      tags:
+        - internal
+      x-google-backend:
+        address: https://user-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: User ID
+          schema:
+            type: string
+        - name: type
+          in: path
+          required: true
+          description: Verification type (facematch, location, voice, background)
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  description: Verification status
+                  enum:
+                    - pending
+                    - processing
+                    - approved
+                    - rejected
+                    - failed
+                    - needs_review
+              required:
+                - status
+      responses:
+        '200':
+          description: Verification status updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+        '400':
+          description: Invalid request
+        '500':
+          description: Server error
+      security: []
   /listings/heartbeat:
     get:
       summary: Heartbeat
@@ -9482,11 +9536,17 @@ paths:
             schema:
               type: object
               properties:
-                transaction_id:
+                payment_reference:
                   type: string
-                  description: Payment-service transaction document ID
+                  description: >-
+                    Provider-specific payment reference (pi_xxx for Stripe, auth
+                    code for PayPal, etc.)
+                provider:
+                  type: string
+                  description: Payment provider name (stripe, paypal, apple_pay, etc.)
               required:
-                - transaction_id
+                - payment_reference
+                - provider
       responses:
         '200':
           description: Booking updated successfully
@@ -10434,7 +10494,6 @@ paths:
             enum:
               - stripe
               - paypal
-              - apple_pay
             default: stripe
       responses:
         '200':
@@ -10477,7 +10536,6 @@ paths:
             enum:
               - stripe
               - paypal
-              - apple_pay
             default: stripe
       responses:
         '200':
@@ -10520,7 +10578,6 @@ paths:
             enum:
               - stripe
               - paypal
-              - apple_pay
             default: stripe
         - name: page
           in: query
@@ -10580,7 +10637,6 @@ paths:
             enum:
               - stripe
               - paypal
-              - apple_pay
             default: stripe
       requestBody:
         required: true
@@ -10635,7 +10691,6 @@ paths:
             enum:
               - stripe
               - paypal
-              - apple_pay
             default: stripe
         - name: id
           in: path
@@ -10658,6 +10713,79 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Payment intent not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /payments/intents/{id}/confirm:
+    post:
+      summary: Confirm payment intent
+      description: >-
+        Confirms a payment intent. Used by PayPal after the user approves the
+        order in the PayPal browser flow. Also supports Stripe when a payment
+        method ID is provided.
+      tags:
+        - payment
+      operationId: confirmPaymentIntent
+      x-google-backend:
+        address: https://payment-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      parameters:
+        - name: X-Payment-Provider
+          in: header
+          required: false
+          description: Payment provider (stripe or paypal)
+          schema:
+            type: string
+            enum:
+              - stripe
+              - paypal
+            default: stripe
+        - name: id
+          in: path
+          required: true
+          description: Payment intent ID
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                payment_method_id:
+                  type: string
+                  description: Payment method ID (optional)
+                provider:
+                  type: string
+                  enum:
+                    - stripe
+                    - paypal
+                  description: Payment provider (overrides header if provided)
+      responses:
+        '200':
+          description: Payment intent confirmed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentIntentResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
           content:
             application/json:
               schema:
@@ -10693,7 +10821,6 @@ paths:
             enum:
               - stripe
               - paypal
-              - apple_pay
             default: stripe
         - name: id
           in: path
@@ -10760,7 +10887,6 @@ paths:
             enum:
               - stripe
               - paypal
-              - apple_pay
             default: stripe
       requestBody:
         required: true
@@ -10815,7 +10941,6 @@ paths:
             enum:
               - stripe
               - paypal
-              - apple_pay
             default: stripe
         - name: id
           in: path
@@ -10890,7 +11015,6 @@ paths:
             enum:
               - stripe
               - paypal
-              - apple_pay
             default: stripe
       responses:
         '200':
@@ -10932,7 +11056,6 @@ paths:
             enum:
               - stripe
               - paypal
-              - apple_pay
             default: stripe
       requestBody:
         required: true
@@ -11001,7 +11124,6 @@ paths:
             enum:
               - stripe
               - paypal
-              - apple_pay
             default: stripe
         - name: id
           in: path
@@ -11069,7 +11191,6 @@ paths:
             enum:
               - stripe
               - paypal
-              - apple_pay
             default: stripe
         - name: id
           in: path
@@ -11154,7 +11275,6 @@ paths:
             enum:
               - stripe
               - paypal
-              - apple_pay
             default: stripe
       responses:
         '201':
@@ -11203,7 +11323,6 @@ paths:
             enum:
               - stripe
               - paypal
-              - apple_pay
             default: stripe
         - name: id
           in: path
@@ -11475,13 +11594,12 @@ paths:
         - name: provider
           in: path
           required: true
-          description: Payment provider (stripe, paypal, apple_pay)
+          description: Payment provider (stripe, paypal)
           schema:
             type: string
             enum:
               - stripe
               - paypal
-              - apple_pay
       requestBody:
         required: true
         content:
@@ -15641,6 +15759,16 @@ components:
             Payment-service transaction document ID (links to successful
             payment)
           example: txn_abc123
+        payment_reference:
+          type: string
+          description: >-
+            Provider-specific payment reference (pi_xxx for Stripe, auth code
+            for PayPal, etc.)
+          example: pi_1234567890abcdef
+        payment_provider:
+          type: string
+          description: Payment provider name (stripe, paypal, apple_pay, etc.)
+          example: stripe
         payment_status:
           type: string
           enum:
@@ -16134,12 +16262,16 @@ components:
           minimum: 1
           description: Number of guests
           example: 2
-        transaction_id:
+        payment_reference:
           type: string
           description: >-
-            Payment-service transaction document ID from CreatePaymentIntent.
-            Actual payment confirmation happens via Stripe webhook.
-          example: txn_abc123
+            Provider-specific payment reference (pi_xxx for Stripe, auth code
+            for PayPal, etc.)
+          example: pi_1234567890abcdef
+        provider:
+          type: string
+          description: Payment provider name (stripe, paypal, apple_pay, etc.)
+          example: stripe
         notes:
           type: string
           description: Optional notes for the booking
@@ -16160,7 +16292,8 @@ components:
         - check_in
         - check_out
         - guests
-        - transaction_id
+        - payment_reference
+        - provider
     GuestCancellationReason:
       type: string
       description: Reason code for guest-initiated cancellations
@@ -17040,6 +17173,19 @@ components:
           type: string
           description: Payment description (optional)
           example: Booking payment for Downtown Apartment
+        payment_method_id:
+          type: string
+          description: >-
+            Payment method ID (optional - if provided, attach and confirm
+            automatically)
+          example: pm_1234567890
+        provider:
+          type: string
+          description: Payment provider (optional, defaults to stripe)
+          enum:
+            - stripe
+            - paypal
+          default: stripe
     PaymentIntentResponse:
       type: object
       required:
@@ -17082,6 +17228,17 @@ components:
           type: string
           description: Associated booking ID
           example: booking_123
+        provider:
+          type: string
+          description: Payment provider
+          enum:
+            - stripe
+            - paypal
+          example: stripe
+        approval_url:
+          type: string
+          description: PayPal approval URL (only present for PayPal orders)
+          example: https://www.sandbox.paypal.com/checkoutnow?token=ORDER_ID
         created_at:
           type: string
           format: date-time

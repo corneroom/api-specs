@@ -654,10 +654,13 @@ paths:
             schema:
               type: object
               properties:
-                transaction_id:
+                payment_reference:
                   type: string
-                  description: Payment-service transaction document ID
-              required: [transaction_id]
+                  description: "Provider-specific payment reference (pi_xxx for Stripe, auth code for PayPal, etc.)"
+                provider:
+                  type: string
+                  description: "Payment provider name (stripe, paypal, apple_pay, etc.)"
+              required: [payment_reference, provider]
       responses:
         "200":
           description: Booking updated successfully
@@ -866,6 +869,14 @@ components:
           type: string
           description: Payment-service transaction document ID (links to successful payment)
           example: "txn_abc123"
+        payment_reference:
+          type: string
+          description: "Provider-specific payment reference (pi_xxx for Stripe, auth code for PayPal, etc.)"
+          example: "pi_1234567890abcdef"
+        payment_provider:
+          type: string
+          description: "Payment provider name (stripe, paypal, apple_pay, etc.)"
+          example: "stripe"
         payment_status:
           type: string
           enum: [pending, authorized, paid, failed, refunded]
@@ -1223,10 +1234,14 @@ components:
           minimum: 1
           description: Number of guests
           example: 2
-        transaction_id:
+        payment_reference:
           type: string
-          description: Payment-service transaction document ID from CreatePaymentIntent. Actual payment confirmation happens via Stripe webhook.
-          example: "txn_abc123"
+          description: "Provider-specific payment reference (pi_xxx for Stripe, auth code for PayPal, etc.)"
+          example: "pi_1234567890abcdef"
+        provider:
+          type: string
+          description: "Payment provider name (stripe, paypal, apple_pay, etc.)"
+          example: "stripe"
         notes:
           type: string
           description: Optional notes for the booking
@@ -1244,7 +1259,8 @@ components:
         - check_in
         - check_out
         - guests
-        - transaction_id
+        - payment_reference
+        - provider
 
     GuestCancellationReason:
       type: string
