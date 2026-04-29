@@ -715,7 +715,7 @@ paths:
                   code for PayPal, etc.)
                 type: string
               provider:
-                description: 'Payment provider name (stripe, paypal, apple_pay, etc.)'
+                description: 'Payment provider name (stripe, paypal, etc.)'
                 type: string
             required:
               - payment_reference
@@ -14450,7 +14450,7 @@ definitions:
         example: pay_001
         type: string
       payment_provider:
-        description: 'Payment provider name (stripe, paypal, apple_pay, etc.)'
+        description: 'Payment provider name (stripe, paypal, etc.)'
         example: stripe
         type: string
       payment_reference:
@@ -16132,7 +16132,7 @@ definitions:
         example: pi_1234567890abcdef
         type: string
       provider:
-        description: 'Payment provider name (stripe, paypal, apple_pay, etc.)'
+        description: 'Payment provider name (stripe, paypal, etc.)'
         example: stripe
         type: string
     required:

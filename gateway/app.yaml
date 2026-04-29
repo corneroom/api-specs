@@ -9543,7 +9543,7 @@ paths:
                     code for PayPal, etc.)
                 provider:
                   type: string
-                  description: Payment provider name (stripe, paypal, apple_pay, etc.)
+                  description: Payment provider name (stripe, paypal, etc.)
               required:
                 - payment_reference
                 - provider
@@ -15767,7 +15767,7 @@ components:
           example: pi_1234567890abcdef
         payment_provider:
           type: string
-          description: Payment provider name (stripe, paypal, apple_pay, etc.)
+          description: Payment provider name (stripe, paypal, etc.)
           example: stripe
         payment_status:
           type: string
@@ -16270,7 +16270,7 @@ components:
           example: pi_1234567890abcdef
         provider:
           type: string
-          description: Payment provider name (stripe, paypal, apple_pay, etc.)
+          description: Payment provider name (stripe, paypal, etc.)
           example: stripe
         notes:
           type: string
