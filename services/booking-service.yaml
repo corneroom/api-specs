@@ -1023,6 +1023,19 @@ components:
           type: integer
           description: "Number of slots booked"
           example: 3
+        # Payment instrument fields (populated after confirmed payment)
+        card_brand:
+          type: string
+          description: "Card brand used for payment (e.g. visa, mastercard)"
+          example: "visa"
+        card_last4:
+          type: string
+          description: "Last 4 digits of the card used for payment"
+          example: "4242"
+        paypal_email:
+          type: string
+          description: "PayPal email address used for payment"
+          example: "user@example.com"
 
       required: [id, listing, guest, host, check_in, check_out]
 

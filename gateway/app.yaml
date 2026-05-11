@@ -12557,6 +12557,55 @@ paths:
           description: Connection successful
         '401':
           $ref: '#/components/responses/Unauthorized'
+  /community/media/upload:
+    post:
+      operationId: uploadMedia
+      summary: Upload a media file for a story or reel
+      description: |
+        Accepts a multipart/form-data upload. Use field `file` for the binary
+        and form value `media_type` set to `story` (image) or `reel` (video).
+        Returns the public GCS URL to pass into createStory or createReel.
+      tags:
+        - content
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+                - media_type
+              properties:
+                file:
+                  type: string
+                  format: binary
+                media_type:
+                  type: string
+                  enum:
+                    - story
+                    - reel
+      responses:
+        '201':
+          description: Media uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                  object_path:
+                    type: string
+        '400':
+          description: Invalid request
+        '401':
+          description: Unauthorized
   /community/stories:
     post:
       operationId: createStory
@@ -15953,6 +16002,18 @@ components:
           type: integer
           description: Number of slots booked
           example: 3
+        card_brand:
+          type: string
+          description: Card brand used for payment (e.g. visa, mastercard)
+          example: visa
+        card_last4:
+          type: string
+          description: Last 4 digits of the card used for payment
+          example: '4242'
+        paypal_email:
+          type: string
+          description: PayPal email address used for payment
+          example: user@example.com
       required:
         - id
         - listing
