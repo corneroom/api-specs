@@ -1375,6 +1375,52 @@ paths:
       x-google-backend:
         address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
+  /community/media/upload:
+    post:
+      consumes:
+        - multipart/form-data
+      produces:
+        - application/json
+      parameters:
+        - format: binary
+          in: formData
+          name: file
+          required: true
+          type: string
+        - enum:
+            - story
+            - reel
+          in: formData
+          name: media_type
+          required: true
+          type: string
+      responses:
+        '201':
+          description: Media uploaded successfully
+          schema:
+            properties:
+              object_path:
+                type: string
+              url:
+                type: string
+            type: object
+        '400':
+          description: Invalid request
+        '401':
+          description: Unauthorized
+      security:
+        - jwtAuth: []
+      tags:
+        - content
+      description: |
+        Accepts a multipart/form-data upload. Use field `file` for the binary
+        and form value `media_type` set to `story` (image) or `reel` (video).
+        Returns the public GCS URL to pass into createStory or createReel.
+      operationId: uploadMedia
+      summary: Upload a media file for a story or reel
+      x-google-backend:
+        address: 'https://community-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
   /community/public/feed:
     get:
       produces:
@@ -14377,6 +14423,14 @@ definitions:
           - SYSTEM
         example: GUEST
         type: string
+      card_brand:
+        description: 'Card brand used for payment (e.g. visa, mastercard)'
+        example: visa
+        type: string
+      card_last4:
+        description: Last 4 digits of the card used for payment
+        example: '4242'
+        type: string
       check_in:
         format: date-time
         type: string
@@ -14468,6 +14522,10 @@ definitions:
           - failed
           - refunded
         example: pending
+        type: string
+      paypal_email:
+        description: PayPal email address used for payment
+        example: user@example.com
         type: string
       pricing_breakdown:
         $ref: '#/definitions/PricingBreakdown'
