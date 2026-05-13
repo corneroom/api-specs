@@ -3285,6 +3285,133 @@ paths:
       x-google-backend:
         address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/support-tickets:
+    get:
+      parameters:
+        - in: query
+          name: status
+          type: string
+        - in: query
+          name: category
+          type: string
+        - in: query
+          name: startDate
+          type: string
+        - in: query
+          name: endDate
+          type: string
+        - in: query
+          name: search
+          type: string
+        - in: query
+          name: limit
+          type: integer
+        - in: query
+          name: offset
+          type: integer
+      responses:
+        '200':
+          description: List of support tickets
+      security:
+        - jwtAuth: []
+      tags:
+        - support-tickets
+      operationId: listSupportTickets
+      summary: List support tickets
+      x-google-backend:
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/support-tickets/stats:
+    get:
+      parameters: []
+      responses:
+        '200':
+          description: Ticket statistics by status
+      security:
+        - jwtAuth: []
+      tags:
+        - support-tickets
+      operationId: getSupportTicketStats
+      summary: Get support ticket statistics
+      x-google-backend:
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/support-tickets/{id}':
+    get:
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Support ticket detail
+      security:
+        - jwtAuth: []
+      tags:
+        - support-tickets
+      operationId: getSupportTicket
+      summary: Get a single support ticket
+      x-google-backend:
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/support-tickets/{id}/assign':
+    patch:
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Ticket assigned
+      security:
+        - jwtAuth: []
+      tags:
+        - support-tickets
+      operationId: assignSupportTicket
+      summary: Assign a support ticket
+      x-google-backend:
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/support-tickets/{id}/close':
+    patch:
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Ticket closed
+      security:
+        - jwtAuth: []
+      tags:
+        - support-tickets
+      operationId: closeSupportTicket
+      summary: Close a support ticket
+      x-google-backend:
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/support-tickets/{id}/resolve':
+    patch:
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Ticket resolved
+      security:
+        - jwtAuth: []
+      tags:
+        - support-tickets
+      operationId: resolveSupportTicket
+      summary: Resolve a support ticket
+      x-google-backend:
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/tasks:
     get:
       produces:
