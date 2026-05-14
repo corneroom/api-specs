@@ -2,7 +2,24 @@
 
 A centralized system for managing, validating, converting, and publishing OpenAPI documentation for microservices.
 
-> **⚠️ Do not manually edit generated specs**: The files in `gateway/` (e.g. `app.yaml`, `app-swagger.yaml`) and `services/` are generated or synced from backend service `docs/api.yaml` files. To add or change API endpoints, edit the source spec in the backend service (e.g. `backend/user-service/docs/api.yaml`), then run `make sync` and `make build-swagger` (or `make gateway`) from this directory.
+> **⚠️ Do not manually edit generated specs**: The files in `gateway/` (e.g. `app.yaml`, `app-swagger.yaml`) and `services/` are generated or synced from backend service `docs/api.yaml` files. To add or change API endpoints, edit the source spec in the backend service (e.g. `backend/dashboard-service/docs/api.yaml`), then run `make gateway` from this directory to sync, build, and deploy in one step.
+
+## Adding a new endpoint (required every time)
+
+Any new route in a backend service **must** be added to the API Gateway spec, or the Gateway will return 404 and the request will never reach Cloud Run.
+
+**Steps:**
+
+1. Add the route to the backend service's `docs/api.yaml` (e.g. `backend/dashboard-service/docs/api.yaml`)
+2. From this directory, run:
+   ```bash
+   make gateway   # sync + build Swagger 2.0 + deploy to GCP
+   ```
+3. Commit the updated `services/<service>.yaml` and `gateway/dashboard-swagger.yaml` (or `app-swagger.yaml`)
+
+**Two separate gateways — never cross-wire:**
+- `app` gateway → mobile app traffic (`backend/*-service` endpoints under `/api/v1/`)
+- `dashboard` gateway → admin portal traffic (`dashboard-service` endpoints under `/api/v1/dashboard/`)
 
 ## Project Overview
 
