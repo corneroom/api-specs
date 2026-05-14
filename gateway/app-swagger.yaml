@@ -8255,54 +8255,6 @@ paths:
       x-google-backend:
         address: 'https://payment-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
-  /payments/refunds:
-    post:
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      parameters:
-        - default: stripe
-          description: 'Payment provider (optional, defaults to user''s preferred provider)'
-          enum:
-            - stripe
-            - paypal
-          in: header
-          name: X-Payment-Provider
-          required: false
-          type: string
-        - in: body
-          name: body
-          required: true
-          schema:
-            $ref: '#/definitions/CreateRefundRequest'
-      responses:
-        '201':
-          description: Refund created successfully
-          schema:
-            $ref: '#/definitions/RefundResponse'
-        '400':
-          description: Bad request
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        '401':
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        '500':
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-      security:
-        - jwtAuth: []
-      tags:
-        - payment
-      description: Creates a refund for a payment intent
-      operationId: createRefund
-      summary: Create refund
-      x-google-backend:
-        address: 'https://payment-service-981292602655.us-central1.run.app'
-        path_translation: APPEND_PATH_TO_ADDRESS
   /payments/setup-intents:
     post:
       produces:

@@ -10865,60 +10865,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-  /payments/refunds:
-    post:
-      summary: Create refund
-      description: Creates a refund for a payment intent
-      tags:
-        - payment
-      operationId: createRefund
-      x-google-backend:
-        address: https://payment-service-981292602655.us-central1.run.app
-        path_translation: APPEND_PATH_TO_ADDRESS
-      security:
-        - jwtAuth: []
-      parameters:
-        - name: X-Payment-Provider
-          in: header
-          required: false
-          description: Payment provider (optional, defaults to user's preferred provider)
-          schema:
-            type: string
-            enum:
-              - stripe
-              - paypal
-            default: stripe
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateRefundRequest'
-      responses:
-        '201':
-          description: Refund created successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RefundResponse'
-        '400':
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
   /payments/methods/{id}/attach:
     post:
       summary: Attach payment method
