@@ -904,6 +904,131 @@ paths:
       x-google-backend:
         address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/community/feed:
+    get:
+      produces:
+        - application/json
+      parameters:
+        - default: pending
+          enum:
+            - pending
+            - approved
+            - rejected
+            - all
+          in: query
+          name: status
+          type: string
+        - default: 50
+          in: query
+          name: limit
+          type: integer
+        - default: 0
+          in: query
+          name: offset
+          type: integer
+      responses:
+        '200':
+          description: List of feed items
+          schema:
+            type: object
+        '403':
+          description: Insufficient permissions
+      security:
+        - jwtAuth: []
+      tags:
+        - community
+      description: >-
+        Retrieve community feed items (stories/reels) by status for admin
+        review.
+      operationId: listCommunityFeedItems
+      summary: List community feed items pending moderation
+      x-google-backend:
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/community/feed/{id}':
+    get:
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Feed item detail
+          schema:
+            type: object
+        '404':
+          description: Not found
+      security:
+        - jwtAuth: []
+      tags:
+        - community
+      operationId: getCommunityFeedItem
+      summary: Get a single community feed item
+      x-google-backend:
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/community/feed/{id}/approve':
+    post:
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Item approved
+          schema:
+            type: object
+        '404':
+          description: Not found
+      security:
+        - jwtAuth: []
+      tags:
+        - community
+      operationId: approveCommunityFeedItem
+      summary: Approve a community feed item
+      x-google-backend:
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/community/feed/{id}/reject':
+    post:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+        - in: body
+          name: body
+          schema:
+            properties:
+              reason:
+                type: string
+            type: object
+      responses:
+        '200':
+          description: Item rejected
+          schema:
+            type: object
+        '404':
+          description: Not found
+      security:
+        - jwtAuth: []
+      tags:
+        - community
+      operationId: rejectCommunityFeedItem
+      summary: Reject a community feed item
+      x-google-backend:
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
   '/dashboard/community/reels/{id}/featured':
     put:
       consumes:
