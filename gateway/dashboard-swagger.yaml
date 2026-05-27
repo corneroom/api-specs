@@ -1975,6 +1975,48 @@ paths:
       x-google-backend:
         address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/listings/{id}/revision':
+    post:
+      consumes:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            properties:
+              action:
+                enum:
+                  - approve
+                  - reject
+                type: string
+              notes:
+                type: string
+            required:
+              - action
+            type: object
+      responses:
+        '200':
+          description: Revision review result
+        '400':
+          description: Bad request or no pending revision
+        '404':
+          description: Listing not found
+      security:
+        - jwtAuth: []
+      tags:
+        - listing
+      description: Approve or reject a host's pending listing edit revision.
+      operationId: reviewListingRevision
+      summary: Review a pending host revision (approve/reject)
+      x-codegen-request-body-name: action
+      x-google-backend:
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
   '/dashboard/listings/{id}/verify':
     put:
       consumes:

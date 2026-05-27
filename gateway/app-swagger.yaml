@@ -10466,6 +10466,76 @@ paths:
       x-google-backend:
         address: 'https://user-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
+  /users/me/deletion-request:
+    delete:
+      produces:
+        - application/json
+      parameters: []
+      responses:
+        '200':
+          description: Deletion request cancelled and account restored
+          schema:
+            properties:
+              success:
+                example: true
+                type: boolean
+              toast:
+                example: Account restored successfully.
+                type: string
+            required:
+              - success
+            type: object
+        '400':
+          description: Account is not pending deletion
+          schema:
+            properties:
+              error:
+                example: account is not pending deletion
+                type: string
+              success:
+                example: false
+                type: boolean
+              toast:
+                example: Could not cancel deletion request.
+                type: string
+            required:
+              - success
+              - error
+            type: object
+        '401':
+          description: Unauthorized
+          schema:
+            properties:
+              error:
+                example: Authentication required.
+                type: string
+              success:
+                example: false
+                type: boolean
+              toast:
+                example: Please log in to continue.
+                type: string
+            required:
+              - success
+              - error
+            type: object
+      security:
+        - jwtAuth: []
+      tags:
+        - user
+      description: >
+        Cancels a pending deletion request for the current user. The account
+        must be in the
+
+        "pending_deletion" state (i.e. within the 30-day grace period). Restores
+        status to
+
+        "active", clears deleted_at, and sets deleted to false.
+      operationId: cancelUserDeletion
+      summary: Cancel account deletion request
+      x-google-backend:
+        address: 'https://user-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
   /users/me/devices:
     get:
       produces:
@@ -17322,6 +17392,8 @@ definitions:
               trending:
                 default: false
                 type: boolean
+              user_id:
+                type: string
               video_url:
                 type: string
               views:
@@ -17346,6 +17418,7 @@ definitions:
               - author
               - author_avatar
               - public
+              - user_id
             type: object
         type: object
   ReferralCodeResponse:
@@ -17889,6 +17962,8 @@ definitions:
               trending:
                 default: false
                 type: boolean
+              user_id:
+                type: string
               views:
                 type: integer
             required:
@@ -17911,6 +17986,7 @@ definitions:
               - author
               - author_avatar
               - public
+              - user_id
             type: object
         type: object
   SuccessResponse:

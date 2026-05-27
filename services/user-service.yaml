@@ -2416,6 +2416,75 @@ paths:
                 required:
                   - success
                   - error
+  /users/me/deletion-request:
+    delete:
+      description: |
+        Cancels a pending deletion request for the current user. The account must be in the
+        "pending_deletion" state (i.e. within the 30-day grace period). Restores status to
+        "active", clears deleted_at, and sets deleted to false.
+      summary: Cancel account deletion request
+      tags:
+        - user
+      operationId: cancelUserDeletion
+      x-google-backend:
+        address: https://user-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      responses:
+        "200":
+          description: Deletion request cancelled and account restored
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  toast:
+                    type: string
+                    example: "Account restored successfully."
+                required:
+                  - success
+        "400":
+          description: Account is not pending deletion
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "account is not pending deletion"
+                  toast:
+                    type: string
+                    example: "Could not cancel deletion request."
+                required:
+                  - success
+                  - error
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "Authentication required."
+                  toast:
+                    type: string
+                    example: "Please log in to continue."
+                required:
+                  - success
+                  - error
   /users/{userId}/profile:
     get:
       description: Retrieves a user's enhanced profile information by user ID. Returns the same profile format as /users/me, but allows viewing other users' profiles. Requires authentication to prevent brute-force enumeration.

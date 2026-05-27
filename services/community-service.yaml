@@ -2089,6 +2089,8 @@ components:
                 public:
                   type: boolean
                   default: false
+                user_id:
+                  type: string
               required:
                 - id
                 - title
@@ -2109,6 +2111,7 @@ components:
                 - author
                 - author_avatar
                 - public
+                - user_id
     ReelResponse:
       allOf:
         - $ref: '#/components/schemas/ApiResponse'
@@ -2168,6 +2171,8 @@ components:
                 public:
                   type: boolean
                   default: false
+                user_id:
+                  type: string
               required:
                 - id
                 - title
@@ -2188,6 +2193,7 @@ components:
                 - author
                 - author_avatar
                 - public
+                - user_id
     ExperienceResponse:
       type: object
       properties:
