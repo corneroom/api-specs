@@ -933,6 +933,35 @@ paths:
       x-google-backend:
         address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
+  /community/experiences/mine:
+    get:
+      produces:
+        - application/json
+      parameters:
+        - default: 1
+          in: query
+          name: page
+          type: integer
+        - default: 20
+          in: query
+          name: limit
+          type: integer
+      responses:
+        '200':
+          description: List of the guide's experiences
+          schema:
+            $ref: '#/definitions/ExperienceListResponse'
+        '401':
+          description: Unauthorized
+      security:
+        - jwtAuth: []
+      tags:
+        - experiences
+      operationId: getMyExperiences
+      summary: List the current guide's experiences (incl. drafts)
+      x-google-backend:
+        address: 'https://community-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
   '/community/experiences/{id}/book':
     post:
       consumes:
@@ -965,6 +994,130 @@ paths:
       description: Book a specific experience
       operationId: bookExperience
       summary: Book an experience
+      x-google-backend:
+        address: 'https://community-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/community/experiences/{id}/sessions':
+    get:
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Sessions for the experience
+          schema:
+            $ref: '#/definitions/SessionListResponse'
+        '404':
+          description: Experience not found
+      security:
+        - jwtAuth: []
+      tags:
+        - experiences
+      operationId: getSessions
+      summary: List upcoming sessions for an experience
+      x-google-backend:
+        address: 'https://community-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+    post:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/SessionRequest'
+      responses:
+        '201':
+          description: Session created
+          schema:
+            $ref: '#/definitions/SessionResponse'
+        '400':
+          description: Invalid request
+        '404':
+          description: Experience not found
+      security:
+        - jwtAuth: []
+      tags:
+        - experiences
+      operationId: createSession
+      summary: Add a session (date) to an experience
+      x-google-backend:
+        address: 'https://community-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/community/experiences/{id}/sessions/{sessionId}/cancel':
+    post:
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+        - in: path
+          name: sessionId
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Session cancelled
+        '404':
+          description: Not found
+      security:
+        - jwtAuth: []
+      tags:
+        - experiences
+      operationId: cancelSession
+      summary: Cancel a session
+      x-google-backend:
+        address: 'https://community-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/community/experiences/{id}/sessions/{sessionId}/reserve':
+    post:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+        - in: path
+          name: sessionId
+          required: true
+          type: string
+        - in: body
+          name: body
+          required: false
+          schema:
+            $ref: '#/definitions/ReserveRequest'
+      responses:
+        '201':
+          description: Reservation created
+          schema:
+            $ref: '#/definitions/BookingResponse'
+        '400':
+          description: Invalid request
+        '409':
+          description: Session full
+      security:
+        - jwtAuth: []
+      tags:
+        - bookings
+      description: >-
+        Creates a reservation (holds a spot). Free experiences confirm
+        immediately; paid ones return requiresPayment for the payment flow.
+      operationId: reserveSession
+      summary: Reserve a spot in a session
       x-google-backend:
         address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
@@ -1080,6 +1233,81 @@ paths:
       description: Create a guide profile
       operationId: createGuide
       summary: Become a guide
+      x-google-backend:
+        address: 'https://community-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /community/guides/apply:
+    post:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/GuideApplyRequest'
+      responses:
+        '200':
+          description: Guide profile created/updated
+          schema:
+            $ref: '#/definitions/GuideResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Identity not verified
+      security:
+        - jwtAuth: []
+      tags:
+        - guides
+      description: >-
+        Creates/updates the guide profile. Auto-approves if the user is
+        facematch-verified.
+      operationId: applyGuide
+      summary: Apply to become a guide
+      x-google-backend:
+        address: 'https://community-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /community/guides/me:
+    get:
+      produces:
+        - application/json
+      parameters: []
+      responses:
+        '200':
+          description: Guide profile
+          schema:
+            $ref: '#/definitions/GuideResponse'
+        '404':
+          description: Not a guide
+      security:
+        - jwtAuth: []
+      tags:
+        - guides
+      operationId: getMyGuideProfile
+      summary: Get the current user's guide profile/status
+      x-google-backend:
+        address: 'https://community-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /community/guides/me/reservations:
+    get:
+      produces:
+        - application/json
+      parameters: []
+      responses:
+        '200':
+          description: Reservations
+          schema:
+            $ref: '#/definitions/BookingListResponse'
+        '401':
+          description: Unauthorized
+      security:
+        - jwtAuth: []
+      tags:
+        - bookings
+      operationId: getGuideReservations
+      summary: List reservations across the current guide's experiences (host view)
       x-google-backend:
         address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
@@ -1691,6 +1919,48 @@ paths:
       description: Like a specific reel
       operationId: likeReel
       summary: Like a reel
+      x-google-backend:
+        address: 'https://community-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /community/reservations/mine:
+    get:
+      produces:
+        - application/json
+      parameters: []
+      responses:
+        '200':
+          description: Reservations
+          schema:
+            $ref: '#/definitions/BookingListResponse'
+        '401':
+          description: Unauthorized
+      security:
+        - jwtAuth: []
+      tags:
+        - bookings
+      operationId: getMyReservations
+      summary: List the current guest's experience reservations
+      x-google-backend:
+        address: 'https://community-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/community/reservations/{id}/cancel':
+    post:
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Reservation cancelled
+        '404':
+          description: Not found
+      security:
+        - jwtAuth: []
+      tags:
+        - bookings
+      operationId: cancelReservation
+      summary: Cancel a reservation (refund per policy)
       x-google-backend:
         address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
@@ -7544,6 +7814,82 @@ paths:
       summary: Mark message as read
       x-google-backend:
         address: 'https://chat-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /payments/charges:
+    post:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - default: stripe
+          description: 'Payment provider (optional, defaults to stripe)'
+          enum:
+            - stripe
+            - paypal
+          in: header
+          name: X-Payment-Provider
+          required: false
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            properties:
+              amount:
+                type: number
+              currency:
+                type: string
+              customer_id:
+                type: string
+              deadline:
+                type: string
+              description:
+                type: string
+              payment_method_id:
+                type: string
+              provider:
+                type: string
+              reference:
+                type: string
+              type:
+                type: string
+            required:
+              - reference
+              - type
+              - amount
+              - currency
+            type: object
+      responses:
+        '201':
+          description: Charge created successfully
+          schema:
+            $ref: '#/definitions/PaymentIntentResponse'
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '500':
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+        - jwtAuth: []
+      tags:
+        - payment
+      description: >
+        Creates a PaymentIntent on the standalone charge surface used by the
+        reusable payment module. Separate from /payments/intents (booking): the
+        charge carries a type discriminator + opaque reference and NO booking
+        fields, so booking-service never picks it up.
+      operationId: createCharge
+      summary: Create charge (standalone payment module)
+      x-google-backend:
+        address: 'https://payment-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /payments/earnings:
     get:
@@ -15177,6 +15523,20 @@ definitions:
     type: object
   CreateExperienceRequest:
     properties:
+      cancellation_policy:
+        enum:
+          - flexible
+          - moderate
+          - strict
+        type: string
+      category:
+        description: >-
+          Category value (food, culture, outdoors, sightseeing, nightlife,
+          wellness, other)
+        type: string
+      cover_image_url:
+        description: Document-service URL for the cover photo (required)
+        type: string
       currency:
         maxLength: 3
         minLength: 3
@@ -15186,25 +15546,44 @@ definitions:
       duration_hours:
         minimum: 1
         type: integer
+      duration_minutes:
+        minimum: 1
+        type: integer
+      end_point:
+        type: string
+      first_session:
+        $ref: '#/definitions/SessionRequest'
       location:
         $ref: '#/definitions/Location'
       max_group_size:
         minimum: 1
         type: integer
+      meeting_point:
+        type: string
       price:
         minimum: 0
         type: number
+      pricing_mode:
+        enum:
+          - free
+          - paid
+        type: string
       title:
         maxLength: 200
         type: string
+      whats_included:
+        items:
+          type: string
+        type: array
     required:
       - title
       - description
       - location
-      - price
       - currency
-      - duration_hours
       - max_group_size
+      - category
+      - cover_image_url
+      - pricing_mode
     type: object
   CreateGuideRequest:
     properties:
@@ -15612,11 +15991,11 @@ definitions:
         properties:
           age_range:
             enum:
-              - '18_24'
-              - '25_34'
-              - '35_44'
-              - '45_54'
-              - '55_64'
+              - 1824
+              - 2534
+              - 3544
+              - 4554
+              - 5564
               - 65_plus
             type: string
           avatar_url:
@@ -15665,11 +16044,11 @@ definitions:
           preferred_guest_age_range:
             items:
               enum:
-                - '18_24'
-                - '25_34'
-                - '35_44'
-                - '45_54'
-                - '55_64'
+                - 1824
+                - 2534
+                - 3544
+                - 4554
+                - 5564
                 - 65_plus
               type: string
             type: array
@@ -16350,6 +16729,24 @@ definitions:
       - accuracy
       - location
       - value
+    type: object
+  GuideApplyRequest:
+    properties:
+      bio:
+        maxLength: 500
+        type: string
+      categories:
+        items:
+          type: string
+        type: array
+      cities:
+        items:
+          type: string
+        type: array
+    required:
+      - cities
+      - categories
+      - bio
     type: object
   GuideListResponse:
     properties:
@@ -17567,6 +17964,13 @@ definitions:
       - reason
       - reported_by
     type: object
+  ReserveRequest:
+    properties:
+      participants:
+        default: 1
+        minimum: 1
+        type: integer
+    type: object
   Review:
     properties:
       host:
@@ -17821,6 +18225,40 @@ definitions:
     required:
       - content
       - message_type
+    type: object
+  SessionListResponse:
+    properties:
+      sessions:
+        items:
+          $ref: '#/definitions/SessionResponse'
+        type: array
+    type: object
+  SessionRequest:
+    properties:
+      capacity:
+        minimum: 1
+        type: integer
+      start_time:
+        format: date-time
+        type: string
+    required:
+      - start_time
+    type: object
+  SessionResponse:
+    properties:
+      booked_count:
+        type: integer
+      capacity:
+        type: integer
+      experience_id:
+        type: string
+      id:
+        type: string
+      start_time:
+        format: date-time
+        type: string
+      status:
+        type: string
     type: object
   SetupIntentResponse:
     properties:

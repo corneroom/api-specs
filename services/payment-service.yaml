@@ -204,6 +204,82 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /payments/charges:
+    post:
+      summary: Create charge (standalone payment module)
+      description: >
+        Creates a PaymentIntent on the standalone charge surface used by the
+        reusable payment module. Separate from /payments/intents (booking): the
+        charge carries a type discriminator + opaque reference and NO booking
+        fields, so booking-service never picks it up.
+      tags:
+        - payment
+      operationId: createCharge
+      x-google-backend:
+        address: https://payment-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security: [{ jwtAuth: [] }]
+      parameters:
+        - name: X-Payment-Provider
+          in: header
+          required: false
+          description: Payment provider (optional, defaults to stripe)
+          schema:
+            type: string
+            enum: [stripe, paypal]
+            default: stripe
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reference, type, amount, currency]
+              properties:
+                reference:
+                  type: string
+                type:
+                  type: string
+                amount:
+                  type: number
+                currency:
+                  type: string
+                customer_id:
+                  type: string
+                payment_method_id:
+                  type: string
+                provider:
+                  type: string
+                description:
+                  type: string
+                deadline:
+                  type: string
+      responses:
+        "201":
+          description: Charge created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentIntentResponse'
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
   /payments/intents:
     post:
       summary: Create payment intent

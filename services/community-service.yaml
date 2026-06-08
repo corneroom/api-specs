@@ -822,6 +822,263 @@ paths:
           description: Invalid request
         '404':
           description: Experience not found
+  /community/experiences/mine:
+    get:
+      operationId: getMyExperiences
+      summary: List the current guide's experiences (incl. drafts)
+      tags:
+        - experiences
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer, default: 1 }
+        - in: query
+          name: limit
+          schema: { type: integer, default: 20 }
+      responses:
+        '200':
+          description: List of the guide's experiences
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperienceListResponse'
+        '401':
+          description: Unauthorized
+  /community/experiences/{id}/sessions:
+    post:
+      operationId: createSession
+      summary: Add a session (date) to an experience
+      tags:
+        - experiences
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionRequest'
+      responses:
+        '201':
+          description: Session created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionResponse'
+        '400':
+          description: Invalid request
+        '404':
+          description: Experience not found
+    get:
+      operationId: getSessions
+      summary: List upcoming sessions for an experience
+      tags:
+        - experiences
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Sessions for the experience
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionListResponse'
+        '404':
+          description: Experience not found
+  /community/experiences/{id}/sessions/{sessionId}/cancel:
+    post:
+      operationId: cancelSession
+      summary: Cancel a session
+      tags:
+        - experiences
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+        - in: path
+          name: sessionId
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Session cancelled
+        '404':
+          description: Not found
+  /community/experiences/{id}/sessions/{sessionId}/reserve:
+    post:
+      operationId: reserveSession
+      summary: Reserve a spot in a session
+      description: Creates a reservation (holds a spot). Free experiences confirm immediately; paid ones return requiresPayment for the payment flow.
+      tags:
+        - bookings
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+        - in: path
+          name: sessionId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReserveRequest'
+      responses:
+        '201':
+          description: Reservation created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingResponse'
+        '400':
+          description: Invalid request
+        '409':
+          description: Session full
+  /community/guides/apply:
+    post:
+      operationId: applyGuide
+      summary: Apply to become a guide
+      description: Creates/updates the guide profile. Auto-approves if the user is facematch-verified.
+      tags:
+        - guides
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GuideApplyRequest'
+      responses:
+        '200':
+          description: Guide profile created/updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GuideResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Identity not verified
+  /community/guides/me:
+    get:
+      operationId: getMyGuideProfile
+      summary: Get the current user's guide profile/status
+      tags:
+        - guides
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      responses:
+        '200':
+          description: Guide profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GuideResponse'
+        '404':
+          description: Not a guide
+  /community/guides/me/reservations:
+    get:
+      operationId: getGuideReservations
+      summary: List reservations across the current guide's experiences (host view)
+      tags:
+        - bookings
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      responses:
+        '200':
+          description: Reservations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingListResponse'
+        '401':
+          description: Unauthorized
+  /community/reservations/mine:
+    get:
+      operationId: getMyReservations
+      summary: List the current guest's experience reservations
+      tags:
+        - bookings
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      responses:
+        '200':
+          description: Reservations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingListResponse'
+        '401':
+          description: Unauthorized
+  /community/reservations/{id}/cancel:
+    post:
+      operationId: cancelReservation
+      summary: Cancel a reservation (refund per policy)
+      tags:
+        - bookings
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://community-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Reservation cancelled
+        '404':
+          description: Not found
   /events:
     post:
       operationId: createEvent
@@ -1891,17 +2148,43 @@ components:
         duration_hours:
           type: integer
           minimum: 1
+        duration_minutes:
+          type: integer
+          minimum: 1
         max_group_size:
           type: integer
           minimum: 1
+        category:
+          type: string
+          description: Category value (food, culture, outdoors, sightseeing, nightlife, wellness, other)
+        cover_image_url:
+          type: string
+          description: Document-service URL for the cover photo (required)
+        whats_included:
+          type: array
+          items:
+            type: string
+        meeting_point:
+          type: string
+        end_point:
+          type: string
+        pricing_mode:
+          type: string
+          enum: [free, paid]
+        cancellation_policy:
+          type: string
+          enum: [flexible, moderate, strict]
+        first_session:
+          $ref: '#/components/schemas/SessionRequest'
       required:
         - title
         - description
         - location
-        - price
         - currency
-        - duration_hours
         - max_group_size
+        - category
+        - cover_image_url
+        - pricing_mode
     CreateEventRequest:
       type: object
       properties:
@@ -2787,3 +3070,62 @@ components:
           type: string
         avatar:
           type: string
+    SessionRequest:
+      type: object
+      properties:
+        start_time:
+          type: string
+          format: date-time
+        capacity:
+          type: integer
+          minimum: 1
+      required:
+        - start_time
+    SessionResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        experience_id:
+          type: string
+        start_time:
+          type: string
+          format: date-time
+        capacity:
+          type: integer
+        booked_count:
+          type: integer
+        status:
+          type: string
+    SessionListResponse:
+      type: object
+      properties:
+        sessions:
+          type: array
+          items:
+            $ref: '#/components/schemas/SessionResponse'
+    ReserveRequest:
+      type: object
+      properties:
+        participants:
+          type: integer
+          minimum: 1
+          default: 1
+    GuideApplyRequest:
+      type: object
+      properties:
+        cities:
+          type: array
+          items:
+            type: string
+        categories:
+          type: array
+          items:
+            type: string
+        bio:
+          type: string
+          maxLength: 500
+      required:
+        - cities
+        - categories
+        - bio
