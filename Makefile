@@ -16,6 +16,8 @@ PROJECT_ID ?= corneroom-82fbb
 LOCATION ?= us-central1
 API_NAME ?= corneroom-api
 CONFIG_PATH ?= gateway/config.json
+# How many recent API configs to keep per gateway after a deploy (newest + rollback buffer)
+KEEP_CONFIGS ?= 3
 
 # Get current git info
 SHORT_SHA := $(shell git rev-parse --short HEAD)
@@ -80,6 +82,19 @@ deploy-gateway: ## Deploy API Gateway configs and gateways
 				--location="$(LOCATION)" \
 				--project="$(PROJECT_ID)"; \
 		fi; \
+		\
+		echo "🧹 Pruning old API configs for $$gw (keeping newest $(KEEP_CONFIGS))..."; \
+		gcloud api-gateway api-configs list --api="$(API_NAME)" --project="$(PROJECT_ID)" \
+			--format="value(name.basename(),createTime)" \
+			| grep "$(API_NAME)-$${gw}-staging-" \
+			| sort -k2 -r | tail -n +$$(($(KEEP_CONFIGS) + 1)) | cut -f1 \
+			| while read -r cfg; do \
+				[ -z "$$cfg" ] && continue; \
+				[ "$$cfg" = "$$NEW_API_CONFIG_NAME" ] && continue; \
+				echo "  🗑️  Deleting old config: $$cfg"; \
+				gcloud api-gateway api-configs delete "$$cfg" --api="$(API_NAME)" --project="$(PROJECT_ID)" --quiet \
+					|| echo "  ⚠️  Skipped $$cfg (in use or delete failed)"; \
+			done; \
 		\
 		echo "🌐 Getting gateway URL..."; \
 		GW_URL=$$(gcloud api-gateway gateways describe "$$STAGING_GW_NAME" --location="$(LOCATION)" --project="$(PROJECT_ID)" --format="value(defaultHostname)"); \

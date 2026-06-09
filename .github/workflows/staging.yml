@@ -128,6 +128,20 @@ jobs:
                 --location="${LOCATION}" \
                 --project="${PROJECT_ID}"
             fi
+            # Prune old API configs for this gateway, keeping the newest few (new + rollback buffer)
+            KEEP_CONFIGS="${KEEP_CONFIGS:-3}"
+            echo "Pruning old API configs for $gw (keeping newest $KEEP_CONFIGS)..."
+            gcloud api-gateway api-configs list --api="$API_NAME" --project="${PROJECT_ID}" \
+              --format="value(name.basename(),createTime)" \
+              | grep "${API_NAME}-${gw}-staging-" \
+              | sort -k2 -r | tail -n +$((KEEP_CONFIGS + 1)) | cut -f1 \
+              | while read -r cfg; do
+                  [ -z "$cfg" ] && continue
+                  [ "$cfg" = "$NEW_API_CONFIG_NAME" ] && continue
+                  echo "  Deleting old config: $cfg"
+                  gcloud api-gateway api-configs delete "$cfg" --api="$API_NAME" --project="${PROJECT_ID}" --quiet \
+                    || echo "  Skipped $cfg (in use or delete failed)"
+                done
             GW_URL=$(gcloud api-gateway gateways describe "$STAGING_GW_NAME" --location="${LOCATION}" --project="${PROJECT_ID}" --format="value(defaultHostname)")
             echo "Staging Gateway $STAGING_GW_NAME URL: https://$GW_URL"
           done
