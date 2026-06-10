@@ -2050,6 +2050,138 @@ paths:
         address: https://dashboard-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       x-codegen-request-body-name: notification
+  /dashboard/experiences:
+    get:
+      tags:
+      - dashboard
+      summary: List experiences
+      description: Retrieve a paginated list of experiences for admin moderation, optionally filtered by status.
+      operationId: listExperiences
+      parameters:
+      - name: status
+        in: query
+        schema:
+          type: string
+          enum: [draft, published, rejected, suspended, flagged, archived]
+      - name: page
+        in: query
+        schema:
+          type: integer
+          default: 1
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          default: 20
+      responses:
+        "200":
+          description: List of experiences
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      experiences:
+                        type: array
+                        items:
+                          type: object
+                      total:
+                        type: integer
+                      page:
+                        type: integer
+                      limit:
+                        type: integer
+                      pages:
+                        type: integer
+        "400":
+          description: Bad request
+          content: {}
+      security:
+      - jwtAuth: []
+      x-google-backend:
+        address: https://dashboard-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/experiences/{id}:
+    get:
+      tags:
+      - dashboard
+      summary: Get an experience
+      description: Retrieve a single experience by ID for admin review.
+      operationId: getExperienceById
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Experience details
+          content:
+            application/json:
+              schema:
+                type: object
+        "404":
+          description: Experience not found
+          content: {}
+      security:
+      - jwtAuth: []
+      x-google-backend:
+        address: https://dashboard-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/experiences/{id}/moderate:
+    post:
+      tags:
+      - dashboard
+      summary: Moderate an experience
+      description: Approve, reject, suspend, or flag an experience. Approving publishes it to Discover.
+      operationId: moderateExperience
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - action
+              properties:
+                action:
+                  type: string
+                  enum:
+                  - approve
+                  - reject
+                  - suspend
+                  - flag
+                notes:
+                  type: string
+                  maxLength: 2000
+      responses:
+        "200":
+          description: Experience moderated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+        "400":
+          description: Bad request
+          content: {}
+        "404":
+          description: Experience not found
+          content: {}
+      security:
+      - jwtAuth: []
+      x-google-backend:
+        address: https://dashboard-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/verifications:
     get:
       tags:

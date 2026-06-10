@@ -1326,6 +1326,140 @@ paths:
       x-google-backend:
         address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/experiences:
+    get:
+      produces:
+        - application/json
+      parameters:
+        - enum:
+            - draft
+            - published
+            - rejected
+            - suspended
+            - flagged
+            - archived
+          in: query
+          name: status
+          type: string
+        - default: 1
+          in: query
+          name: page
+          type: integer
+        - default: 20
+          in: query
+          name: limit
+          type: integer
+      responses:
+        '200':
+          description: List of experiences
+          schema:
+            properties:
+              data:
+                properties:
+                  experiences:
+                    items:
+                      type: object
+                    type: array
+                  limit:
+                    type: integer
+                  page:
+                    type: integer
+                  pages:
+                    type: integer
+                  total:
+                    type: integer
+                type: object
+            type: object
+        '400':
+          description: Bad request
+      security:
+        - jwtAuth: []
+      tags:
+        - dashboard
+      description: >-
+        Retrieve a paginated list of experiences for admin moderation,
+        optionally filtered by status.
+      operationId: listExperiences
+      summary: List experiences
+      x-google-backend:
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/experiences/{id}':
+    get:
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Experience details
+          schema:
+            type: object
+        '404':
+          description: Experience not found
+      security:
+        - jwtAuth: []
+      tags:
+        - dashboard
+      description: Retrieve a single experience by ID for admin review.
+      operationId: getExperienceById
+      summary: Get an experience
+      x-google-backend:
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/experiences/{id}/moderate':
+    post:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            properties:
+              action:
+                enum:
+                  - approve
+                  - reject
+                  - suspend
+                  - flag
+                type: string
+              notes:
+                maxLength: 2000
+                type: string
+            required:
+              - action
+            type: object
+      responses:
+        '200':
+          description: Experience moderated successfully
+          schema:
+            type: object
+        '400':
+          description: Bad request
+        '404':
+          description: Experience not found
+      security:
+        - jwtAuth: []
+      tags:
+        - dashboard
+      description: >-
+        Approve, reject, suspend, or flag an experience. Approving publishes it
+        to Discover.
+      operationId: moderateExperience
+      summary: Moderate an experience
+      x-google-backend:
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/feedback:
     get:
       produces:
