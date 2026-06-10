@@ -2250,6 +2250,10 @@ components:
         - specialties
     UpdateExperienceRequest:
       type: object
+      description: >-
+        Partial update of an Experience (owner only). Any omitted field is left
+        unchanged. Supports the full editable field set so the edit flow can
+        persist the whole Experience.
       properties:
         title:
           type: string
@@ -2262,11 +2266,36 @@ components:
         duration_hours:
           type: integer
           minimum: 1
+        duration_minutes:
+          type: integer
+          minimum: 1
         max_group_size:
           type: integer
           minimum: 1
         available:
           type: boolean
+        category:
+          type: string
+        cover_image_url:
+          type: string
+        whats_included:
+          type: array
+          items:
+            type: string
+        meeting_point:
+          type: string
+        end_point:
+          type: string
+        pricing_mode:
+          type: string
+          enum: [free, paid]
+        cancellation_policy:
+          type: string
+          enum: [flexible, moderate, strict]
+        currency:
+          type: string
+        location:
+          $ref: '#/components/schemas/Location'
     BookExperienceRequest:
       type: object
       properties:
@@ -2625,6 +2654,9 @@ components:
           type: string
         payment_status:
           type: string
+        can_cancel:
+          type: boolean
+          description: Backend-driven cancellation eligibility. The mobile app must not gate cancellation on its own rules.
         created_at:
           type: string
           format: date-time

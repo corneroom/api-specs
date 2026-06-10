@@ -2946,6 +2946,172 @@ paths:
       x-google-backend:
         address: https://dashboard-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/refunds:
+    get:
+      tags:
+        - refunds
+      summary: List refund requests
+      description: >-
+        Retrieve refund requests with optional filtering by status (space +
+        experience cancellations awaiting review).
+      operationId: listRefunds
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum:
+              - pending
+              - approved
+              - rejected
+              - refunded
+            default: pending
+          description: Filter by refund request status
+      responses:
+        '200':
+          description: List of refund requests
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      type: object
+                  total:
+                    type: integer
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error400Response'
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://dashboard-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/refunds/{id}:
+    get:
+      tags:
+        - refunds
+      summary: Get refund request details
+      description: Retrieve details of a single refund request.
+      operationId: getRefundRequest
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Refund request details
+          content:
+            application/json:
+              schema:
+                type: object
+        '404':
+          description: Refund request not found
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://dashboard-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/refunds/{id}/approve:
+    post:
+      tags:
+        - refunds
+      summary: Approve a refund request
+      description: >-
+        Approve a pending refund request (optionally overriding the amount).
+        Triggers the refund via payment-service.
+      operationId: approveRefund
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount:
+                  type: number
+                  description: Refund amount; defaults to the policy-suggested amount.
+      responses:
+        '200':
+          description: Refund request approved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error400Response'
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://dashboard-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/refunds/{id}/reject:
+    post:
+      tags:
+        - refunds
+      summary: Reject a refund request
+      description: Reject a refund request with an optional note. No money is refunded.
+      operationId: rejectRefund
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                note:
+                  type: string
+      responses:
+        '200':
+          description: Refund request rejected
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error400Response'
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://dashboard-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/reports/overview:
     get:
       tags:

@@ -15122,6 +15122,11 @@ definitions:
       booking_date:
         format: date-time
         type: string
+      can_cancel:
+        description: >-
+          Backend-driven cancellation eligibility. The mobile app must not gate
+          cancellation on its own rules.
+        type: boolean
       content_id:
         type: string
       created_at:
@@ -18603,23 +18608,57 @@ definitions:
         type: string
     type: object
   UpdateExperienceRequest:
+    description: >-
+      Partial update of an Experience (owner only). Any omitted field is left
+      unchanged. Supports the full editable field set so the edit flow can
+      persist the whole Experience.
     properties:
       available:
         type: boolean
+      cancellation_policy:
+        enum:
+          - flexible
+          - moderate
+          - strict
+        type: string
+      category:
+        type: string
+      cover_image_url:
+        type: string
+      currency:
+        type: string
       description:
         type: string
       duration_hours:
         minimum: 1
         type: integer
+      duration_minutes:
+        minimum: 1
+        type: integer
+      end_point:
+        type: string
+      location:
+        $ref: '#/definitions/Location'
       max_group_size:
         minimum: 1
         type: integer
+      meeting_point:
+        type: string
       price:
         minimum: 0
         type: number
+      pricing_mode:
+        enum:
+          - free
+          - paid
+        type: string
       title:
         maxLength: 200
         type: string
+      whats_included:
+        items:
+          type: string
+        type: array
     type: object
   UpdateMessageRequest:
     properties:
