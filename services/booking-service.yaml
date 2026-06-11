@@ -795,6 +795,177 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  # ─────────────────────────────────────────────────────────────────────────
+  # Experience sessions + reservations — migrated from community-service.
+  # Same Firestore stores (experiences/{id}/sessions subcollection + bookings
+  # type="experience" + refund_requests); only the serving service moves.
+  # operationIds are distinct from community-service's so the merged gateway
+  # spec stays valid while both exist.
+  # ─────────────────────────────────────────────────────────────────────────
+  /experiences/{id}/sessions:
+    post:
+      operationId: experienceSessionCreate
+      summary: Add a session (date) to an experience
+      tags: [experiences]
+      security:
+        - jwtAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExperienceSessionRequest"
+      responses:
+        "201":
+          description: Session created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExperienceSessionResponse"
+        "400":
+          description: Invalid request
+        "404":
+          description: Experience not found
+    get:
+      operationId: experienceSessionList
+      summary: List sessions for an experience
+      tags: [experiences]
+      security:
+        - jwtAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Sessions for the experience
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExperienceSessionListResponse"
+        "404":
+          description: Experience not found
+  /experiences/{id}/sessions/{sessionId}/cancel:
+    post:
+      operationId: experienceSessionCancel
+      summary: Cancel a session (owner only)
+      tags: [experiences]
+      security:
+        - jwtAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: sessionId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Session cancelled
+        "404":
+          description: Not found
+  /experiences/{id}/sessions/{sessionId}/reserve:
+    post:
+      operationId: experienceSessionReserve
+      summary: Reserve a spot in a session
+      description: Creates a reservation (holds a spot). Free experiences confirm immediately; paid ones return requires_payment for the payment flow.
+      tags: [experiences]
+      security:
+        - jwtAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: sessionId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExperienceReserveRequest"
+      responses:
+        "201":
+          description: Reservation created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExperienceReservationResponse"
+        "400":
+          description: Invalid request
+        "409":
+          description: Session full
+  /experience-reservations/mine:
+    get:
+      operationId: experienceReservationsMine
+      summary: List the current guest's experience reservations
+      tags: [experiences]
+      security:
+        - jwtAuth: []
+      responses:
+        "200":
+          description: Reservations
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExperienceReservationListResponse"
+        "401":
+          description: Unauthorized
+  /experience-reservations/guide:
+    get:
+      operationId: experienceReservationsGuide
+      summary: List reservations across the current guide's experiences (host view)
+      tags: [experiences]
+      security:
+        - jwtAuth: []
+      responses:
+        "200":
+          description: Reservations
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExperienceReservationListResponse"
+        "401":
+          description: Unauthorized
+  /experience-reservations/{id}/cancel:
+    post:
+      operationId: experienceReservationCancel
+      summary: Cancel an experience reservation
+      description: Free reservations cancel immediately; paid ones queue an admin refund review.
+      tags: [experiences]
+      security:
+        - jwtAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Cancellation accepted
+        "404":
+          description: Not found
+        "409":
+          description: Cancellation not allowed
+
 components:
   securitySchemes:
     jwtAuth:
@@ -1449,3 +1620,102 @@ components:
                 example: true
             required: [start, end, available]
       required: [date, slot_duration_minutes, listing_id, slots]
+
+    # ── Experience sessions + reservations (ported from community-service;
+    #    wire-shape parity with the responses mobile already parses) ──
+    ExperienceSessionRequest:
+      type: object
+      properties:
+        start_time:
+          type: string
+          format: date-time
+        capacity:
+          type: integer
+          minimum: 1
+      required: [start_time]
+    ExperienceSessionResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        experience_id:
+          type: string
+        start_time:
+          type: string
+        capacity:
+          type: integer
+        booked_count:
+          type: integer
+        status:
+          type: string
+    ExperienceSessionListResponse:
+      type: object
+      properties:
+        sessions:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExperienceSessionResponse"
+    ExperienceReserveRequest:
+      type: object
+      properties:
+        participants:
+          type: integer
+          minimum: 1
+          default: 1
+    ExperienceReservationResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        experience_id:
+          type: string
+        session_id:
+          type: string
+        guide_id:
+          type: string
+        guest_id:
+          type: string
+        status:
+          type: string
+        participants:
+          type: integer
+        total_amount:
+          type: number
+        currency:
+          type: string
+        payment_status:
+          type: string
+        requires_payment:
+          type: boolean
+        can_cancel:
+          type: boolean
+          description: Backend-driven cancellation eligibility. The mobile app must not gate cancellation on its own rules.
+        experience_title:
+          type: string
+        cover_image_url:
+          type: string
+        meeting_point:
+          type: string
+        duration_minutes:
+          type: integer
+        max_group_size:
+          type: integer
+        category:
+          type: string
+        guide_name:
+          type: string
+        guide_avatar:
+          type: string
+        session_start:
+          type: string
+        created_at:
+          type: string
+    ExperienceReservationListResponse:
+      type: object
+      properties:
+        reservations:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExperienceReservationResponse"

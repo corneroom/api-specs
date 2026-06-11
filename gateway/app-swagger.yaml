@@ -867,165 +867,6 @@ paths:
       x-google-backend:
         address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
-  '/community/experiences/{id}/book':
-    post:
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      parameters:
-        - in: path
-          name: id
-          required: true
-          type: string
-        - in: body
-          name: body
-          required: true
-          schema:
-            $ref: '#/definitions/BookExperienceRequest'
-      responses:
-        '201':
-          description: Experience booked successfully
-          schema:
-            $ref: '#/definitions/BookingResponse'
-        '400':
-          description: Invalid request
-        '404':
-          description: Experience not found
-      security:
-        - jwtAuth: []
-      tags:
-        - bookings
-      description: Book a specific experience
-      operationId: bookExperience
-      summary: Book an experience
-      x-google-backend:
-        address: 'https://community-service-981292602655.us-central1.run.app'
-        path_translation: APPEND_PATH_TO_ADDRESS
-  '/community/experiences/{id}/sessions':
-    get:
-      produces:
-        - application/json
-      parameters:
-        - in: path
-          name: id
-          required: true
-          type: string
-      responses:
-        '200':
-          description: Sessions for the experience
-          schema:
-            $ref: '#/definitions/SessionListResponse'
-        '404':
-          description: Experience not found
-      security:
-        - jwtAuth: []
-      tags:
-        - experiences
-      operationId: getSessions
-      summary: List upcoming sessions for an experience
-      x-google-backend:
-        address: 'https://community-service-981292602655.us-central1.run.app'
-        path_translation: APPEND_PATH_TO_ADDRESS
-    post:
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      parameters:
-        - in: path
-          name: id
-          required: true
-          type: string
-        - in: body
-          name: body
-          required: true
-          schema:
-            $ref: '#/definitions/SessionRequest'
-      responses:
-        '201':
-          description: Session created
-          schema:
-            $ref: '#/definitions/SessionResponse'
-        '400':
-          description: Invalid request
-        '404':
-          description: Experience not found
-      security:
-        - jwtAuth: []
-      tags:
-        - experiences
-      operationId: createSession
-      summary: Add a session (date) to an experience
-      x-google-backend:
-        address: 'https://community-service-981292602655.us-central1.run.app'
-        path_translation: APPEND_PATH_TO_ADDRESS
-  '/community/experiences/{id}/sessions/{sessionId}/cancel':
-    post:
-      parameters:
-        - in: path
-          name: id
-          required: true
-          type: string
-        - in: path
-          name: sessionId
-          required: true
-          type: string
-      responses:
-        '200':
-          description: Session cancelled
-        '404':
-          description: Not found
-      security:
-        - jwtAuth: []
-      tags:
-        - experiences
-      operationId: cancelSession
-      summary: Cancel a session
-      x-google-backend:
-        address: 'https://community-service-981292602655.us-central1.run.app'
-        path_translation: APPEND_PATH_TO_ADDRESS
-  '/community/experiences/{id}/sessions/{sessionId}/reserve':
-    post:
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      parameters:
-        - in: path
-          name: id
-          required: true
-          type: string
-        - in: path
-          name: sessionId
-          required: true
-          type: string
-        - in: body
-          name: body
-          required: false
-          schema:
-            $ref: '#/definitions/ReserveRequest'
-      responses:
-        '201':
-          description: Reservation created
-          schema:
-            $ref: '#/definitions/BookingResponse'
-        '400':
-          description: Invalid request
-        '409':
-          description: Session full
-      security:
-        - jwtAuth: []
-      tags:
-        - bookings
-      description: >-
-        Creates a reservation (holds a spot). Free experiences confirm
-        immediately; paid ones return requiresPayment for the payment flow.
-      operationId: reserveSession
-      summary: Reserve a spot in a session
-      x-google-backend:
-        address: 'https://community-service-981292602655.us-central1.run.app'
-        path_translation: APPEND_PATH_TO_ADDRESS
   /community/feed:
     get:
       produces:
@@ -1074,27 +915,6 @@ paths:
       x-google-backend:
         address: 'https://community-service-981292602655.us-central1.run.app'
         deadline: 60
-        path_translation: APPEND_PATH_TO_ADDRESS
-  /community/guides/me/reservations:
-    get:
-      produces:
-        - application/json
-      parameters: []
-      responses:
-        '200':
-          description: Reservations
-          schema:
-            $ref: '#/definitions/BookingListResponse'
-        '401':
-          description: Unauthorized
-      security:
-        - jwtAuth: []
-      tags:
-        - bookings
-      operationId: getGuideReservations
-      summary: List reservations across the current guide's experiences (host view)
-      x-google-backend:
-        address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /community/hangouts:
     get:
@@ -1704,48 +1524,6 @@ paths:
       description: Like a specific reel
       operationId: likeReel
       summary: Like a reel
-      x-google-backend:
-        address: 'https://community-service-981292602655.us-central1.run.app'
-        path_translation: APPEND_PATH_TO_ADDRESS
-  /community/reservations/mine:
-    get:
-      produces:
-        - application/json
-      parameters: []
-      responses:
-        '200':
-          description: Reservations
-          schema:
-            $ref: '#/definitions/BookingListResponse'
-        '401':
-          description: Unauthorized
-      security:
-        - jwtAuth: []
-      tags:
-        - bookings
-      operationId: getMyReservations
-      summary: List the current guest's experience reservations
-      x-google-backend:
-        address: 'https://community-service-981292602655.us-central1.run.app'
-        path_translation: APPEND_PATH_TO_ADDRESS
-  '/community/reservations/{id}/cancel':
-    post:
-      parameters:
-        - in: path
-          name: id
-          required: true
-          type: string
-      responses:
-        '200':
-          description: Reservation cancelled
-        '404':
-          description: Not found
-      security:
-        - jwtAuth: []
-      tags:
-        - bookings
-      operationId: cancelReservation
-      summary: Cancel a reservation (refund per policy)
       x-google-backend:
         address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
@@ -3295,6 +3073,74 @@ paths:
       x-google-backend:
         address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
+  /experience-reservations/guide:
+    get:
+      produces:
+        - application/json
+      parameters: []
+      responses:
+        '200':
+          description: Reservations
+          schema:
+            $ref: '#/definitions/ExperienceReservationListResponse'
+        '401':
+          description: Unauthorized
+      security:
+        - jwtAuth: []
+      tags:
+        - experiences
+      operationId: experienceReservationsGuide
+      summary: List reservations across the current guide's experiences (host view)
+      x-google-backend:
+        address: 'https://booking-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /experience-reservations/mine:
+    get:
+      produces:
+        - application/json
+      parameters: []
+      responses:
+        '200':
+          description: Reservations
+          schema:
+            $ref: '#/definitions/ExperienceReservationListResponse'
+        '401':
+          description: Unauthorized
+      security:
+        - jwtAuth: []
+      tags:
+        - experiences
+      operationId: experienceReservationsMine
+      summary: List the current guest's experience reservations
+      x-google-backend:
+        address: 'https://booking-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/experience-reservations/{id}/cancel':
+    post:
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Cancellation accepted
+        '404':
+          description: Not found
+        '409':
+          description: Cancellation not allowed
+      security:
+        - jwtAuth: []
+      tags:
+        - experiences
+      description: >-
+        Free reservations cancel immediately; paid ones queue an admin refund
+        review.
+      operationId: experienceReservationCancel
+      summary: Cancel an experience reservation
+      x-google-backend:
+        address: 'https://booking-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
   /experiences:
     get:
       produces:
@@ -3470,6 +3316,130 @@ paths:
       summary: Update experience
       x-google-backend:
         address: 'https://listing-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/experiences/{id}/sessions':
+    get:
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Sessions for the experience
+          schema:
+            $ref: '#/definitions/ExperienceSessionListResponse'
+        '404':
+          description: Experience not found
+      security:
+        - jwtAuth: []
+      tags:
+        - experiences
+      operationId: experienceSessionList
+      summary: List sessions for an experience
+      x-google-backend:
+        address: 'https://booking-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+    post:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/ExperienceSessionRequest'
+      responses:
+        '201':
+          description: Session created
+          schema:
+            $ref: '#/definitions/ExperienceSessionResponse'
+        '400':
+          description: Invalid request
+        '404':
+          description: Experience not found
+      security:
+        - jwtAuth: []
+      tags:
+        - experiences
+      operationId: experienceSessionCreate
+      summary: Add a session (date) to an experience
+      x-google-backend:
+        address: 'https://booking-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/experiences/{id}/sessions/{sessionId}/cancel':
+    post:
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+        - in: path
+          name: sessionId
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Session cancelled
+        '404':
+          description: Not found
+      security:
+        - jwtAuth: []
+      tags:
+        - experiences
+      operationId: experienceSessionCancel
+      summary: Cancel a session (owner only)
+      x-google-backend:
+        address: 'https://booking-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/experiences/{id}/sessions/{sessionId}/reserve':
+    post:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+        - in: path
+          name: sessionId
+          required: true
+          type: string
+        - in: body
+          name: body
+          required: false
+          schema:
+            $ref: '#/definitions/ExperienceReserveRequest'
+      responses:
+        '201':
+          description: Reservation created
+          schema:
+            $ref: '#/definitions/ExperienceReservationResponse'
+        '400':
+          description: Invalid request
+        '409':
+          description: Session full
+      security:
+        - jwtAuth: []
+      tags:
+        - experiences
+      description: >-
+        Creates a reservation (holds a spot). Free experiences confirm
+        immediately; paid ones return requires_payment for the payment flow.
+      operationId: experienceSessionReserve
+      summary: Reserve a spot in a session
+      x-google-backend:
+        address: 'https://booking-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /guides:
     get:
@@ -16523,6 +16493,72 @@ definitions:
       - city
       - country
     type: object
+  ExperienceReservationListResponse:
+    properties:
+      reservations:
+        items:
+          $ref: '#/definitions/ExperienceReservationResponse'
+        type: array
+    type: object
+  ExperienceReservationResponse:
+    properties:
+      can_cancel:
+        description: >-
+          Backend-driven cancellation eligibility. The mobile app must not gate
+          cancellation on its own rules.
+        type: boolean
+      category:
+        type: string
+      cover_image_url:
+        type: string
+      created_at:
+        type: string
+      currency:
+        type: string
+      duration_minutes:
+        type: integer
+      experience_id:
+        type: string
+      experience_title:
+        type: string
+      guest_id:
+        type: string
+      guide_avatar:
+        type: string
+      guide_id:
+        type: string
+      guide_name:
+        type: string
+      id:
+        type: string
+      max_group_size:
+        type: integer
+      meeting_point:
+        type: string
+      participants:
+        type: integer
+      payment_status:
+        type: string
+      requires_payment:
+        type: boolean
+      session_id:
+        type: string
+      session_start:
+        type: string
+      status:
+        type: string
+      total_amount:
+        type: number
+      type:
+        type: string
+    type: object
+  ExperienceReserveRequest:
+    properties:
+      participants:
+        default: 1
+        minimum: 1
+        type: integer
+    type: object
   ExperienceResponse:
     properties:
       available:
@@ -16566,6 +16602,39 @@ definitions:
       - views
       - bookings
       - created_at
+    type: object
+  ExperienceSessionListResponse:
+    properties:
+      sessions:
+        items:
+          $ref: '#/definitions/ExperienceSessionResponse'
+        type: array
+    type: object
+  ExperienceSessionRequest:
+    properties:
+      capacity:
+        minimum: 1
+        type: integer
+      start_time:
+        format: date-time
+        type: string
+    required:
+      - start_time
+    type: object
+  ExperienceSessionResponse:
+    properties:
+      booked_count:
+        type: integer
+      capacity:
+        type: integer
+      experience_id:
+        type: string
+      id:
+        type: string
+      start_time:
+        type: string
+      status:
+        type: string
     type: object
   FacematchSubmissionRequest:
     properties:
