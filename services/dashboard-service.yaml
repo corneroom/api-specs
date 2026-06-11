@@ -2235,6 +2235,60 @@ paths:
       x-google-backend:
         address: https://dashboard-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/experience-reservations:
+    get:
+      tags:
+      - dashboard
+      summary: List experience reservations
+      description: Read-only list of experience reservations (bookings of type "experience") newest-first, optionally filtered by status.
+      operationId: listExperienceReservations
+      parameters:
+      - name: status
+        in: query
+        schema:
+          type: string
+          enum: [reserved, confirmed, cancelled, cancellation_requested, completed]
+      - name: page
+        in: query
+        schema:
+          type: integer
+          default: 1
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          default: 20
+      responses:
+        "200":
+          description: List of experience reservations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      reservations:
+                        type: array
+                        items:
+                          type: object
+                      total:
+                        type: integer
+                      page:
+                        type: integer
+                      limit:
+                        type: integer
+                      pages:
+                        type: integer
+        "400":
+          description: Bad request
+          content: {}
+      security:
+      - jwtAuth: []
+      x-google-backend:
+        address: https://dashboard-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/verifications:
     get:
       tags:
