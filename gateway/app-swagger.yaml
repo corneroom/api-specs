@@ -1208,6 +1208,21 @@ paths:
       x-google-backend:
         address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
+  /community/heartbeat:
+    get:
+      parameters: []
+      responses:
+        '200':
+          description: Service is alive
+      security: []
+      tags:
+        - content
+      description: Public liveness check for the community service (no auth).
+      operationId: communityHeartbeat
+      summary: Heartbeat
+      x-google-backend:
+        address: 'https://community-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
   /community/media/upload:
     post:
       consumes:

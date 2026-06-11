@@ -13192,6 +13192,20 @@ paths:
           description: Connection successful
         '401':
           $ref: '#/components/responses/Unauthorized'
+  /community/heartbeat:
+    get:
+      operationId: communityHeartbeat
+      summary: Heartbeat
+      description: Public liveness check for the community service (no auth).
+      tags:
+        - content
+      security: []
+      x-google-backend:
+        address: https://community-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      responses:
+        '200':
+          description: Service is alive
   /community/media/upload:
     post:
       operationId: uploadMedia
