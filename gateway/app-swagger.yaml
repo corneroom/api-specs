@@ -3160,6 +3160,29 @@ paths:
         - in: query
           name: max_price
           type: number
+        - description: >-
+            Case-insensitive substring over
+            title/category/city/guide/description
+          in: query
+          name: search
+          type: string
+        - description: >-
+            Exact category match (e.g. food, culture, outdoors, nightlife,
+            wellness)
+          in: query
+          name: category
+          type: string
+        - description: Discovery mood filter
+          enum:
+            - sunset
+            - water
+            - art
+            - food
+            - night
+            - wellness
+          in: query
+          name: vibe
+          type: string
       responses:
         '200':
           description: List of experiences
@@ -7927,8 +7950,7 @@ paths:
           description: Internal server error
           schema:
             $ref: '#/definitions/ErrorResponse'
-      security:
-        - jwtAuth: []
+      security: []
       tags:
         - payment
       description: >-
@@ -16582,10 +16604,21 @@ definitions:
         $ref: '#/definitions/Location'
       max_group_size:
         type: integer
+      next_session_at:
+        description: >-
+          Start time of the earliest upcoming scheduled session (omitted if
+          none)
+        format: date-time
+        type: string
       price:
         type: number
       title:
         type: string
+      vibes:
+        description: 'Derived discovery moods (sunset, water, art, food, night, wellness)'
+        items:
+          type: string
+        type: array
       views:
         type: integer
     required:

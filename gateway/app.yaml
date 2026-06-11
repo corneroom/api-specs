@@ -8911,6 +8911,32 @@ paths:
           name: max_price
           schema:
             type: number
+        - in: query
+          name: search
+          description: >-
+            Case-insensitive substring over
+            title/category/city/guide/description
+          schema:
+            type: string
+        - in: query
+          name: category
+          description: >-
+            Exact category match (e.g. food, culture, outdoors, nightlife,
+            wellness)
+          schema:
+            type: string
+        - in: query
+          name: vibe
+          description: Discovery mood filter
+          schema:
+            type: string
+            enum:
+              - sunset
+              - water
+              - art
+              - food
+              - night
+              - wellness
       responses:
         '200':
           description: List of experiences
@@ -11064,8 +11090,7 @@ paths:
       x-google-backend:
         address: https://payment-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
-      security:
-        - jwtAuth: []
+      security: []
       parameters:
         - name: X-Payment-Provider
           in: header
@@ -16259,6 +16284,17 @@ components:
         created_at:
           type: string
           format: date-time
+        next_session_at:
+          type: string
+          format: date-time
+          description: >-
+            Start time of the earliest upcoming scheduled session (omitted if
+            none)
+        vibes:
+          type: array
+          items:
+            type: string
+          description: Derived discovery moods (sunset, water, art, food, night, wellness)
       required:
         - id
         - title

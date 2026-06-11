@@ -77,7 +77,7 @@ paths:
       x-google-backend:
         address: https://payment-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
-      security: [{ jwtAuth: [] }]
+      security: []
       parameters:
         - name: X-Payment-Provider
           in: header
