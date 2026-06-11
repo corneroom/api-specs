@@ -867,101 +867,6 @@ paths:
       x-google-backend:
         address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
-  /community/experiences:
-    get:
-      produces:
-        - application/json
-      parameters:
-        - default: 1
-          in: query
-          name: page
-          type: integer
-        - default: 10
-          in: query
-          name: limit
-          type: integer
-        - in: query
-          name: country
-          type: string
-        - in: query
-          name: max_price
-          type: number
-      responses:
-        '200':
-          description: List of experiences
-          schema:
-            $ref: '#/definitions/ExperienceListResponse'
-        '400':
-          description: Invalid request parameters
-      security:
-        - jwtAuth: []
-      tags:
-        - experiences
-      description: Retrieve a paginated list of available experiences
-      operationId: getExperiences
-      summary: List experiences
-      x-google-backend:
-        address: 'https://community-service-981292602655.us-central1.run.app'
-        path_translation: APPEND_PATH_TO_ADDRESS
-    post:
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            $ref: '#/definitions/CreateExperienceRequest'
-      responses:
-        '201':
-          description: Experience created successfully
-          schema:
-            $ref: '#/definitions/ExperienceResponse'
-        '400':
-          description: Invalid request
-        '401':
-          description: Unauthorized
-      security:
-        - jwtAuth: []
-      tags:
-        - experiences
-      description: Create a new local experience or tour
-      operationId: createExperience
-      summary: Create a new experience
-      x-google-backend:
-        address: 'https://community-service-981292602655.us-central1.run.app'
-        path_translation: APPEND_PATH_TO_ADDRESS
-  /community/experiences/mine:
-    get:
-      produces:
-        - application/json
-      parameters:
-        - default: 1
-          in: query
-          name: page
-          type: integer
-        - default: 20
-          in: query
-          name: limit
-          type: integer
-      responses:
-        '200':
-          description: List of the guide's experiences
-          schema:
-            $ref: '#/definitions/ExperienceListResponse'
-        '401':
-          description: Unauthorized
-      security:
-        - jwtAuth: []
-      tags:
-        - experiences
-      operationId: getMyExperiences
-      summary: List the current guide's experiences (incl. drafts)
-      x-google-backend:
-        address: 'https://community-service-981292602655.us-central1.run.app'
-        path_translation: APPEND_PATH_TO_ADDRESS
   '/community/experiences/{id}/book':
     post:
       consumes:
@@ -1169,126 +1074,6 @@ paths:
       x-google-backend:
         address: 'https://community-service-981292602655.us-central1.run.app'
         deadline: 60
-        path_translation: APPEND_PATH_TO_ADDRESS
-  /community/guides:
-    get:
-      produces:
-        - application/json
-      parameters:
-        - default: 1
-          in: query
-          name: page
-          type: integer
-        - default: 10
-          in: query
-          name: limit
-          type: integer
-        - in: query
-          name: country
-          type: string
-        - in: query
-          name: verified
-          type: boolean
-      responses:
-        '200':
-          description: List of guides
-          schema:
-            $ref: '#/definitions/GuideListResponse'
-        '400':
-          description: Invalid request parameters
-      security:
-        - jwtAuth: []
-      tags:
-        - guides
-      description: Retrieve a paginated list of available guides
-      operationId: getGuides
-      summary: List guides
-      x-google-backend:
-        address: 'https://community-service-981292602655.us-central1.run.app'
-        path_translation: APPEND_PATH_TO_ADDRESS
-    post:
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            $ref: '#/definitions/CreateGuideRequest'
-      responses:
-        '201':
-          description: Guide profile created successfully
-          schema:
-            $ref: '#/definitions/GuideResponse'
-        '400':
-          description: Invalid request
-        '401':
-          description: Unauthorized
-      security:
-        - jwtAuth: []
-      tags:
-        - guides
-      description: Create a guide profile
-      operationId: createGuide
-      summary: Become a guide
-      x-google-backend:
-        address: 'https://community-service-981292602655.us-central1.run.app'
-        path_translation: APPEND_PATH_TO_ADDRESS
-  /community/guides/apply:
-    post:
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            $ref: '#/definitions/GuideApplyRequest'
-      responses:
-        '200':
-          description: Guide profile created/updated
-          schema:
-            $ref: '#/definitions/GuideResponse'
-        '401':
-          description: Unauthorized
-        '403':
-          description: Identity not verified
-      security:
-        - jwtAuth: []
-      tags:
-        - guides
-      description: >-
-        Creates/updates the guide profile. Auto-approves if the user is
-        facematch-verified.
-      operationId: applyGuide
-      summary: Apply to become a guide
-      x-google-backend:
-        address: 'https://community-service-981292602655.us-central1.run.app'
-        path_translation: APPEND_PATH_TO_ADDRESS
-  /community/guides/me:
-    get:
-      produces:
-        - application/json
-      parameters: []
-      responses:
-        '200':
-          description: Guide profile
-          schema:
-            $ref: '#/definitions/GuideResponse'
-        '404':
-          description: Not a guide
-      security:
-        - jwtAuth: []
-      tags:
-        - guides
-      operationId: getMyGuideProfile
-      summary: Get the current user's guide profile/status
-      x-google-backend:
-        address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /community/guides/me/reservations:
     get:
@@ -3510,6 +3295,103 @@ paths:
       x-google-backend:
         address: 'https://community-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
+  /experiences:
+    get:
+      produces:
+        - application/json
+      parameters:
+        - default: 1
+          in: query
+          name: page
+          type: integer
+        - default: 10
+          in: query
+          name: limit
+          type: integer
+        - in: query
+          name: country
+          type: string
+        - in: query
+          name: max_price
+          type: number
+      responses:
+        '200':
+          description: List of experiences
+          schema:
+            $ref: '#/definitions/ExperienceListResponse'
+        '400':
+          description: Invalid request parameters
+      security:
+        - jwtAuth: []
+      tags:
+        - experiences
+      description: Retrieve a paginated list of available experiences
+      operationId: experienceList
+      summary: List experiences
+      x-google-backend:
+        address: 'https://listing-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+    post:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/CreateExperienceRequest'
+      responses:
+        '201':
+          description: Experience created successfully
+          schema:
+            $ref: '#/definitions/ExperienceResponse'
+        '400':
+          description: Invalid request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Not an approved guide
+      security:
+        - jwtAuth: []
+      tags:
+        - experiences
+      description: Create a new local experience or tour (approved guides only)
+      operationId: experienceCreate
+      summary: Create a new experience
+      x-google-backend:
+        address: 'https://listing-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /experiences/mine:
+    get:
+      produces:
+        - application/json
+      parameters:
+        - default: 1
+          in: query
+          name: page
+          type: integer
+        - default: 20
+          in: query
+          name: limit
+          type: integer
+      responses:
+        '200':
+          description: List of the guide's experiences
+          schema:
+            $ref: '#/definitions/ExperienceListResponse'
+        '401':
+          description: Unauthorized
+      security:
+        - jwtAuth: []
+      tags:
+        - experiences
+      operationId: experienceListMine
+      summary: List the current guide's experiences (incl. drafts)
+      x-google-backend:
+        address: 'https://listing-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
   '/experiences/{id}':
     delete:
       parameters:
@@ -3527,10 +3409,10 @@ paths:
       tags:
         - experiences
       description: Delete an experience (only by the experience owner)
-      operationId: deleteExperience
+      operationId: experienceDelete
       summary: Delete experience
       x-google-backend:
-        address: 'https://community-service-981292602655.us-central1.run.app'
+        address: 'https://listing-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     get:
       produces:
@@ -3552,10 +3434,10 @@ paths:
       tags:
         - experiences
       description: Retrieve details for a specific experience
-      operationId: getExperience
+      operationId: experienceGet
       summary: Get experience details
       x-google-backend:
-        address: 'https://community-service-981292602655.us-central1.run.app'
+        address: 'https://listing-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
     put:
       consumes:
@@ -3584,10 +3466,130 @@ paths:
       tags:
         - experiences
       description: Update an existing experience (only by the experience owner)
-      operationId: updateExperience
+      operationId: experienceUpdate
       summary: Update experience
       x-google-backend:
-        address: 'https://community-service-981292602655.us-central1.run.app'
+        address: 'https://listing-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /guides:
+    get:
+      produces:
+        - application/json
+      parameters:
+        - default: 1
+          in: query
+          name: page
+          type: integer
+        - default: 10
+          in: query
+          name: limit
+          type: integer
+        - in: query
+          name: country
+          type: string
+        - in: query
+          name: verified
+          type: boolean
+      responses:
+        '200':
+          description: List of guides
+          schema:
+            $ref: '#/definitions/GuideListResponse'
+        '400':
+          description: Invalid request parameters
+      security:
+        - jwtAuth: []
+      tags:
+        - guides
+      description: Retrieve a paginated list of available guides
+      operationId: guideList
+      summary: List guides
+      x-google-backend:
+        address: 'https://listing-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+    post:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/CreateGuideRequest'
+      responses:
+        '201':
+          description: Guide profile created successfully
+          schema:
+            $ref: '#/definitions/GuideResponse'
+        '400':
+          description: Invalid request
+        '401':
+          description: Unauthorized
+      security:
+        - jwtAuth: []
+      tags:
+        - guides
+      description: Create a guide profile
+      operationId: guideCreate
+      summary: Become a guide
+      x-google-backend:
+        address: 'https://listing-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /guides/apply:
+    post:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/GuideApplyRequest'
+      responses:
+        '200':
+          description: Guide profile created/updated
+          schema:
+            $ref: '#/definitions/GuideResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Identity not verified
+      security:
+        - jwtAuth: []
+      tags:
+        - guides
+      description: >-
+        Creates/updates the guide profile. Auto-approves if the user is
+        facematch-verified.
+      operationId: guideApply
+      summary: Apply to become a guide
+      x-google-backend:
+        address: 'https://listing-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /guides/me:
+    get:
+      produces:
+        - application/json
+      parameters: []
+      responses:
+        '200':
+          description: Guide profile
+          schema:
+            $ref: '#/definitions/GuideResponse'
+        '404':
+          description: Not a guide
+      security:
+        - jwtAuth: []
+      tags:
+        - guides
+      operationId: guideGetMine
+      summary: Get the current user's guide profile/status
+      x-google-backend:
+        address: 'https://listing-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   '/guides/{id}':
     get:
@@ -3610,10 +3612,10 @@ paths:
       tags:
         - guides
       description: Retrieve details for a specific guide
-      operationId: getGuide
+      operationId: guideGet
       summary: Get guide profile
       x-google-backend:
-        address: 'https://community-service-981292602655.us-central1.run.app'
+        address: 'https://listing-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
   /health:
     get:
@@ -16498,6 +16500,28 @@ definitions:
     required:
       - experiences
       - pagination
+    type: object
+  ExperienceLocation:
+    properties:
+      address:
+        type: string
+      city:
+        type: string
+      country:
+        type: string
+      latitude:
+        format: double
+        type: number
+      longitude:
+        format: double
+        type: number
+      place_id:
+        type: string
+    required:
+      - latitude
+      - longitude
+      - city
+      - country
     type: object
   ExperienceResponse:
     properties:

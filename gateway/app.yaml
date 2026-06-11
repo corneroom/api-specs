@@ -8850,6 +8850,334 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
       x-google-backend: *ref_0
+  /experiences:
+    post:
+      operationId: experienceCreate
+      summary: Create a new experience
+      description: Create a new local experience or tour (approved guides only)
+      tags:
+        - experiences
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://listing-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateExperienceRequest'
+      responses:
+        '201':
+          description: Experience created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperienceResponse'
+        '400':
+          description: Invalid request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Not an approved guide
+    get:
+      operationId: experienceList
+      summary: List experiences
+      description: Retrieve a paginated list of available experiences
+      tags:
+        - experiences
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://listing-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+        - in: query
+          name: country
+          schema:
+            type: string
+        - in: query
+          name: max_price
+          schema:
+            type: number
+      responses:
+        '200':
+          description: List of experiences
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperienceListResponse'
+        '400':
+          description: Invalid request parameters
+  /experiences/mine:
+    get:
+      operationId: experienceListMine
+      summary: List the current guide's experiences (incl. drafts)
+      tags:
+        - experiences
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://listing-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: List of the guide's experiences
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperienceListResponse'
+        '401':
+          description: Unauthorized
+  /experiences/{id}:
+    get:
+      operationId: experienceGet
+      summary: Get experience details
+      description: Retrieve details for a specific experience
+      tags:
+        - experiences
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://listing-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Experience details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperienceResponse'
+        '404':
+          description: Experience not found
+    put:
+      operationId: experienceUpdate
+      summary: Update experience
+      description: Update an existing experience (only by the experience owner)
+      tags:
+        - experiences
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://listing-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateExperienceRequest'
+      responses:
+        '200':
+          description: Experience updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperienceResponse'
+        '404':
+          description: Experience not found
+    delete:
+      operationId: experienceDelete
+      summary: Delete experience
+      description: Delete an experience (only by the experience owner)
+      tags:
+        - experiences
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://listing-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Experience deleted successfully
+        '404':
+          description: Experience not found
+  /guides:
+    post:
+      operationId: guideCreate
+      summary: Become a guide
+      description: Create a guide profile
+      tags:
+        - guides
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://listing-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateGuideRequest'
+      responses:
+        '201':
+          description: Guide profile created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GuideResponse'
+        '400':
+          description: Invalid request
+        '401':
+          description: Unauthorized
+    get:
+      operationId: guideList
+      summary: List guides
+      description: Retrieve a paginated list of available guides
+      tags:
+        - guides
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://listing-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+        - in: query
+          name: country
+          schema:
+            type: string
+        - in: query
+          name: verified
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: List of guides
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GuideListResponse'
+        '400':
+          description: Invalid request parameters
+  /guides/apply:
+    post:
+      operationId: guideApply
+      summary: Apply to become a guide
+      description: >-
+        Creates/updates the guide profile. Auto-approves if the user is
+        facematch-verified.
+      tags:
+        - guides
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://listing-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GuideApplyRequest'
+      responses:
+        '200':
+          description: Guide profile created/updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GuideResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Identity not verified
+  /guides/me:
+    get:
+      operationId: guideGetMine
+      summary: Get the current user's guide profile/status
+      tags:
+        - guides
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://listing-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      responses:
+        '200':
+          description: Guide profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GuideResponse'
+        '404':
+          description: Not a guide
+  /guides/{id}:
+    get:
+      operationId: guideGet
+      summary: Get guide profile
+      description: Retrieve details for a specific guide
+      tags:
+        - guides
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://listing-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Guide profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GuideResponse'
+        '404':
+          description: Guide not found
   /bookings/heartbeat:
     get:
       summary: Heartbeat
@@ -13267,155 +13595,6 @@ paths:
                 $ref: '#/components/schemas/FeedResponse'
         '400':
           description: Invalid request parameters
-  /community/experiences:
-    post:
-      operationId: createExperience
-      summary: Create a new experience
-      description: Create a new local experience or tour
-      tags:
-        - experiences
-      security:
-        - jwtAuth: []
-      x-google-backend:
-        address: https://community-service-981292602655.us-central1.run.app
-        path_translation: APPEND_PATH_TO_ADDRESS
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateExperienceRequest'
-      responses:
-        '201':
-          description: Experience created successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExperienceResponse'
-        '400':
-          description: Invalid request
-        '401':
-          description: Unauthorized
-    get:
-      operationId: getExperiences
-      summary: List experiences
-      description: Retrieve a paginated list of available experiences
-      tags:
-        - experiences
-      security:
-        - jwtAuth: []
-      x-google-backend:
-        address: https://community-service-981292602655.us-central1.run.app
-        path_translation: APPEND_PATH_TO_ADDRESS
-      parameters:
-        - in: query
-          name: page
-          schema:
-            type: integer
-            default: 1
-        - in: query
-          name: limit
-          schema:
-            type: integer
-            default: 10
-        - in: query
-          name: country
-          schema:
-            type: string
-        - in: query
-          name: max_price
-          schema:
-            type: number
-      responses:
-        '200':
-          description: List of experiences
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExperienceListResponse'
-        '400':
-          description: Invalid request parameters
-  /experiences/{id}:
-    get:
-      operationId: getExperience
-      summary: Get experience details
-      description: Retrieve details for a specific experience
-      tags:
-        - experiences
-      security:
-        - jwtAuth: []
-      x-google-backend:
-        address: https://community-service-981292602655.us-central1.run.app
-        path_translation: APPEND_PATH_TO_ADDRESS
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Experience details
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExperienceResponse'
-        '404':
-          description: Experience not found
-    put:
-      operationId: updateExperience
-      summary: Update experience
-      description: Update an existing experience (only by the experience owner)
-      tags:
-        - experiences
-      security:
-        - jwtAuth: []
-      x-google-backend:
-        address: https://community-service-981292602655.us-central1.run.app
-        path_translation: APPEND_PATH_TO_ADDRESS
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateExperienceRequest'
-      responses:
-        '200':
-          description: Experience updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExperienceResponse'
-        '404':
-          description: Experience not found
-    delete:
-      operationId: deleteExperience
-      summary: Delete experience
-      description: Delete an experience (only by the experience owner)
-      tags:
-        - experiences
-      security:
-        - jwtAuth: []
-      x-google-backend:
-        address: https://community-service-981292602655.us-central1.run.app
-        path_translation: APPEND_PATH_TO_ADDRESS
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-      responses:
-        '204':
-          description: Experience deleted successfully
-        '404':
-          description: Experience not found
   /community/experiences/{id}/book:
     post:
       operationId: bookExperience
@@ -13451,37 +13630,6 @@ paths:
           description: Invalid request
         '404':
           description: Experience not found
-  /community/experiences/mine:
-    get:
-      operationId: getMyExperiences
-      summary: List the current guide's experiences (incl. drafts)
-      tags:
-        - experiences
-      security:
-        - jwtAuth: []
-      x-google-backend:
-        address: https://community-service-981292602655.us-central1.run.app
-        path_translation: APPEND_PATH_TO_ADDRESS
-      parameters:
-        - in: query
-          name: page
-          schema:
-            type: integer
-            default: 1
-        - in: query
-          name: limit
-          schema:
-            type: integer
-            default: 20
-      responses:
-        '200':
-          description: List of the guide's experiences
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExperienceListResponse'
-        '401':
-          description: Unauthorized
   /community/experiences/{id}/sessions:
     post:
       operationId: createSession
@@ -13610,57 +13758,6 @@ paths:
           description: Invalid request
         '409':
           description: Session full
-  /community/guides/apply:
-    post:
-      operationId: applyGuide
-      summary: Apply to become a guide
-      description: >-
-        Creates/updates the guide profile. Auto-approves if the user is
-        facematch-verified.
-      tags:
-        - guides
-      security:
-        - jwtAuth: []
-      x-google-backend:
-        address: https://community-service-981292602655.us-central1.run.app
-        path_translation: APPEND_PATH_TO_ADDRESS
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/GuideApplyRequest'
-      responses:
-        '200':
-          description: Guide profile created/updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GuideResponse'
-        '401':
-          description: Unauthorized
-        '403':
-          description: Identity not verified
-  /community/guides/me:
-    get:
-      operationId: getMyGuideProfile
-      summary: Get the current user's guide profile/status
-      tags:
-        - guides
-      security:
-        - jwtAuth: []
-      x-google-backend:
-        address: https://community-service-981292602655.us-central1.run.app
-        path_translation: APPEND_PATH_TO_ADDRESS
-      responses:
-        '200':
-          description: Guide profile
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GuideResponse'
-        '404':
-          description: Not a guide
   /community/guides/me/reservations:
     get:
       operationId: getGuideReservations
@@ -13843,101 +13940,6 @@ paths:
           description: Invalid request
         '404':
           description: Event not found
-  /community/guides:
-    post:
-      operationId: createGuide
-      summary: Become a guide
-      description: Create a guide profile
-      tags:
-        - guides
-      security:
-        - jwtAuth: []
-      x-google-backend:
-        address: https://community-service-981292602655.us-central1.run.app
-        path_translation: APPEND_PATH_TO_ADDRESS
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateGuideRequest'
-      responses:
-        '201':
-          description: Guide profile created successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GuideResponse'
-        '400':
-          description: Invalid request
-        '401':
-          description: Unauthorized
-    get:
-      operationId: getGuides
-      summary: List guides
-      description: Retrieve a paginated list of available guides
-      tags:
-        - guides
-      security:
-        - jwtAuth: []
-      x-google-backend:
-        address: https://community-service-981292602655.us-central1.run.app
-        path_translation: APPEND_PATH_TO_ADDRESS
-      parameters:
-        - in: query
-          name: page
-          schema:
-            type: integer
-            default: 1
-        - in: query
-          name: limit
-          schema:
-            type: integer
-            default: 10
-        - in: query
-          name: country
-          schema:
-            type: string
-        - in: query
-          name: verified
-          schema:
-            type: boolean
-      responses:
-        '200':
-          description: List of guides
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GuideListResponse'
-        '400':
-          description: Invalid request parameters
-  /guides/{id}:
-    get:
-      operationId: getGuide
-      summary: Get guide profile
-      description: Retrieve details for a specific guide
-      tags:
-        - guides
-      security:
-        - jwtAuth: []
-      x-google-backend:
-        address: https://community-service-981292602655.us-central1.run.app
-        path_translation: APPEND_PATH_TO_ADDRESS
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Guide profile
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GuideResponse'
-        '404':
-          description: Guide not found
   /community/travel-plans:
     post:
       operationId: createTravelPlan
@@ -16121,6 +16123,334 @@ components:
         - start_date
         - end_date
         - unavailable_dates
+    ExperienceLocation:
+      type: object
+      properties:
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+        city:
+          type: string
+        country:
+          type: string
+        place_id:
+          type: string
+        address:
+          type: string
+      required:
+        - latitude
+        - longitude
+        - city
+        - country
+    SessionRequest:
+      type: object
+      properties:
+        start_time:
+          type: string
+          format: date-time
+        capacity:
+          type: integer
+          minimum: 1
+      required:
+        - start_time
+    CreateExperienceRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        location:
+          $ref: '#/components/schemas/Location'
+        price:
+          type: number
+          minimum: 0
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+        duration_hours:
+          type: integer
+          minimum: 1
+        duration_minutes:
+          type: integer
+          minimum: 1
+        max_group_size:
+          type: integer
+          minimum: 1
+        category:
+          type: string
+          description: >-
+            Category value (food, culture, outdoors, sightseeing, nightlife,
+            wellness, other)
+        cover_image_url:
+          type: string
+          description: Document-service URL for the cover photo (required)
+        whats_included:
+          type: array
+          items:
+            type: string
+        meeting_point:
+          type: string
+        end_point:
+          type: string
+        pricing_mode:
+          type: string
+          enum:
+            - free
+            - paid
+        cancellation_policy:
+          type: string
+          enum:
+            - flexible
+            - moderate
+            - strict
+        first_session:
+          $ref: '#/components/schemas/SessionRequest'
+      required:
+        - title
+        - description
+        - location
+        - currency
+        - max_group_size
+        - category
+        - cover_image_url
+        - pricing_mode
+    UpdateExperienceRequest:
+      type: object
+      description: >-
+        Partial update of an Experience (owner only). Any omitted field is left
+        unchanged. Supports the full editable field set so the edit flow can
+        persist the whole Experience.
+      properties:
+        title:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        price:
+          type: number
+          minimum: 0
+        duration_hours:
+          type: integer
+          minimum: 1
+        duration_minutes:
+          type: integer
+          minimum: 1
+        max_group_size:
+          type: integer
+          minimum: 1
+        available:
+          type: boolean
+        category:
+          type: string
+        cover_image_url:
+          type: string
+        whats_included:
+          type: array
+          items:
+            type: string
+        meeting_point:
+          type: string
+        end_point:
+          type: string
+        pricing_mode:
+          type: string
+          enum:
+            - free
+            - paid
+        cancellation_policy:
+          type: string
+          enum:
+            - flexible
+            - moderate
+            - strict
+        currency:
+          type: string
+        location:
+          $ref: '#/components/schemas/Location'
+    ExperienceResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        location:
+          $ref: '#/components/schemas/Location'
+        price:
+          type: number
+        currency:
+          type: string
+        duration_hours:
+          type: integer
+        max_group_size:
+          type: integer
+        available:
+          type: boolean
+        likes:
+          type: integer
+        views:
+          type: integer
+        bookings:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - description
+        - location
+        - price
+        - currency
+        - duration_hours
+        - max_group_size
+        - available
+        - likes
+        - views
+        - bookings
+        - created_at
+    ExperienceListResponse:
+      type: object
+      properties:
+        experiences:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExperienceResponse'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+      required:
+        - experiences
+        - pagination
+    CreateGuideRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        bio:
+          type: string
+          maxLength: 500
+        avatar:
+          type: string
+          format: uri
+        location:
+          $ref: '#/components/schemas/Location'
+        languages:
+          type: array
+          items:
+            type: string
+        specialties:
+          type: array
+          items:
+            type: string
+      required:
+        - name
+        - bio
+        - location
+        - languages
+        - specialties
+    GuideApplyRequest:
+      type: object
+      properties:
+        cities:
+          type: array
+          items:
+            type: string
+        categories:
+          type: array
+          items:
+            type: string
+        bio:
+          type: string
+          maxLength: 500
+      required:
+        - cities
+        - categories
+        - bio
+    GuideResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        bio:
+          type: string
+        avatar:
+          type: string
+        location:
+          $ref: '#/components/schemas/Location'
+        languages:
+          type: array
+          items:
+            type: string
+        specialties:
+          type: array
+          items:
+            type: string
+        rating:
+          type: number
+          format: float
+        review_count:
+          type: integer
+        verified:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - bio
+        - location
+        - languages
+        - specialties
+        - rating
+        - review_count
+        - verified
+        - created_at
+    GuideListResponse:
+      type: object
+      properties:
+        guides:
+          type: array
+          items:
+            $ref: '#/components/schemas/GuideResponse'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+      required:
+        - guides
+        - pagination
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+        total_pages:
+          type: integer
+        has_next:
+          type: boolean
+        has_prev:
+          type: boolean
+      required:
+        - page
+        - limit
+        - total
+        - total_pages
+        - has_next
+        - has_prev
     ApiResponseBookings:
       type: object
       description: Standard API response for multiple bookings.
@@ -18421,70 +18751,6 @@ components:
         - content
         - author
         - author_avatar
-    CreateExperienceRequest:
-      type: object
-      properties:
-        title:
-          type: string
-          maxLength: 200
-        description:
-          type: string
-        location:
-          $ref: '#/components/schemas/Location'
-        price:
-          type: number
-          minimum: 0
-        currency:
-          type: string
-          minLength: 3
-          maxLength: 3
-        duration_hours:
-          type: integer
-          minimum: 1
-        duration_minutes:
-          type: integer
-          minimum: 1
-        max_group_size:
-          type: integer
-          minimum: 1
-        category:
-          type: string
-          description: >-
-            Category value (food, culture, outdoors, sightseeing, nightlife,
-            wellness, other)
-        cover_image_url:
-          type: string
-          description: Document-service URL for the cover photo (required)
-        whats_included:
-          type: array
-          items:
-            type: string
-        meeting_point:
-          type: string
-        end_point:
-          type: string
-        pricing_mode:
-          type: string
-          enum:
-            - free
-            - paid
-        cancellation_policy:
-          type: string
-          enum:
-            - flexible
-            - moderate
-            - strict
-        first_session:
-          $ref: '#/components/schemas/SessionRequest'
-      required:
-        - title
-        - description
-        - location
-        - currency
-        - max_group_size
-        - category
-        - cover_image_url
-        - pricing_mode
     CreateEventRequest:
       type: object
       properties:
@@ -18520,87 +18786,6 @@ components:
         - max_attendees
         - price
         - currency
-    CreateGuideRequest:
-      type: object
-      properties:
-        name:
-          type: string
-          maxLength: 100
-        bio:
-          type: string
-          maxLength: 500
-        avatar:
-          type: string
-          format: uri
-        location:
-          $ref: '#/components/schemas/Location'
-        languages:
-          type: array
-          items:
-            type: string
-        specialties:
-          type: array
-          items:
-            type: string
-      required:
-        - name
-        - bio
-        - location
-        - languages
-        - specialties
-    UpdateExperienceRequest:
-      type: object
-      description: >-
-        Partial update of an Experience (owner only). Any omitted field is left
-        unchanged. Supports the full editable field set so the edit flow can
-        persist the whole Experience.
-      properties:
-        title:
-          type: string
-          maxLength: 200
-        description:
-          type: string
-        price:
-          type: number
-          minimum: 0
-        duration_hours:
-          type: integer
-          minimum: 1
-        duration_minutes:
-          type: integer
-          minimum: 1
-        max_group_size:
-          type: integer
-          minimum: 1
-        available:
-          type: boolean
-        category:
-          type: string
-        cover_image_url:
-          type: string
-        whats_included:
-          type: array
-          items:
-            type: string
-        meeting_point:
-          type: string
-        end_point:
-          type: string
-        pricing_mode:
-          type: string
-          enum:
-            - free
-            - paid
-        cancellation_policy:
-          type: string
-          enum:
-            - flexible
-            - moderate
-            - strict
-        currency:
-          type: string
-        location:
-          $ref: '#/components/schemas/Location'
     BookExperienceRequest:
       type: object
       properties:
@@ -18811,50 +18996,6 @@ components:
                 - author_avatar
                 - public
                 - user_id
-    ExperienceResponse:
-      type: object
-      properties:
-        id:
-          type: string
-        title:
-          type: string
-        description:
-          type: string
-        location:
-          $ref: '#/components/schemas/Location'
-        price:
-          type: number
-        currency:
-          type: string
-        duration_hours:
-          type: integer
-        max_group_size:
-          type: integer
-        available:
-          type: boolean
-        likes:
-          type: integer
-        views:
-          type: integer
-        bookings:
-          type: integer
-        created_at:
-          type: string
-          format: date-time
-      required:
-        - id
-        - title
-        - description
-        - location
-        - price
-        - currency
-        - duration_hours
-        - max_group_size
-        - available
-        - likes
-        - views
-        - bookings
-        - created_at
     EventResponse:
       type: object
       properties:
@@ -18894,48 +19035,6 @@ components:
         - attendees
         - price
         - currency
-        - created_at
-    GuideResponse:
-      type: object
-      properties:
-        id:
-          type: string
-        name:
-          type: string
-        bio:
-          type: string
-        avatar:
-          type: string
-        location:
-          $ref: '#/components/schemas/Location'
-        languages:
-          type: array
-          items:
-            type: string
-        specialties:
-          type: array
-          items:
-            type: string
-        rating:
-          type: number
-          format: float
-        review_count:
-          type: integer
-        verified:
-          type: boolean
-        created_at:
-          type: string
-          format: date-time
-      required:
-        - id
-        - name
-        - bio
-        - location
-        - languages
-        - specialties
-        - rating
-        - review_count
-        - verified
         - created_at
     BookingResponse:
       type: object
@@ -19026,18 +19125,6 @@ components:
       required:
         - reels
         - pagination
-    ExperienceListResponse:
-      type: object
-      properties:
-        experiences:
-          type: array
-          items:
-            $ref: '#/components/schemas/ExperienceResponse'
-        pagination:
-          $ref: '#/components/schemas/Pagination'
-      required:
-        - experiences
-        - pagination
     EventListResponse:
       type: object
       properties:
@@ -19049,18 +19136,6 @@ components:
           $ref: '#/components/schemas/Pagination'
       required:
         - events
-        - pagination
-    GuideListResponse:
-      type: object
-      properties:
-        guides:
-          type: array
-          items:
-            $ref: '#/components/schemas/GuideResponse'
-        pagination:
-          $ref: '#/components/schemas/Pagination'
-      required:
-        - guides
         - pagination
     BookingListResponse:
       type: object
@@ -19130,28 +19205,6 @@ components:
       required:
         - liked
         - likes
-    Pagination:
-      type: object
-      properties:
-        page:
-          type: integer
-        limit:
-          type: integer
-        total:
-          type: integer
-        total_pages:
-          type: integer
-        has_next:
-          type: boolean
-        has_prev:
-          type: boolean
-      required:
-        - page
-        - limit
-        - total
-        - total_pages
-        - has_next
-        - has_prev
     CreateTravelPlanRequest:
       type: object
       properties:
@@ -19412,17 +19465,6 @@ components:
           type: string
         avatar:
           type: string
-    SessionRequest:
-      type: object
-      properties:
-        start_time:
-          type: string
-          format: date-time
-        capacity:
-          type: integer
-          minimum: 1
-      required:
-        - start_time
     SessionResponse:
       type: object
       properties:
@@ -19453,24 +19495,6 @@ components:
           type: integer
           minimum: 1
           default: 1
-    GuideApplyRequest:
-      type: object
-      properties:
-        cities:
-          type: array
-          items:
-            type: string
-        categories:
-          type: array
-          items:
-            type: string
-        bio:
-          type: string
-          maxLength: 500
-      required:
-        - cities
-        - categories
-        - bio
     FacematchSubmissionRequest:
       type: object
       properties:
