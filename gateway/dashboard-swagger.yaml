@@ -3070,6 +3070,57 @@ paths:
       x-google-backend:
         address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/reviews:
+    get:
+      produces:
+        - application/json
+      parameters:
+        - in: query
+          name: status
+          type: string
+        - default: 1
+          in: query
+          name: page
+          type: integer
+        - default: 10
+          in: query
+          name: limit
+          type: integer
+      responses:
+        '200':
+          description: List of reviews
+          schema:
+            properties:
+              data:
+                properties:
+                  limit:
+                    type: integer
+                  page:
+                    type: integer
+                  pages:
+                    type: integer
+                  reviews:
+                    items:
+                      type: object
+                    type: array
+                  total:
+                    type: integer
+                type: object
+            type: object
+        '400':
+          description: Bad request
+      security:
+        - jwtAuth: []
+      tags:
+        - review
+      description: >-
+        Retrieve a paginated list of reviews newest-first for moderation,
+        optionally filtered by status.
+      operationId: listReviews
+      summary: List reviews
+      x-google-backend:
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
   '/dashboard/reviews/{id}':
     delete:
       produces:
