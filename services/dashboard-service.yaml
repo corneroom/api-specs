@@ -2103,6 +2103,121 @@ paths:
         address: https://dashboard-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       x-codegen-request-body-name: notification
+  /dashboard/guides:
+    get:
+      tags:
+      - dashboard
+      summary: List guide applications
+      description: Retrieve a paginated list of guide applications for admin review, optionally filtered by status.
+      operationId: listGuides
+      parameters:
+      - name: status
+        in: query
+        schema:
+          type: string
+          enum: [none, pending, approved, rejected, suspended]
+      - name: page
+        in: query
+        schema:
+          type: integer
+          default: 1
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          default: 20
+      responses:
+        "200":
+          description: List of guides
+          content:
+            application/json:
+              schema:
+                type: object
+        "400":
+          description: Bad request
+          content: {}
+      security:
+      - jwtAuth: []
+      x-google-backend:
+        address: https://dashboard-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/guides/{id}:
+    get:
+      tags:
+      - dashboard
+      summary: Get a guide application
+      description: Retrieve a single guide application by ID for admin review.
+      operationId: getGuideById
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Guide details
+          content:
+            application/json:
+              schema:
+                type: object
+        "404":
+          description: Guide not found
+          content: {}
+      security:
+      - jwtAuth: []
+      x-google-backend:
+        address: https://dashboard-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/guides/{id}/moderate:
+    post:
+      tags:
+      - dashboard
+      summary: Moderate a guide application
+      description: Approve, reject, or suspend a guide application.
+      operationId: moderateGuide
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - action
+              properties:
+                action:
+                  type: string
+                  enum:
+                  - approve
+                  - reject
+                  - suspend
+                notes:
+                  type: string
+                  maxLength: 2000
+      responses:
+        "200":
+          description: Guide moderated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+        "400":
+          description: Bad request
+          content: {}
+        "404":
+          description: Guide not found
+          content: {}
+      security:
+      - jwtAuth: []
+      x-google-backend:
+        address: https://dashboard-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/experiences:
     get:
       tags:
