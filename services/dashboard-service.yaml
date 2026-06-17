@@ -3054,6 +3054,59 @@ paths:
         address: https://dashboard-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
 
+  /dashboard/analytics/pulse:
+    get:
+      tags:
+        - analytics
+      summary: Get pulse metrics + charts for a domain
+      description: >-
+        Live Pulse for a domain (bookings, listings, users, experiences or
+        overview). Returns a uniform presentation-ready shape — tiles, charts
+        (trend/donut/rose/bars), map layer refs and a recent feed — so the
+        dashboard renders any type generically.
+      operationId: getBookingPulse
+      parameters:
+        - name: domain
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [bookings, listings, users, experiences, overview]
+      responses:
+        "200":
+          description: Booking pulse data
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://dashboard-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+
+  /dashboard/analytics/geo:
+    get:
+      tags:
+        - analytics
+      summary: Get a geographic dataset for the maps
+      description: >-
+        Generic geo dataset for the dashboard maps. `dataset` selects the lens:
+        bookings (demand points), listings (supply points), revenue (money
+        points) or users (counts by country for a choropleth/bubble map).
+      operationId: getGeo
+      parameters:
+        - name: dataset
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [bookings, listings, users, revenue, experiences]
+      responses:
+        "200":
+          description: Geographic dataset (points and/or regions)
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://dashboard-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+
   /dashboard/financial/overview:
     get:
       tags:
@@ -5885,6 +5938,69 @@ paths:
       responses:
         "200":
           description: Ticket closed
+      security:
+      - jwtAuth: []
+      x-google-backend:
+        address: https://dashboard-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/support-tickets/{id}/priority:
+    patch:
+      tags:
+      - support-tickets
+      summary: Set support ticket priority
+      operationId: setSupportTicketPriority
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - priority
+              properties:
+                priority:
+                  type: string
+                  enum: [low, medium, high]
+      responses:
+        "200":
+          description: Priority updated
+      security:
+      - jwtAuth: []
+      x-google-backend:
+        address: https://dashboard-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/support-tickets/{id}/reply:
+    post:
+      tags:
+      - support-tickets
+      summary: Reply to a support ticket (emails the customer via an event)
+      operationId: replySupportTicket
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - body
+              properties:
+                body:
+                  type: string
+      responses:
+        "200":
+          description: Reply recorded and queued for delivery
       security:
       - jwtAuth: []
       x-google-backend:

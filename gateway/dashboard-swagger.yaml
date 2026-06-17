@@ -88,6 +88,35 @@ paths:
       x-google-backend:
         address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/analytics/geo:
+    get:
+      parameters:
+        - enum:
+            - bookings
+            - listings
+            - users
+            - revenue
+            - experiences
+          in: query
+          name: dataset
+          required: false
+          type: string
+      responses:
+        '200':
+          description: Geographic dataset (points and/or regions)
+      security:
+        - jwtAuth: []
+      tags:
+        - analytics
+      description: >-
+        Generic geo dataset for the dashboard maps. `dataset` selects the lens:
+        bookings (demand points), listings (supply points), revenue (money
+        points) or users (counts by country for a choropleth/bubble map).
+      operationId: getGeo
+      summary: Get a geographic dataset for the maps
+      x-google-backend:
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/analytics/listing:
     get:
       produces:
@@ -163,6 +192,36 @@ paths:
         and reviews.
       operationId: getOverviewMetrics
       summary: Get overview metrics
+      x-google-backend:
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/analytics/pulse:
+    get:
+      parameters:
+        - enum:
+            - bookings
+            - listings
+            - users
+            - experiences
+            - overview
+          in: query
+          name: domain
+          required: false
+          type: string
+      responses:
+        '200':
+          description: Booking pulse data
+      security:
+        - jwtAuth: []
+      tags:
+        - analytics
+      description: >-
+        Live Pulse for a domain (bookings, listings, users, experiences or
+        overview). Returns a uniform presentation-ready shape — tiles, charts
+        (trend/donut/rose/bars), map layer refs and a recent feed — so the
+        dashboard renders any type generically.
+      operationId: getBookingPulse
+      summary: Get pulse metrics + charts for a domain
       x-google-backend:
         address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
@@ -4071,6 +4130,72 @@ paths:
         - support-tickets
       operationId: closeSupportTicket
       summary: Close a support ticket
+      x-google-backend:
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/support-tickets/{id}/priority':
+    patch:
+      consumes:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            properties:
+              priority:
+                enum:
+                  - low
+                  - medium
+                  - high
+                type: string
+            required:
+              - priority
+            type: object
+      responses:
+        '200':
+          description: Priority updated
+      security:
+        - jwtAuth: []
+      tags:
+        - support-tickets
+      operationId: setSupportTicketPriority
+      summary: Set support ticket priority
+      x-google-backend:
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/support-tickets/{id}/reply':
+    post:
+      consumes:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            properties:
+              body:
+                type: string
+            required:
+              - body
+            type: object
+      responses:
+        '200':
+          description: Reply recorded and queued for delivery
+      security:
+        - jwtAuth: []
+      tags:
+        - support-tickets
+      operationId: replySupportTicket
+      summary: Reply to a support ticket (emails the customer via an event)
       x-google-backend:
         address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS

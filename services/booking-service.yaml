@@ -1025,6 +1025,10 @@ components:
         host: { $ref: "#/components/schemas/User" }
         check_in: { type: string, format: date-time }
         check_out: { type: string, format: date-time }
+        checkout_time:
+          type: string
+          description: "Standard checkout time for day-based bookings (HH:MM, 24h). Sourced from server config; use this to anchor the stay-progress bar rather than assuming midnight."
+          example: "09:00"
         rate: { type: number, format: float, example: 9.99 }
         amount: { type: number, format: float, example: 49.99 }
         total_paid:

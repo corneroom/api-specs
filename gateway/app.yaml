@@ -5207,6 +5207,17 @@ paths:
           schema:
             type: number
             format: double
+        - name: radius_km
+          in: query
+          description: >-
+            Search radius in kilometers for coordinate (latitude/longitude)
+            searches. Ignored when no valid coordinates are supplied. Invalid or
+            absent values fall back to the server default (50km); supplied
+            values are clamped to [1, 200].
+          required: false
+          schema:
+            type: number
+            format: double
         - name: category
           in: query
           description: >-
@@ -7912,6 +7923,66 @@ paths:
                 required:
                   - success
                   - error
+  /reports:
+    post:
+      summary: Report content
+      description: >-
+        Submit a generic content report (listing, user, review). The reporter is
+        taken from the authenticated token; the report is persisted for admin
+        moderation in the dashboard.
+      tags:
+        - listing
+      operationId: createReport
+      x-google-backend:
+        address: https://listing-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - type
+                - target_id
+                - reason
+              properties:
+                type:
+                  type: string
+                  enum:
+                    - listing
+                    - user
+                    - review
+                    - profile
+                  description: The kind of content being reported.
+                target_id:
+                  type: string
+                  description: ID of the reported entity.
+                reason:
+                  type: string
+                  description: Report reason code.
+                details:
+                  type: string
+                  maxLength: 1000
+                  description: Optional free-text details.
+      responses:
+        '201':
+          description: Report created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  report_id:
+                    type: string
+                  status:
+                    type: string
+        '400':
+          description: Invalid report
+        '401':
+          description: Unauthorized
   /listings/{id}/report:
     post:
       summary: Report a listing
@@ -8540,6 +8611,63 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /listings/{id}/host-calendar:
+    get:
+      summary: Host-only classified availability calendar
+      description: >
+        Authenticated host view of a listing's calendar. Each day is classified
+        open / booked / blocked; booked days carry guest identity. Caller must
+        be the listing host (non-hosts receive 404). The public, guest-free
+        calendar remains at /availability/calendar.
+      tags:
+        - listing
+      operationId: listingsGetHostCalendar
+      x-google-backend:
+        address: https://listing-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Listing ID
+        - name: days
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 60
+            minimum: 1
+            maximum: 365
+          description: Number of days from today (listing timezone) to classify
+      responses:
+        '200':
+          description: Host calendar retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseHostCalendar'
+        '401':
+          description: Unauthorized (missing or invalid token)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Listing not found or caller is not the host
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /listings/dashboard/{section}:
     get:
       summary: Get dashboard section data
@@ -8974,6 +9102,32 @@ paths:
           name: max_price
           schema:
             type: number
+        - in: query
+          name: search
+          description: >-
+            Case-insensitive substring over
+            title/category/city/guide/description
+          schema:
+            type: string
+        - in: query
+          name: category
+          description: >-
+            Exact category match (e.g. food, culture, outdoors, nightlife,
+            wellness)
+          schema:
+            type: string
+        - in: query
+          name: vibe
+          description: Discovery mood filter
+          schema:
+            type: string
+            enum:
+              - sunset
+              - water
+              - art
+              - food
+              - night
+              - wellness
       responses:
         '200':
           description: List of experiences
@@ -10539,6 +10693,90 @@ paths:
                 $ref: '#/components/schemas/DefaultResponse'
         '409':
           description: Duplicate review - review already exists for this booking
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+        default:
+          description: Default
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+  /reviews/experience:
+    post:
+      summary: Create a review for a completed Experience reservation
+      description: |
+        Create a review for a completed guide-led Experience. The author is
+        inferred from the JWT; the experience and guide are derived from the
+        reservation. Single 1-5 star rating + optional comment. Separate from
+        POST /reviews (which is for space listing/user reviews).
+      tags:
+        - review
+      operationId: createExperienceReview
+      x-google-backend:
+        address: https://review-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - booking_id
+                - rating
+              properties:
+                booking_id:
+                  type: string
+                  description: The experience reservation id.
+                rating:
+                  type: number
+                  description: Star rating, 1-5.
+                comment:
+                  type: string
+            examples:
+              guest_review_experience:
+                summary: Guest review of a completed experience
+                value:
+                  booking_id: resv_123
+                  rating: 5
+                  comment: Amazing local food tour!
+      responses:
+        '201':
+          description: Review created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewCreatedResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+        '403':
+          description: Not allowed (not the guest, or not completed)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+        '404':
+          description: Reservation not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultResponse'
+        '409':
+          description: Already reviewed
           content:
             application/json:
               schema:
@@ -16121,6 +16359,81 @@ components:
       required:
         - success
         - data
+    ApiResponseHostCalendar:
+      type: object
+      description: Standard API response for the host calendar.
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/HostCalendarData'
+        error:
+          type: string
+          example: ''
+        toast:
+          type: string
+          example: ''
+      required:
+        - success
+        - data
+    HostCalendarData:
+      type: object
+      description: Host-only classified availability calendar.
+      properties:
+        listing_id:
+          type: string
+        start_date:
+          type: string
+          format: date-time
+        end_date:
+          type: string
+          format: date-time
+        days:
+          type: array
+          items:
+            $ref: '#/components/schemas/HostCalendarDay'
+    HostCalendarDay:
+      type: object
+      description: One classified day in the host calendar.
+      properties:
+        date:
+          type: string
+          example: '2026-06-20'
+          description: YYYY-MM-DD in the listing timezone
+        state:
+          type: string
+          enum:
+            - open
+            - booked
+            - blocked
+        blackout_reason:
+          type: string
+          description: Present only when state is blocked
+          example: maintenance
+        booking:
+          $ref: '#/components/schemas/HostCalendarBooking'
+      required:
+        - date
+        - state
+    HostCalendarBooking:
+      type: object
+      description: Guest context attached to a booked day.
+      properties:
+        guest_name:
+          type: string
+          example: Maya G.
+        guest_avatar:
+          type: string
+        check_in:
+          type: string
+          example: '2026-06-20'
+        check_out:
+          type: string
+          example: '2026-06-22'
+        booking_code:
+          type: string
+          example: CR-8J3K2P
     AvailabilityCalendar:
       type: object
       description: Listing availability calendar data.
@@ -16334,6 +16647,17 @@ components:
         created_at:
           type: string
           format: date-time
+        next_session_at:
+          type: string
+          format: date-time
+          description: >-
+            Start time of the earliest upcoming scheduled session (omitted if
+            none)
+        vibes:
+          type: array
+          items:
+            type: string
+          description: Derived discovery moods (sunset, water, art, food, night, wellness)
       required:
         - id
         - title
@@ -16548,6 +16872,13 @@ components:
         check_out:
           type: string
           format: date-time
+        checkout_time:
+          type: string
+          description: >-
+            Standard checkout time for day-based bookings (HH:MM, 24h). Sourced
+            from server config; use this to anchor the stay-progress bar rather
+            than assuming midnight.
+          example: '09:00'
         rate:
           type: number
           format: float

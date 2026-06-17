@@ -3175,6 +3175,29 @@ paths:
         - in: query
           name: max_price
           type: number
+        - description: >-
+            Case-insensitive substring over
+            title/category/city/guide/description
+          in: query
+          name: search
+          type: string
+        - description: >-
+            Exact category match (e.g. food, culture, outdoors, nightlife,
+            wellness)
+          in: query
+          name: category
+          type: string
+        - description: Discovery mood filter
+          enum:
+            - sunset
+            - water
+            - art
+            - food
+            - night
+            - wellness
+          in: query
+          name: vibe
+          type: string
       responses:
         '200':
           description: List of experiences
@@ -3726,6 +3749,16 @@ paths:
           format: double
           in: query
           name: longitude
+          required: false
+          type: number
+        - description: >-
+            Search radius in kilometers for coordinate (latitude/longitude)
+            searches. Ignored when no valid coordinates are supplied. Invalid or
+            absent values fall back to the server default (50km); supplied
+            values are clamped to [1, 200].
+          format: double
+          in: query
+          name: radius_km
           required: false
           type: number
         - description: >-
@@ -7338,6 +7371,55 @@ paths:
       x-google-backend:
         address: 'https://listing-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
+  '/listings/{id}/host-calendar':
+    get:
+      produces:
+        - application/json
+      parameters:
+        - description: Listing ID
+          in: path
+          name: id
+          required: true
+          type: string
+        - default: 60
+          description: Number of days from today (listing timezone) to classify
+          in: query
+          maximum: 365
+          minimum: 1
+          name: days
+          required: false
+          type: integer
+      responses:
+        '200':
+          description: Host calendar retrieved successfully
+          schema:
+            $ref: '#/definitions/ApiResponseHostCalendar'
+        '401':
+          description: Unauthorized (missing or invalid token)
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '404':
+          description: Listing not found or caller is not the host
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        default:
+          description: Default error response
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+        - jwtAuth: []
+      tags:
+        - listing
+      description: >
+        Authenticated host view of a listing's calendar. Each day is classified
+        open / booked / blocked; booked days carry guest identity. Caller must
+        be the listing host (non-hosts receive 404). The public, guest-free
+        calendar remains at /availability/calendar.
+      operationId: listingsGetHostCalendar
+      summary: Host-only classified availability calendar
+      x-google-backend:
+        address: 'https://listing-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
   '/listings/{id}/report':
     post:
       consumes:
@@ -8922,6 +9004,68 @@ paths:
       x-google-backend:
         address: 'https://booking-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
+  /reports:
+    post:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            properties:
+              details:
+                description: Optional free-text details.
+                maxLength: 1000
+                type: string
+              reason:
+                description: Report reason code.
+                type: string
+              target_id:
+                description: ID of the reported entity.
+                type: string
+              type:
+                description: The kind of content being reported.
+                enum:
+                  - listing
+                  - user
+                  - review
+                  - profile
+                type: string
+            required:
+              - type
+              - target_id
+              - reason
+            type: object
+      responses:
+        '201':
+          description: Report created
+          schema:
+            properties:
+              report_id:
+                type: string
+              status:
+                type: string
+            type: object
+        '400':
+          description: Invalid report
+        '401':
+          description: Unauthorized
+      security:
+        - jwtAuth: []
+      tags:
+        - listing
+      description: >-
+        Submit a generic content report (listing, user, review). The reporter is
+        taken from the authenticated token; the report is persisted for admin
+        moderation in the dashboard.
+      operationId: createReport
+      summary: Report content
+      x-google-backend:
+        address: 'https://listing-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
   /reviews:
     get:
       produces:
@@ -9037,6 +9181,73 @@ paths:
         and other details.
       operationId: createReview
       summary: Create a new review (user or listing)
+      x-google-backend:
+        address: 'https://review-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /reviews/experience:
+    post:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            properties:
+              booking_id:
+                description: The experience reservation id.
+                type: string
+              comment:
+                type: string
+              rating:
+                description: 'Star rating, 1-5.'
+                type: number
+            required:
+              - booking_id
+              - rating
+            type: object
+      responses:
+        '201':
+          description: Review created.
+          schema:
+            $ref: '#/definitions/ReviewCreatedResponse'
+        '400':
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/DefaultResponse'
+        '401':
+          description: Authentication required
+          schema:
+            $ref: '#/definitions/DefaultResponse'
+        '403':
+          description: 'Not allowed (not the guest, or not completed)'
+          schema:
+            $ref: '#/definitions/DefaultResponse'
+        '404':
+          description: Reservation not found
+          schema:
+            $ref: '#/definitions/DefaultResponse'
+        '409':
+          description: Already reviewed
+          schema:
+            $ref: '#/definitions/DefaultResponse'
+        default:
+          description: Default
+          schema:
+            $ref: '#/definitions/DefaultResponse'
+      security:
+        - jwtAuth: []
+      tags:
+        - review
+      description: |
+        Create a review for a completed guide-led Experience. The author is
+        inferred from the JWT; the experience and guide are derived from the
+        reservation. Single 1-5 star rating + optional comment. Separate from
+        POST /reviews (which is for space listing/user reviews).
+      operationId: createExperienceReview
+      summary: Create a review for a completed Experience reservation
       x-google-backend:
         address: 'https://review-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
@@ -14746,6 +14957,24 @@ definitions:
       - success
       - data
     type: object
+  ApiResponseHostCalendar:
+    description: Standard API response for the host calendar.
+    properties:
+      data:
+        $ref: '#/definitions/HostCalendarData'
+      error:
+        example: ''
+        type: string
+      success:
+        example: true
+        type: boolean
+      toast:
+        example: ''
+        type: string
+    required:
+      - success
+      - data
+    type: object
   ApplyReferralRequest:
     properties:
       code:
@@ -14888,6 +15117,13 @@ definitions:
         type: string
       check_out:
         format: date-time
+        type: string
+      checkout_time:
+        description: >-
+          Standard checkout time for day-based bookings (HH:MM, 24h). Sourced
+          from server config; use this to anchor the stay-progress bar rather
+          than assuming midnight.
+        example: '09:00'
         type: string
       created_at:
         example: '2025-09-02T12:00:00Z'
@@ -16656,10 +16892,21 @@ definitions:
         $ref: '#/definitions/Location'
       max_group_size:
         type: integer
+      next_session_at:
+        description: >-
+          Start time of the earliest upcoming scheduled session (omitted if
+          none)
+        format: date-time
+        type: string
       price:
         type: number
       title:
         type: string
+      vibes:
+        description: 'Derived discovery moods (sunset, water, art, food, night, wellness)'
+        items:
+          type: string
+        type: array
       views:
         type: integer
     required:
@@ -17007,6 +17254,63 @@ definitions:
       - status
       - timestamp
       - version
+    type: object
+  HostCalendarBooking:
+    description: Guest context attached to a booked day.
+    properties:
+      booking_code:
+        example: CR-8J3K2P
+        type: string
+      check_in:
+        example: '2026-06-20'
+        type: string
+      check_out:
+        example: '2026-06-22'
+        type: string
+      guest_avatar:
+        type: string
+      guest_name:
+        example: Maya G.
+        type: string
+    type: object
+  HostCalendarData:
+    description: Host-only classified availability calendar.
+    properties:
+      days:
+        items:
+          $ref: '#/definitions/HostCalendarDay'
+        type: array
+      end_date:
+        format: date-time
+        type: string
+      listing_id:
+        type: string
+      start_date:
+        format: date-time
+        type: string
+    type: object
+  HostCalendarDay:
+    description: One classified day in the host calendar.
+    properties:
+      blackout_reason:
+        description: Present only when state is blocked
+        example: maintenance
+        type: string
+      booking:
+        $ref: '#/definitions/HostCalendarBooking'
+      date:
+        description: YYYY-MM-DD in the listing timezone
+        example: '2026-06-20'
+        type: string
+      state:
+        enum:
+          - open
+          - booked
+          - blocked
+        type: string
+    required:
+      - date
+      - state
     type: object
   HostCancellationReason:
     description: Reason code for host-initiated cancellations

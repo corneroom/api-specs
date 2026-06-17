@@ -225,6 +225,90 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DefaultResponse"
+  /reviews/experience:
+    post:
+      summary: Create a review for a completed Experience reservation
+      description: |
+        Create a review for a completed guide-led Experience. The author is
+        inferred from the JWT; the experience and guide are derived from the
+        reservation. Single 1-5 star rating + optional comment. Separate from
+        POST /reviews (which is for space listing/user reviews).
+      tags:
+        - review
+      operationId: createExperienceReview
+      x-google-backend:
+        address: https://review-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - booking_id
+                - rating
+              properties:
+                booking_id:
+                  type: string
+                  description: The experience reservation id.
+                rating:
+                  type: number
+                  description: Star rating, 1-5.
+                comment:
+                  type: string
+            examples:
+              guest_review_experience:
+                summary: Guest review of a completed experience
+                value:
+                  booking_id: "resv_123"
+                  rating: 5
+                  comment: "Amazing local food tour!"
+      responses:
+        "201":
+          description: Review created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewCreatedResponse"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultResponse"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultResponse"
+        "403":
+          description: Not allowed (not the guest, or not completed)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultResponse"
+        "404":
+          description: Reservation not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultResponse"
+        "409":
+          description: Already reviewed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultResponse"
+        default:
+          description: Default
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultResponse"
   /reviews/{id}:
     get:
       summary: Get a single review by ID
