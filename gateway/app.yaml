@@ -358,18 +358,6 @@ paths:
                         format: date-time
                       gender:
                         type: string
-                        enum:
-                          - Male
-                          - Female
-                          - Non-binary
-                          - Transgender
-                          - Genderqueer
-                          - Genderfluid
-                          - Agender
-                          - Two-spirit
-                          - Bigender
-                          - Other
-                          - Prefer not to say
                       status:
                         type: string
                         enum:
@@ -607,18 +595,6 @@ paths:
                         format: date-time
                       gender:
                         type: string
-                        enum:
-                          - Male
-                          - Female
-                          - Non-binary
-                          - Transgender
-                          - Genderqueer
-                          - Genderfluid
-                          - Agender
-                          - Two-spirit
-                          - Bigender
-                          - Other
-                          - Prefer not to say
                       status:
                         type: string
                         enum:
@@ -963,18 +939,6 @@ paths:
                         format: date-time
                       gender:
                         type: string
-                        enum:
-                          - Male
-                          - Female
-                          - Non-binary
-                          - Transgender
-                          - Genderqueer
-                          - Genderfluid
-                          - Agender
-                          - Two-spirit
-                          - Bigender
-                          - Other
-                          - Prefer not to say
                   toast:
                     type: string
                     example: Social authentication successful.
@@ -1121,18 +1085,6 @@ paths:
                         format: date-time
                       gender:
                         type: string
-                        enum:
-                          - Male
-                          - Female
-                          - Non-binary
-                          - Transgender
-                          - Genderqueer
-                          - Genderfluid
-                          - Agender
-                          - Two-spirit
-                          - Bigender
-                          - Other
-                          - Prefer not to say
                   toast:
                     type: string
                     example: Login successful.
@@ -1279,18 +1231,6 @@ paths:
                         format: date-time
                       gender:
                         type: string
-                        enum:
-                          - Male
-                          - Female
-                          - Non-binary
-                          - Transgender
-                          - Genderqueer
-                          - Genderfluid
-                          - Agender
-                          - Two-spirit
-                          - Bigender
-                          - Other
-                          - Prefer not to say
                   toast:
                     type: string
                     example: Login successful.
@@ -4588,6 +4528,129 @@ paths:
           description: Success
         '401':
           description: Unauthorized
+  /users/support-tickets:
+    post:
+      description: >
+        Submit a support request. Authenticated; the requester's user_id and
+
+        email are taken from the JWT (not the body). The handler writes a
+
+        `support_tickets` Firestore document (read by the admin dashboard) and
+
+        publishes a `support_requested` event for the Slack alert and an
+        optional
+
+        acknowledgement. messaging-service is internal/event-driven and is never
+
+        called directly.
+      summary: Submit a support ticket
+      tags:
+        - user
+      operationId: createSupportTicket
+      x-google-backend:
+        address: https://user-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      requestBody:
+        description: The support request.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - category
+                - subject
+                - message
+              properties:
+                category:
+                  type: string
+                  description: Ticket category (free-form label chosen in the app).
+                  maxLength: 60
+                  example: Booking Issue
+                subject:
+                  type: string
+                  description: Short summary of the issue.
+                  maxLength: 200
+                  example: Can't check in to my booking
+                message:
+                  type: string
+                  description: Full description of the issue.
+                  maxLength: 5000
+                  example: >-
+                    The host hasn't shared the access code and check-in is in 1
+                    hour.
+      responses:
+        '201':
+          description: The created support ticket.
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Response containing the created support ticket.
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        example: tkt_a1b2c3
+                      status:
+                        type: string
+                        example: open
+                      category:
+                        type: string
+                        example: Booking Issue
+                      subject:
+                        type: string
+                        example: Can't check in to my booking
+                    required:
+                      - id
+                      - status
+                required:
+                  - success
+                  - data
+        '400':
+          description: Invalid request (missing or invalid fields).
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: subject is required.
+                  toast:
+                    type: string
+                    example: Please add a category, subject and message.
+                required:
+                  - success
+                  - error
+        '401':
+          description: Unauthorized (missing or invalid access token).
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: Unauthorized.
+                required:
+                  - success
+                  - error
   /internal/users/{userId}/verifications/{type}:
     patch:
       description: Update verification status for a user (service-to-service only)
@@ -8911,32 +8974,6 @@ paths:
           name: max_price
           schema:
             type: number
-        - in: query
-          name: search
-          description: >-
-            Case-insensitive substring over
-            title/category/city/guide/description
-          schema:
-            type: string
-        - in: query
-          name: category
-          description: >-
-            Exact category match (e.g. food, culture, outdoors, nightlife,
-            wellness)
-          schema:
-            type: string
-        - in: query
-          name: vibe
-          description: Discovery mood filter
-          schema:
-            type: string
-            enum:
-              - sunset
-              - water
-              - art
-              - food
-              - night
-              - wellness
       responses:
         '200':
           description: List of experiences
@@ -15358,7 +15395,6 @@ components:
                 - male
                 - female
                 - lgbtq
-                - other
                 - prefer_not_to_say
             city:
               type: string
@@ -16298,17 +16334,6 @@ components:
         created_at:
           type: string
           format: date-time
-        next_session_at:
-          type: string
-          format: date-time
-          description: >-
-            Start time of the earliest upcoming scheduled session (omitted if
-            none)
-        vibes:
-          type: array
-          items:
-            type: string
-          description: Derived discovery moods (sunset, water, art, food, night, wellness)
       required:
         - id
         - title

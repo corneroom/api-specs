@@ -3175,29 +3175,6 @@ paths:
         - in: query
           name: max_price
           type: number
-        - description: >-
-            Case-insensitive substring over
-            title/category/city/guide/description
-          in: query
-          name: search
-          type: string
-        - description: >-
-            Exact category match (e.g. food, culture, outdoors, nightlife,
-            wellness)
-          in: query
-          name: category
-          type: string
-        - description: Discovery mood filter
-          enum:
-            - sunset
-            - water
-            - art
-            - food
-            - night
-            - wellness
-          in: query
-          name: vibe
-          type: string
       responses:
         '200':
           description: List of experiences
@@ -9640,18 +9617,6 @@ paths:
                   first_name:
                     type: string
                   gender:
-                    enum:
-                      - Male
-                      - Female
-                      - Non-binary
-                      - Transgender
-                      - Genderqueer
-                      - Genderfluid
-                      - Agender
-                      - Two-spirit
-                      - Bigender
-                      - Other
-                      - Prefer not to say
                     type: string
                   id:
                     type: string
@@ -10139,18 +10104,6 @@ paths:
                   first_name:
                     type: string
                   gender:
-                    enum:
-                      - Male
-                      - Female
-                      - Non-binary
-                      - Transgender
-                      - Genderqueer
-                      - Genderfluid
-                      - Agender
-                      - Two-spirit
-                      - Bigender
-                      - Other
-                      - Prefer not to say
                     type: string
                   id:
                     type: string
@@ -12972,18 +12925,6 @@ paths:
                   first_name:
                     type: string
                   gender:
-                    enum:
-                      - Male
-                      - Female
-                      - Non-binary
-                      - Transgender
-                      - Genderqueer
-                      - Genderfluid
-                      - Agender
-                      - Two-spirit
-                      - Bigender
-                      - Other
-                      - Prefer not to say
                     type: string
                   id:
                     type: string
@@ -13402,18 +13343,6 @@ paths:
                   first_name:
                     type: string
                   gender:
-                    enum:
-                      - Male
-                      - Female
-                      - Non-binary
-                      - Transgender
-                      - Genderqueer
-                      - Genderfluid
-                      - Agender
-                      - Two-spirit
-                      - Bigender
-                      - Other
-                      - Prefer not to say
                     type: string
                   id:
                     type: string
@@ -13560,18 +13489,6 @@ paths:
                   first_name:
                     type: string
                   gender:
-                    enum:
-                      - Male
-                      - Female
-                      - Non-binary
-                      - Transgender
-                      - Genderqueer
-                      - Genderfluid
-                      - Agender
-                      - Two-spirit
-                      - Bigender
-                      - Other
-                      - Prefer not to say
                     type: string
                   id:
                     type: string
@@ -13654,6 +13571,127 @@ paths:
       description: Authenticates user via social login provider.
       operationId: socialAuth
       summary: User auth via social media
+      x-google-backend:
+        address: 'https://user-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /users/support-tickets:
+    post:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - description: The support request.
+          in: body
+          name: body
+          required: true
+          schema:
+            properties:
+              category:
+                description: Ticket category (free-form label chosen in the app).
+                example: Booking Issue
+                maxLength: 60
+                type: string
+              message:
+                description: Full description of the issue.
+                example: >-
+                  The host hasn't shared the access code and check-in is in 1
+                  hour.
+                maxLength: 5000
+                type: string
+              subject:
+                description: Short summary of the issue.
+                example: Can't check in to my booking
+                maxLength: 200
+                type: string
+            required:
+              - category
+              - subject
+              - message
+            type: object
+      responses:
+        '201':
+          description: The created support ticket.
+          schema:
+            description: Response containing the created support ticket.
+            properties:
+              data:
+                properties:
+                  category:
+                    example: Booking Issue
+                    type: string
+                  id:
+                    example: tkt_a1b2c3
+                    type: string
+                  status:
+                    example: open
+                    type: string
+                  subject:
+                    example: Can't check in to my booking
+                    type: string
+                required:
+                  - id
+                  - status
+                type: object
+              success:
+                example: true
+                type: boolean
+            required:
+              - success
+              - data
+            type: object
+        '400':
+          description: Invalid request (missing or invalid fields).
+          schema:
+            description: Standard error response model for failed requests.
+            properties:
+              error:
+                example: subject is required.
+                type: string
+              success:
+                example: false
+                type: boolean
+              toast:
+                example: 'Please add a category, subject and message.'
+                type: string
+            required:
+              - success
+              - error
+            type: object
+        '401':
+          description: Unauthorized (missing or invalid access token).
+          schema:
+            description: Standard error response model for failed requests.
+            properties:
+              error:
+                example: Unauthorized.
+                type: string
+              success:
+                example: false
+                type: boolean
+            required:
+              - success
+              - error
+            type: object
+      security:
+        - jwtAuth: []
+      tags:
+        - user
+      description: >
+        Submit a support request. Authenticated; the requester's user_id and
+
+        email are taken from the JWT (not the body). The handler writes a
+
+        `support_tickets` Firestore document (read by the admin dashboard) and
+
+        publishes a `support_requested` event for the Slack alert and an
+        optional
+
+        acknowledgement. messaging-service is internal/event-driven and is never
+
+        called directly.
+      operationId: createSupportTicket
+      summary: Submit a support ticket
       x-google-backend:
         address: 'https://user-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
@@ -16035,7 +16073,6 @@ definitions:
               - male
               - female
               - lgbtq
-              - other
               - prefer_not_to_say
             type: string
           last_name:
@@ -16619,21 +16656,10 @@ definitions:
         $ref: '#/definitions/Location'
       max_group_size:
         type: integer
-      next_session_at:
-        description: >-
-          Start time of the earliest upcoming scheduled session (omitted if
-          none)
-        format: date-time
-        type: string
       price:
         type: number
       title:
         type: string
-      vibes:
-        description: 'Derived discovery moods (sunset, water, art, food, night, wellness)'
-        items:
-          type: string
-        type: array
       views:
         type: integer
     required:
