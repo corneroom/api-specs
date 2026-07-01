@@ -3676,59 +3676,6 @@ paths:
       x-google-backend:
         address: 'https://chat-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
-  '/internal/users/{userId}/verifications/{type}':
-    patch:
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      parameters:
-        - description: User ID
-          in: path
-          name: userId
-          required: true
-          type: string
-        - description: 'Verification type (facematch, location, voice, background)'
-          in: path
-          name: type
-          required: true
-          type: string
-        - in: body
-          name: body
-          required: true
-          schema:
-            properties:
-              status:
-                description: Verification status
-                enum:
-                  - pending
-                  - processing
-                  - approved
-                  - rejected
-                  - failed
-                  - needs_review
-                type: string
-            required:
-              - status
-            type: object
-      responses:
-        '200':
-          description: Verification status updated successfully
-          schema:
-            $ref: '#/definitions/APIResponse'
-        '400':
-          description: Invalid request
-        '500':
-          description: Server error
-      security: []
-      tags:
-        - internal
-      description: Update verification status for a user (service-to-service only)
-      operationId: updateVerificationStatus
-      summary: Update verification status
-      x-google-backend:
-        address: 'https://user-service-981292602655.us-central1.run.app'
-        path_translation: APPEND_PATH_TO_ADDRESS
   /listings:
     get:
       produces:
@@ -9105,6 +9052,13 @@ paths:
           name: role
           required: false
           type: string
+        - description: >
+            Filter experience reviews by guide_id — a guide's received reviews.
+            Sufficient on its own (no other filter required).
+          in: query
+          name: guide
+          required: false
+          type: string
         - default: 1
           in: query
           name: page
@@ -14282,6 +14236,64 @@ paths:
       x-google-backend:
         address: 'https://verification-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
+  /verifications/selfie:
+    post:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - default: en
+          description: Preferred language for response messages
+          enum:
+            - en
+            - en-US
+            - fr
+            - fr-FR
+            - es
+            - es-ES
+          in: header
+          name: Accept-Language
+          required: false
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/SelfieSubmissionRequest'
+      responses:
+        '200':
+          description: Selfie verification submitted successfully
+          schema:
+            allOf:
+              - $ref: '#/definitions/APIResponse'
+              - properties:
+                  data:
+                    $ref: '#/definitions/VerificationSubmissionResponse'
+                type: object
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/APIResponse'
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/APIResponse'
+      security:
+        - jwtAuth: []
+      tags:
+        - verification
+      description: >
+        Submit a lightweight selfie verification (selfie + liveness, no ID
+        document).
+
+        Used as the first-booking trust check for guests who are not yet
+        ID-verified.
+      operationId: submitSelfieVerification
+      summary: Submit Tier-1 selfie verification request
+      x-google-backend:
+        address: 'https://verification-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
   /verifications/voice:
     post:
       consumes:
@@ -15191,6 +15203,15 @@ definitions:
       payment_id:
         example: pay_001
         type: string
+      payment_options:
+        description: >-
+          Which payment providers may be offered to the guest for this booking's
+          currency (e.g. PayPal is unavailable for ZAR). Present on the active
+          booking step (initiate/draft). Absent when eligibility could not be
+          resolved — clients should then offer all methods.
+        items:
+          $ref: '#/definitions/PaymentOption'
+        type: array
       payment_provider:
         description: 'Payment provider name (stripe, paypal, etc.)'
         example: stripe
@@ -15841,6 +15862,8 @@ definitions:
         type: string
       first_session:
         $ref: '#/definitions/SessionRequest'
+      know_before_you_go:
+        type: string
       location:
         $ref: '#/definitions/Location'
       max_group_size:
@@ -15856,8 +15879,21 @@ definitions:
           - free
           - paid
         type: string
+      safety_info:
+        type: string
+      time_of_day:
+        description: morning|afternoon|evening — drives discovery time/vibe filters
+        items:
+          type: string
+        type: array
       title:
         maxLength: 200
+        type: string
+      what_to_bring:
+        items:
+          type: string
+        type: array
+      what_to_wear:
         type: string
       whats_included:
         items:
@@ -18028,6 +18064,25 @@ definitions:
       - success
       - data
     type: object
+  PaymentOption:
+    description: Whether a payment provider can be offered for the booking's currency.
+    properties:
+      enabled:
+        description: Whether this provider may be shown to the guest.
+        example: false
+        type: boolean
+      provider:
+        description: Payment provider identifier.
+        enum:
+          - stripe
+          - paypal
+        example: paypal
+        type: string
+      reason:
+        description: User-facing explanation when the provider is disabled.
+        example: PayPal isn't available for ZAR
+        type: string
+    type: object
   PopularLocations:
     properties:
       countries:
@@ -18665,6 +18720,23 @@ definitions:
         description: Category-specific metrics (flexible)
         type: object
     type: object
+  SelfieSubmissionRequest:
+    properties:
+      device_info:
+        default: {}
+        description: Device information for security
+        type: object
+      metadata:
+        default: {}
+        description: Additional metadata (e.g. liveness signal)
+        type: object
+      selfie_image_url:
+        description: URL of the captured selfie photo
+        format: uri
+        type: string
+    required:
+      - selfie_image_url
+    type: object
   SendMessageRequest:
     properties:
       content:
@@ -19108,6 +19180,8 @@ definitions:
         type: integer
       end_point:
         type: string
+      know_before_you_go:
+        type: string
       location:
         $ref: '#/definitions/Location'
       max_group_size:
@@ -19123,8 +19197,21 @@ definitions:
           - free
           - paid
         type: string
+      safety_info:
+        type: string
+      time_of_day:
+        description: morning|afternoon|evening — drives discovery time/vibe filters
+        items:
+          type: string
+        type: array
       title:
         maxLength: 200
+        type: string
+      what_to_bring:
+        items:
+          type: string
+        type: array
+      what_to_wear:
         type: string
       whats_included:
         items:

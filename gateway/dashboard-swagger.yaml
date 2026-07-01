@@ -1758,6 +1758,83 @@ paths:
       x-google-backend:
         address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/financial/trend:
+    get:
+      produces:
+        - application/json
+      parameters:
+        - default: 90
+          description: Trailing window size in days
+          in: query
+          maximum: 365
+          minimum: 1
+          name: days
+          type: integer
+      responses:
+        '200':
+          description: Transaction trend data
+          schema:
+            properties:
+              data:
+                properties:
+                  byStatus:
+                    items:
+                      properties:
+                        count:
+                          type: integer
+                        status:
+                          type: string
+                      type: object
+                    type: array
+                  byType:
+                    items:
+                      properties:
+                        count:
+                          type: integer
+                        type:
+                          type: string
+                      type: object
+                    type: array
+                  daily:
+                    items:
+                      properties:
+                        booking:
+                          type: integer
+                        date:
+                          type: string
+                        experience:
+                          type: integer
+                        refund:
+                          type: integer
+                        total:
+                          type: integer
+                      type: object
+                    type: array
+                  rangeDays:
+                    type: integer
+                  total:
+                    type: integer
+                type: object
+              status:
+                type: string
+            type: object
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/Error400Response'
+      security:
+        - jwtAuth: []
+      tags:
+        - financial
+      description: >-
+        Count-based transaction trend over the last N days — daily counts split
+        by type, plus by-type and by-status totals. Counts are
+        currency-agnostic.
+      operationId: getTransactionTrend
+      summary: Get transaction trend
+      x-google-backend:
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/firebase/config:
     get:
       produces:

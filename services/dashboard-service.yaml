@@ -3195,6 +3195,77 @@ paths:
         address: https://dashboard-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
 
+  /dashboard/financial/trend:
+    get:
+      tags:
+        - financial
+      summary: Get transaction trend
+      description: >-
+        Count-based transaction trend over the last N days — daily counts split
+        by type, plus by-type and by-status totals. Counts are currency-agnostic.
+      operationId: getTransactionTrend
+      parameters:
+        - name: days
+          in: query
+          schema:
+            type: integer
+            default: 90
+            minimum: 1
+            maximum: 365
+          description: Trailing window size in days
+      responses:
+        "200":
+          description: Transaction trend data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      rangeDays:
+                        type: integer
+                      total:
+                        type: integer
+                      daily:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            date: { type: string }
+                            booking: { type: integer }
+                            experience: { type: integer }
+                            refund: { type: integer }
+                            total: { type: integer }
+                      byStatus:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            status: { type: string }
+                            count: { type: integer }
+                      byType:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            type: { type: string }
+                            count: { type: integer }
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error400Response'
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://dashboard-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+
   /dashboard/payouts:
     get:
       tags:

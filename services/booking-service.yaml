@@ -1158,6 +1158,15 @@ components:
         pricing_breakdown:
           $ref: "#/components/schemas/PricingBreakdown"
           description: Computed pricing breakdown (subtotal, fees, taxes, total). Present when booking has amount (dates selected).
+        payment_options:
+          type: array
+          description: >-
+            Which payment providers may be offered to the guest for this booking's
+            currency (e.g. PayPal is unavailable for ZAR). Present on the active
+            booking step (initiate/draft). Absent when eligibility could not be
+            resolved — clients should then offer all methods.
+          items:
+            $ref: "#/components/schemas/PaymentOption"
         display_currency:
           type: string
           description: "Guest's locale currency ISO 4217 code (e.g. \"CAD\"). Only set when different from listing charge currency."
@@ -1534,6 +1543,23 @@ components:
       required:
         - subtotal
 
+    PaymentOption:
+      type: object
+      description: Whether a payment provider can be offered for the booking's currency.
+      properties:
+        provider:
+          type: string
+          description: Payment provider identifier.
+          enum: [stripe, paypal]
+          example: paypal
+        enabled:
+          type: boolean
+          description: Whether this provider may be shown to the guest.
+          example: false
+        reason:
+          type: string
+          description: User-facing explanation when the provider is disabled.
+          example: "PayPal isn't available for ZAR"
     PricingBreakdown:
       type: object
       description: Complete pricing breakdown with fees and taxes

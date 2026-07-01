@@ -4982,6 +4982,21 @@ components:
           type: array
           items:
             type: string
+        what_to_bring:
+          type: array
+          items:
+            type: string
+        what_to_wear:
+          type: string
+        safety_info:
+          type: string
+        know_before_you_go:
+          type: string
+        time_of_day:
+          type: array
+          description: morning|afternoon|evening — drives discovery time/vibe filters
+          items:
+            type: string
         meeting_point:
           type: string
         end_point:
@@ -5035,6 +5050,21 @@ components:
           type: string
         whats_included:
           type: array
+          items:
+            type: string
+        what_to_bring:
+          type: array
+          items:
+            type: string
+        what_to_wear:
+          type: string
+        safety_info:
+          type: string
+        know_before_you_go:
+          type: string
+        time_of_day:
+          type: array
+          description: morning|afternoon|evening — drives discovery time/vibe filters
           items:
             type: string
         meeting_point:

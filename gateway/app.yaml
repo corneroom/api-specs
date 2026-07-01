@@ -4651,60 +4651,6 @@ paths:
                 required:
                   - success
                   - error
-  /internal/users/{userId}/verifications/{type}:
-    patch:
-      description: Update verification status for a user (service-to-service only)
-      summary: Update verification status
-      operationId: updateVerificationStatus
-      tags:
-        - internal
-      x-google-backend:
-        address: https://user-service-981292602655.us-central1.run.app
-        path_translation: APPEND_PATH_TO_ADDRESS
-      parameters:
-        - name: userId
-          in: path
-          required: true
-          description: User ID
-          schema:
-            type: string
-        - name: type
-          in: path
-          required: true
-          description: Verification type (facematch, location, voice, background)
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                status:
-                  type: string
-                  description: Verification status
-                  enum:
-                    - pending
-                    - processing
-                    - approved
-                    - rejected
-                    - failed
-                    - needs_review
-              required:
-                - status
-      responses:
-        '200':
-          description: Verification status updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/APIResponse'
-        '400':
-          description: Invalid request
-        '500':
-          description: Server error
-      security: []
   /listings/heartbeat:
     get:
       summary: Heartbeat
@@ -10576,6 +10522,14 @@ paths:
             Filter user-type reviews by the target's role. 'host' returns
             reviews of the target as a host (guest_review_host=true). 'guest'
             returns reviews of the target as a guest (host_review_guest=true).
+        - name: guide
+          in: query
+          required: false
+          schema:
+            type: string
+          description: >
+            Filter experience reviews by guide_id — a guide's received reviews.
+            Sufficient on its own (no other filter required).
         - name: page
           in: query
           required: false
@@ -15046,6 +15000,68 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/APIResponse'
+  /verifications/selfie:
+    post:
+      operationId: submitSelfieVerification
+      summary: Submit Tier-1 selfie verification request
+      description: >
+        Submit a lightweight selfie verification (selfie + liveness, no ID
+        document).
+
+        Used as the first-booking trust check for guests who are not yet
+        ID-verified.
+      tags:
+        - verification
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://verification-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: Accept-Language
+          in: header
+          required: false
+          description: Preferred language for response messages
+          schema:
+            type: string
+            default: en
+            enum:
+              - en
+              - en-US
+              - fr
+              - fr-FR
+              - es
+              - es-ES
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SelfieSubmissionRequest'
+      responses:
+        '200':
+          description: Selfie verification submitted successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/APIResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/VerificationSubmissionResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
   /verifications/location:
     post:
       operationId: submitLocationVerification
@@ -16555,6 +16571,21 @@ components:
             - strict
         first_session:
           $ref: '#/components/schemas/SessionRequest'
+        what_to_bring:
+          type: array
+          items:
+            type: string
+        what_to_wear:
+          type: string
+        safety_info:
+          type: string
+        know_before_you_go:
+          type: string
+        time_of_day:
+          type: array
+          description: morning|afternoon|evening — drives discovery time/vibe filters
+          items:
+            type: string
       required:
         - title
         - description
@@ -16617,6 +16648,21 @@ components:
           type: string
         location:
           $ref: '#/components/schemas/Location'
+        what_to_bring:
+          type: array
+          items:
+            type: string
+        what_to_wear:
+          type: string
+        safety_info:
+          type: string
+        know_before_you_go:
+          type: string
+        time_of_day:
+          type: array
+          description: morning|afternoon|evening — drives discovery time/vibe filters
+          items:
+            type: string
     ExperienceResponse:
       type: object
       properties:
@@ -17063,6 +17109,15 @@ components:
           description: >-
             Computed pricing breakdown (subtotal, fees, taxes, total). Present
             when booking has amount (dates selected).
+        payment_options:
+          type: array
+          description: >-
+            Which payment providers may be offered to the guest for this
+            booking's currency (e.g. PayPal is unavailable for ZAR). Present on
+            the active booking step (initiate/draft). Absent when eligibility
+            could not be resolved — clients should then offer all methods.
+          items:
+            $ref: '#/components/schemas/PaymentOption'
         display_currency:
           type: string
           description: >-
@@ -17543,6 +17598,25 @@ components:
           example: CA
       required:
         - subtotal
+    PaymentOption:
+      type: object
+      description: Whether a payment provider can be offered for the booking's currency.
+      properties:
+        provider:
+          type: string
+          description: Payment provider identifier.
+          enum:
+            - stripe
+            - paypal
+          example: paypal
+        enabled:
+          type: boolean
+          description: Whether this provider may be shown to the guest.
+          example: false
+        reason:
+          type: string
+          description: User-facing explanation when the provider is disabled.
+          example: PayPal isn't available for ZAR
     PricingBreakdown:
       type: object
       description: Complete pricing breakdown with fees and taxes
@@ -20041,6 +20115,23 @@ components:
           default: {}
       required:
         - audio_url
+    SelfieSubmissionRequest:
+      type: object
+      properties:
+        selfie_image_url:
+          type: string
+          format: uri
+          description: URL of the captured selfie photo
+        device_info:
+          type: object
+          description: Device information for security
+          default: {}
+        metadata:
+          type: object
+          description: Additional metadata (e.g. liveness signal)
+          default: {}
+      required:
+        - selfie_image_url
     GeoLocation:
       type: object
       properties:

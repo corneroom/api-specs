@@ -137,6 +137,60 @@ paths:
               schema:
                 $ref: '#/components/schemas/APIResponse'
 
+  /verifications/selfie:
+    post:
+      operationId: submitSelfieVerification
+      summary: Submit Tier-1 selfie verification request
+      description: |
+        Submit a lightweight selfie verification (selfie + liveness, no ID document).
+        Used as the first-booking trust check for guests who are not yet ID-verified.
+      tags:
+        - verification
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://verification-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - name: Accept-Language
+          in: header
+          required: false
+          description: Preferred language for response messages
+          schema:
+            type: string
+            default: "en"
+            enum: ["en", "en-US", "fr", "fr-FR", "es", "es-ES"]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SelfieSubmissionRequest'
+      responses:
+        '200':
+          description: Selfie verification submitted successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/APIResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/VerificationSubmissionResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+
   /verifications/location:
     post:
       operationId: submitLocationVerification
@@ -532,6 +586,24 @@ components:
           default: {}
       required:
         - audio_url
+
+    SelfieSubmissionRequest:
+      type: object
+      properties:
+        selfie_image_url:
+          type: string
+          format: uri
+          description: URL of the captured selfie photo
+        device_info:
+          type: object
+          description: Device information for security
+          default: {}
+        metadata:
+          type: object
+          description: Additional metadata (e.g. liveness signal)
+          default: {}
+      required:
+        - selfie_image_url
 
     GeoLocation:
       type: object
