@@ -20,6 +20,8 @@ npm-debug.log*
 .env.test.local
 .env.production.local
 .env.example
+# ...but do commit the gateway-test env template
+!tests/.env.example
 
 # Editor directories and files
 .idea/

@@ -118,14 +118,19 @@ check-prereqs: ## Check if all required tools are installed
 	@command -v jq >/dev/null 2>&1 || (echo "❌ jq not found" && exit 1)
 	@echo "✅ All prerequisites met"
 
-# Test gateway endpoints
-test-gateway: ## Test deployed gateway endpoints
-	@echo "🧪 Testing gateway endpoints..."
+# Gateway integration test suite (tests/)
+test-gateway: ## Run the gateway integration suite (auth-aware, per-service; see tests/)
+	@node tests/run.mjs
+test-gw: test-gateway ## Alias for test-gateway
+
+# Quick health-only ping of the deployed gateways (no auth, no suite)
+gateway-health: ## Curl /health on each deployed gateway
+	@echo "🧪 Pinging gateway health..."
 	@for gw in $$(jq -r '.gateways | keys[]' $(CONFIG_PATH)); do \
 		STAGING_GW_NAME="$${gw}-staging-gateway"; \
 		GW_URL=$$(gcloud api-gateway gateways describe "$$STAGING_GW_NAME" --location="$(LOCATION)" --project="$(PROJECT_ID)" --format="value(defaultHostname)" 2>/dev/null); \
 		if [ -n "$$GW_URL" ]; then \
-			echo "🌐 Testing $$gw gateway: https://$$GW_URL"; \
+			echo "🌐 $$gw: https://$$GW_URL"; \
 			curl -s -o /dev/null -w "Status: %{http_code}, Time: %{time_total}s\n" "https://$$GW_URL/api/v1/health" || echo "❌ Health check failed"; \
 		else \
 			echo "❌ Gateway $$STAGING_GW_NAME not found"; \
