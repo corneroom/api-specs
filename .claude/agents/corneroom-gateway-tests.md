@@ -97,6 +97,9 @@ export default {
   `gateway/app-swagger.yaml` to drive tests.
 - `corneroom/api-specs` is a backend/infra repo → after tests pass, commit and push to `main`
   (per Corneroom's backend push policy). Write commit messages a reviewer will read.
+- **After pushing, WATCH CI to green** (`gh run watch <id> --exit-status`); a push isn't done
+  until the run passes. On failure, `gh run view <id> --log-failed`, fix real failures, re-run
+  infra flakes. Don't assume a push succeeded.
 - Always leave `make test-gateway` **green** before committing. Run it to verify.
 - Match the existing style: small readable case tables, per-service files, the shared
   `authHeaders` model. Don't introduce heavy frameworks; `node:fetch` + the existing runner is enough.
