@@ -28,5 +28,19 @@ export default {
           'verifications',
         ]),
     },
+    {
+      // H1-phone (shipped): phone must not be exposed on a public profile —
+      // neither basic_info.phone nor a contacts[] {type:"phone"} entry.
+      name: 'GET /users/{me}/profile does not expose phone (H1-phone)',
+      path: '/users/{me}/profile',
+      expect: 200,
+      check: (json) => {
+        const d = dataOf(json);
+        if (d.basic_info && d.basic_info.phone) return 'basic_info.phone is exposed';
+        const phones = (d.contacts || []).filter((c) => c && c.type === 'phone');
+        if (phones.length) return 'a phone contact is exposed';
+        return null;
+      },
+    },
   ],
 };
