@@ -3754,6 +3754,14 @@ paths:
           name: gender
           required: false
           type: string
+        - description: >-
+            Minimum guest count to accommodate. Only listings with max_guests >=
+            this value are returned.
+          in: query
+          minimum: 1
+          name: guests
+          required: false
+          type: integer
         - default: 1
           description: Page number (starts at 1)
           in: query
@@ -4638,6 +4646,14 @@ paths:
           name: min_rating
           required: false
           type: number
+        - description: >-
+            Minimum guest count to accommodate. Only listings with max_guests >=
+            this value are returned.
+          in: query
+          minimum: 1
+          name: guests
+          required: false
+          type: integer
       responses:
         '200':
           description: Successful dashboard section data retrieval

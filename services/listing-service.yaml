@@ -558,6 +558,13 @@ paths:
           required: false
           schema:
             type: string
+        - name: guests
+          in: query
+          description: Minimum guest count to accommodate. Only listings with max_guests >= this value are returned.
+          required: false
+          schema:
+            type: integer
+            minimum: 1
         - name: page
           in: query
           description: Page number (starts at 1)
@@ -3961,6 +3968,13 @@ paths:
             type: number
             format: double
             default: 4.8
+        - name: guests
+          in: query
+          description: Minimum guest count to accommodate. Only listings with max_guests >= this value are returned.
+          required: false
+          schema:
+            type: integer
+            minimum: 1
       responses:
         "200":
           description: Successful dashboard section data retrieval
