@@ -11,10 +11,32 @@
 const LAT = '43.90792414274335';
 const LNG = '-79.50215343385935';
 
+import { dataOf, requirePresent } from '../lib/assert.mjs';
+
 export default {
   name: 'listing-service',
   cases: [
-    { name: 'GET /listings (browse)', path: '/listings?limit=3', expect: 200 },
+    // Browse + shape guard: `location` is FLATTENED to {city,country} by the REST
+    // layer (stored nested as location.address.*). The app renders location.city /
+    // location.country and category.code directly, so this guards that contract —
+    // a 200 with a re-nested/renamed location would still render broken.
+    {
+      name: 'GET /listings (browse)',
+      path: '/listings?limit=3',
+      expect: 200,
+      check: (json) => {
+        const d = dataOf(json);
+        if (!Array.isArray(d)) return 'expected an array of listings';
+        if (d.length === 0) return null; // empty is valid; shape check needs an item
+        return requirePresent(d[0], [
+          'id',
+          'title',
+          'location.city',
+          'location.country',
+          'category.code',
+        ]);
+      },
+    },
     // Map "search this area": geo + country, no category (needs the
     // active/deleted/country/status/geohash index).
     {

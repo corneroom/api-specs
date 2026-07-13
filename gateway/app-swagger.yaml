@@ -690,6 +690,52 @@ paths:
       x-google-backend:
         address: 'https://booking-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
+  '/bookings/{id}/revalidate':
+    patch:
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Booking is still payable
+          schema:
+            $ref: '#/definitions/ApiResponseBooking'
+        '400':
+          description: Booking is no longer payable (dates passed or listing unavailable)
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '403':
+          description: Forbidden - booking does not belong to the authenticated user
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '404':
+          description: Booking not found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        default:
+          description: Default error response
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+        - jwtAuth: []
+      tags:
+        - booking
+      description: >-
+        Re-runs the same past-date + listing-availability checks applied at
+        booking creation/finalize against an already-finalized (unpaid)
+        booking's stored dates. Used by the "Complete Your Booking" resume flow
+        right before the guest pays, so a booking whose dates have passed or
+        that lost availability while unpaid cannot be paid for. Owner-scoped to
+        the guest on the booking.
+      operationId: bookingsRevalidate
+      summary: Re-validate an existing booking before payment
+      x-google-backend:
+        address: 'https://booking-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
   '/bookings/{id}/transaction':
     patch:
       consumes:

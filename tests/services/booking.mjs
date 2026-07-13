@@ -1,3 +1,5 @@
+import { dataOf, requirePresent } from '../lib/assert.mjs';
+
 // booking-service — CR-521 regression guard.
 //
 // CR-521: a guest who signed in via Google/Apple with no name shared could
@@ -38,6 +40,46 @@ export default {
       auth: 'none',
       body: { listing_id: 'lst_gw_test_does_not_exist' },
       expect: 401,
+    },
+    // Positive reads — the guest's own trips. Idempotent (no writes). Shape:
+    // { current[], upcoming[], past[], pagination }. Guards routing/index/auth
+    // regressions the way the listing geo cases do.
+    {
+      name: 'GET /bookings (my trips)',
+      path: '/bookings',
+      expect: 200,
+      check: (json) => {
+        const d = dataOf(json);
+        if (!Array.isArray(d.current) || !Array.isArray(d.upcoming) || !Array.isArray(d.past)) {
+          return 'expected current/upcoming/past arrays';
+        }
+        return requirePresent(d, ['pagination']);
+      },
+    },
+    {
+      name: 'GET /bookings (protected — no auth)',
+      path: '/bookings',
+      auth: 'none',
+      expect: 401,
+    },
+    // Host-side bookings for the same account (same envelope shape).
+    {
+      name: 'GET /bookings/host (as host)',
+      path: '/bookings/host',
+      expect: 200,
+      check: (json) => {
+        const d = dataOf(json);
+        return Array.isArray(d.current) && Array.isArray(d.upcoming) && Array.isArray(d.past)
+          ? null
+          : 'expected current/upcoming/past arrays';
+      },
+    },
+    // Draft bookings — returns a bare array (empty is a valid result).
+    {
+      name: 'GET /bookings/drafts',
+      path: '/bookings/drafts',
+      expect: 200,
+      check: (json) => (Array.isArray(dataOf(json)) ? null : 'expected an array of drafts'),
     },
   ],
 };

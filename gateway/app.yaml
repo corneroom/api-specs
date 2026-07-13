@@ -9879,6 +9879,59 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
       x-google-backend: *ref_0
+  /bookings/{id}/revalidate:
+    patch:
+      summary: Re-validate an existing booking before payment
+      description: >-
+        Re-runs the same past-date + listing-availability checks applied at
+        booking creation/finalize against an already-finalized (unpaid)
+        booking's stored dates. Used by the "Complete Your Booking" resume flow
+        right before the guest pays, so a booking whose dates have passed or
+        that lost availability while unpaid cannot be paid for. Owner-scoped to
+        the guest on the booking.
+      tags:
+        - booking
+      operationId: bookingsRevalidate
+      security:
+        - jwtAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Booking is still payable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseBooking'
+        '400':
+          description: Booking is no longer payable (dates passed or listing unavailable)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - booking does not belong to the authenticated user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Booking not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+      x-google-backend: *ref_0
   /bookings/{id}/complete:
     patch:
       summary: Complete a booking

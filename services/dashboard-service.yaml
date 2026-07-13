@@ -486,6 +486,55 @@ paths:
       x-google-backend:
         address: https://dashboard-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/users/{id}/hard-delete:
+    post:
+      tags:
+      - user
+      summary: Immediately hard-delete a user
+      description: >-
+        Admin-triggered immediate hard delete (CR-536). Runs user-service's
+        HardDeleteUser pipeline (PII scrub + audit trail) directly, skipping the
+        self-service pending_deletion grace period. Rejected for banned users
+        (the ban must be lifted first) and already-deleted users.
+      operationId: adminHardDeleteUser
+      parameters:
+      - name: id
+        in: path
+        description: User ID
+        required: true
+        schema:
+          maxLength: 32
+          type: string
+      responses:
+        "200":
+          description: User hard-deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  user_id:
+                    type: string
+        "400":
+          description: User cannot be hard-deleted (banned or already deleted)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error400Response'
+        "404":
+          description: User Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error404Response'
+      security:
+      - jwtAuth: []
+      x-google-backend:
+        address: https://dashboard-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/users/{id}/verify:
     put:
       tags:
