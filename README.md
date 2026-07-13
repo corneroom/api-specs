@@ -4,18 +4,25 @@ A centralized system for managing, validating, converting, and publishing OpenAP
 
 > **⚠️ Do not manually edit generated specs**: The files in `gateway/` (e.g. `app.yaml`, `app-swagger.yaml`) and `services/` are generated or synced from backend service `docs/api.yaml` files. To add or change API endpoints, edit the source spec in the backend service (e.g. `backend/dashboard-service/docs/api.yaml`), then run `make gateway` from this directory to sync, build, and deploy in one step.
 
+> **🚨 Gateway deployment is LOCAL — GitHub Actions does NOT deploy.** The
+> "Deploy All Staging API Gateways" workflow is **manually disabled** (its last
+> runs failed on 2026-06-10). Pushing this repo does **not** deploy anything.
+> As long as that workflow stays disabled, every gateway deploy must be done
+> locally with `make gateway` (needs `gcloud` ADC auth: `make auth`).
+
 ## Adding a new endpoint (required every time)
 
-Any new route in a backend service **must** be added to the API Gateway spec, or the Gateway will return 404 and the request will never reach Cloud Run.
+Any new route in a backend service **must** be added to the API Gateway spec, or the Gateway will return 404/405 and the request will never reach Cloud Run.
 
 **Steps:**
 
 1. Add the route to the backend service's `docs/api.yaml` (e.g. `backend/dashboard-service/docs/api.yaml`)
 2. From this directory, run:
    ```bash
-   make gateway   # sync + build Swagger 2.0 + deploy to GCP
+   make gateway   # sync + build Swagger 2.0 + deploy to GCP (local — the ONLY deploy path while GH Actions is disabled)
    ```
 3. Commit the updated `services/<service>.yaml` and `gateway/dashboard-swagger.yaml` (or `app-swagger.yaml`)
+4. Verify the route is live: unauthenticated `curl` should return **401** (routed, auth required), not 404/405 — then run `make test-gateway`
 
 **Two separate gateways — never cross-wire:**
 - `app` gateway → mobile app traffic (`backend/*-service` endpoints under `/api/v1/`)
@@ -29,7 +36,7 @@ This repository serves as a central hub for OpenAPI/Swagger specifications acros
 2. **Flexible Gateway Configuration**: Configure multiple API gateways using a simple JSON configuration
 3. **Validation & Conversion**: Automatic validation and conversion between OpenAPI 3.x and Swagger 2.0
 4. **Documentation Generation**: Create beautiful API documentation using Swagger UI and ReDoc
-5. **Deployment Automation**: GitHub Actions integration with Google Cloud API Gateway
+5. **Deployment**: local `make gateway` deploys to Google Cloud API Gateway (the GH Actions staging-deploy workflow exists but is manually disabled)
 
 ## Directory Structure
 
@@ -196,23 +203,21 @@ For the `api-docs` repository:
 
 ### Adding a New Microservice
 
-1. Add your OpenAPI/Swagger specification to the `services/` directory
-2. Follow the naming convention: `{service-name}.v{version}.yaml`
-3. Update the `gateway/config.json` file to include the service in the desired gateways
-4. Push your changes to trigger the validation workflow
-5. The spec will be automatically validated, merged, and deployed to the appropriate gateways
+1. Add the service's `docs/api.yaml` copy step to the `sync` target in the `Makefile`
+2. Update the `gateway/config.json` file to include the service in the desired gateways
+3. Run `make gateway` to sync, validate, build, and deploy
+4. Commit the synced `services/<service>.yaml` and regenerated `gateway/*.yaml`
 
 ### Adding a New Gateway
 
 1. Add a new gateway entry to the `gateway/config.json` file
 2. Specify which services should be included in the gateway
-3. Push your changes to trigger the validation workflow
-4. The new gateway will be automatically created and deployed
+3. Run `make gateway` — the new gateway will be created and deployed
 
 ### Deployment Flow
 
-- Deploy to staging: Manually trigger the staging workflow or via repository_dispatch
-- Deploy to production: Manually trigger the production workflow or via repository_dispatch
+- **Staging (current, required): run `make gateway` locally from this directory.** The "Deploy All Staging API Gateways" GH workflow is manually disabled — pushing does not deploy.
+- Production: no production gateway pipeline is active yet.
 
 ## Documentation
 
