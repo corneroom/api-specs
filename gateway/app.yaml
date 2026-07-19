@@ -16996,6 +16996,12 @@ components:
             from server config; use this to anchor the stay-progress bar rather
             than assuming midnight.
           example: '09:00'
+        arrival_window:
+          type: string
+          description: >-
+            Guest's expected arrival window for flexible check-in (stays only).
+            One of: morning, afternoon, evening, late.
+          example: evening
         rate:
           type: number
           format: float
@@ -17568,6 +17574,14 @@ components:
           type: string
           description: Optional notes for the booking
           example: Arriving late, will be there around 6 PM
+        arrival_window:
+          type: string
+          description: >-
+            Guest's expected arrival window for flexible check-in (stays only;
+            ignored for slot bookings). One of: morning, afternoon, evening,
+            late. Optional at the API level for backward compatibility with
+            older app builds — current clients always send it for stays.
+          example: evening
         display_currency:
           type: string
           description: Guest's preferred display currency ISO 4217 code (e.g. "CAD").

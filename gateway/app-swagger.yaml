@@ -15137,6 +15137,12 @@ definitions:
         example: 49.99
         format: float
         type: number
+      arrival_window:
+        description: >-
+          Guest's expected arrival window for flexible check-in (stays only).
+          One of: morning, afternoon, evening, late.
+        example: evening
+        type: string
       booking_code:
         description: 'Human-friendly booking code (e.g., CR-8J3K2P)'
         example: CR-8J3K2P
@@ -17115,6 +17121,14 @@ definitions:
         example: 50
         format: double
         type: number
+      arrival_window:
+        description: >-
+          Guest's expected arrival window for flexible check-in (stays only;
+          ignored for slot bookings). One of: morning, afternoon, evening, late.
+          Optional at the API level for backward compatibility with older app
+          builds — current clients always send it for stays.
+        example: evening
+        type: string
       check_in:
         description: Check-in date and time
         example: '2025-09-15T14:00:00Z'
