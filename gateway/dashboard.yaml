@@ -3682,6 +3682,99 @@ paths:
       x-google-backend:
         address: https://dashboard-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/reports:
+    get:
+      tags:
+        - reports
+      summary: List reports
+      description: >-
+        Paginated list of user/content reports for the admin table, newest
+        first, enriched with reporter/target display names.
+      operationId: listReports
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum:
+              - open
+              - assigned
+              - resolved
+        - name: type
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Paginated list of reports
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://dashboard-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/reports/{id}/assign:
+    post:
+      tags:
+        - reports
+      summary: Assign a report
+      description: >-
+        Assign a report to an admin. Defaults to the authenticated admin when
+        admin_id is omitted.
+      operationId: assignReport
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                admin_id:
+                  type: string
+      responses:
+        '200':
+          description: Report assigned
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://dashboard-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/reports/{id}/resolve:
+    post:
+      tags:
+        - reports
+      summary: Resolve a report
+      description: >-
+        Mark a report resolved. Records resolved_by (the authenticated admin)
+        and resolved_at.
+      operationId: resolveReport
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Report resolved
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://dashboard-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/reports/overview:
     get:
       tags:

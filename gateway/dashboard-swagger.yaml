@@ -3301,6 +3301,40 @@ paths:
       x-google-backend:
         address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/reports:
+    get:
+      parameters:
+        - enum:
+            - open
+            - assigned
+            - resolved
+          in: query
+          name: status
+          type: string
+        - in: query
+          name: type
+          type: string
+        - in: query
+          name: page
+          type: integer
+        - in: query
+          name: limit
+          type: integer
+      responses:
+        '200':
+          description: Paginated list of reports
+      security:
+        - jwtAuth: []
+      tags:
+        - reports
+      description: >-
+        Paginated list of user/content reports for the admin table, newest
+        first, enriched with reporter/target display names.
+      operationId: listReports
+      summary: List reports
+      x-google-backend:
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/reports/breakdown:
     get:
       produces:
@@ -3374,6 +3408,60 @@ paths:
         resolution times.
       operationId: getAdminWorkload
       summary: Get admin workload data
+      x-google-backend:
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/reports/{id}/assign':
+    post:
+      consumes:
+        - application/json
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+        - in: body
+          name: body
+          required: false
+          schema:
+            properties:
+              admin_id:
+                type: string
+            type: object
+      responses:
+        '200':
+          description: Report assigned
+      security:
+        - jwtAuth: []
+      tags:
+        - reports
+      description: >-
+        Assign a report to an admin. Defaults to the authenticated admin when
+        admin_id is omitted.
+      operationId: assignReport
+      summary: Assign a report
+      x-google-backend:
+        address: 'https://dashboard-service-981292602655.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/dashboard/reports/{id}/resolve':
+    post:
+      parameters:
+        - in: path
+          name: id
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Report resolved
+      security:
+        - jwtAuth: []
+      tags:
+        - reports
+      description: >-
+        Mark a report resolved. Records resolved_by (the authenticated admin)
+        and resolved_at.
+      operationId: resolveReport
+      summary: Resolve a report
       x-google-backend:
         address: 'https://dashboard-service-981292602655.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
