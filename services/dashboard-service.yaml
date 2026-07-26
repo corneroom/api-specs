@@ -3901,6 +3901,111 @@ paths:
       x-google-backend:
         address: https://dashboard-service-981292602655.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS  
+  /dashboard/bot-allowlist:
+    get:
+      tags:
+      - config
+      summary: Get bot-booking QA allow-list
+      description: Returns the user IDs allowed to book bot-host listings while the booking block is on.
+      operationId: getBotAllowlist
+      responses:
+        "200":
+          description: Current allow-list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  user_ids:
+                    type: array
+                    items:
+                      type: string
+      security:
+      - jwtAuth: []
+      x-google-backend:
+        address: https://dashboard-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+    post:
+      tags:
+      - config
+      summary: Add a user to the bot-booking QA allow-list
+      description: Resolves an email to a user ID and appends it to the allow-list.
+      operationId: addBotAllowlistEntry
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - email
+              properties:
+                email:
+                  type: string
+        required: true
+      responses:
+        "200":
+          description: Updated allow-list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  user_ids:
+                    type: array
+                    items:
+                      type: string
+        "400":
+          description: Bad request
+          content: {}
+        "404":
+          description: No user found for email
+          content: {}
+      security:
+      - jwtAuth: []
+      x-google-backend:
+        address: https://dashboard-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/bot-allowlist/{id}:
+    delete:
+      tags:
+      - config
+      summary: Remove a user from the bot-booking QA allow-list
+      description: Removes a user ID from the allow-list.
+      operationId: deleteBotAllowlistEntry
+      parameters:
+      - name: id
+        in: path
+        description: User ID
+        required: true
+        schema:
+          maxLength: 128
+          type: string
+      responses:
+        "200":
+          description: Updated allow-list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  user_ids:
+                    type: array
+                    items:
+                      type: string
+      security:
+      - jwtAuth: []
+      x-google-backend:
+        address: https://dashboard-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/maintenance:
     put:
       tags:
