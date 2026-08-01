@@ -9,18 +9,12 @@
 // cleanup runs unconditionally so the suite stays idempotent even if an
 // assertion above it fails (the shared runner doesn't stop on failure).
 //
-// KNOWN FAILURE (confirmed 2026-08-01, live staging) — this is a caching
-// bug, not a propagation delay: the filter DOES work when `GET /wishlists`
-// is called cold (no prior read this session) immediately after blocking.
-// But as soon as `GET /wishlists` is read ONCE before the block (which is
-// exactly what real usage looks like — a user opens their wishlist, then
-// blocks someone from it — and is also what the "contains the seeded item
-// before blocking" sanity case below does on purpose), every subsequent
-// `GET /wishlists` keeps returning the stale pre-block list — verified
-// unchanged after waiting up to 10s. wishlist-service appears to cache the
-// list response and never invalidates that cache on a block/unblock event.
-// Do not remove the "before blocking" read or add a delay to paper over
-// this — the intermediate read is what exposes the real bug.
+// RESOLVED (2026-08-01): the earlier-observed stale-cache bug (filter not
+// applying after a prior `GET /wishlists` read in the same session) is gone
+// — this suite now passes end-to-end including the "before blocking" read
+// immediately followed by the post-block assertion. Keep that intermediate
+// read in place; it's what would catch a cache-invalidation regression if
+// this ever comes back.
 import { login, authHeaders } from '../lib/auth.mjs';
 import { config } from '../lib/env.mjs';
 import { dataOf } from '../lib/assert.mjs';

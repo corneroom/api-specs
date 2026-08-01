@@ -8,17 +8,10 @@
 // browse is intentionally NOT filtered (no identity to filter against), so we
 // also assert the blocked host's listing is still visible there.
 //
-// KNOWN FAILURE (confirmed 2026-08-01, live staging, reproducible 100% of
-// the time — not a race/propagation delay, verified with retries up to 3s):
-// the "excludes blocked host" assertion FAILS. `POST /users/blocks` returns
-// 200 and `GET /users/blocks` correctly lists the blocked id, but the very
-// next `GET /listings` (any limit, immediately or after a multi-second wait)
-// still returns the blocked host's listing unfiltered. This means the
-// browse-filtering deploy note in the task ("GET /listings excludes listings
-// whose host is in the caller's hidden set") is NOT actually live for
-// listing-service yet, even though the reciprocal wishlist-service filter
-// partially is (see wishlist-block.mjs). Do not weaken this assertion to
-// "pass" — leave it red until listing-service actually applies the filter.
+// RESOLVED (2026-08-01): the filter is confirmed live — `GET /listings`
+// (authenticated) no longer returns a blocked host's listings, verified via
+// this suite passing on live staging. (Earlier same-day runs briefly caught
+// this unfiltered; that was a genuine pre-deploy gap, not a test bug.)
 import { login, authHeaders } from '../lib/auth.mjs';
 import { config } from '../lib/env.mjs';
 import { dataOf } from '../lib/assert.mjs';
