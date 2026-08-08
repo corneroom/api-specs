@@ -1,0 +1,205 @@
+name: Deploy All API Gateways
+run-name: "${{ inputs.environment || (github.ref == 'refs/heads/main' && 'Staging') || 'Production' }} Gateway Deploy • ${{ github.ref_name }} • ${{ github.sha }}"
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+    paths:
+      - 'services/*.yaml'
+      - 'services/*.yml'
+      - 'gateway/*.yaml'
+      - 'gateway/*.yml'
+      - 'gateway/config.json'
+      - 'scripts/**'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target Environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      target_branch:
+        description: 'Branch or Ref to deploy from'
+        required: false
+        default: 'main'
+
+concurrency:
+  group: gateway-deploy-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  deploy-gateways:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: write
+      id-token: write
+    steps:
+      - name: Set Environment variables
+        id: env_resolver
+        run: |
+          # Priority: workflow_dispatch input > ref-based trigger
+          ENV="staging"
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            ENV="${{ github.event.inputs.environment }}"
+          elif [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            ENV="production"
+          fi
+          
+          echo "DEPLOY_ENV=$ENV" >> $GITHUB_OUTPUT
+          
+          if [[ "$ENV" == "production" ]]; then
+            echo "PROJECT_ID=corneroom-prod-504810" >> $GITHUB_OUTPUT
+            echo "PROJECT_NUMBER=376797180502" >> $GITHUB_OUTPUT
+            echo "TARGET_PROJECT_NUMBER=376797180502" >> $GITHUB_OUTPUT
+            echo "GATEWAY_SUFFIX=-production-gateway" >> $GITHUB_OUTPUT
+          else
+            echo "PROJECT_ID=corneroom-82fbb" >> $GITHUB_OUTPUT
+            echo "PROJECT_NUMBER=981292602655" >> $GITHUB_OUTPUT
+            echo "TARGET_PROJECT_NUMBER=" >> $GITHUB_OUTPUT
+            echo "GATEWAY_SUFFIX=-staging-gateway" >> $GITHUB_OUTPUT
+          fi
+          
+          # Branch to checkout
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]] && [[ -n "${{ github.event.inputs.target_branch }}" ]]; then
+            echo "TARGET_BRANCH=${{ github.event.inputs.target_branch }}" >> $GITHUB_OUTPUT
+          else
+            echo "TARGET_BRANCH=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.env_resolver.outputs.TARGET_BRANCH }}
+          fetch-depth: 1
+          token: ${{ secrets.OPENAPI_CICD_WORKFLOW_TOKEN || github.token }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build and convert OpenAPI specs to Swagger 2.0
+        run: npm run swagger
+        env:
+          TARGET_PROJECT_NUMBER: ${{ steps.env_resolver.outputs.TARGET_PROJECT_NUMBER }}
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: "projects/${{ steps.env_resolver.outputs.PROJECT_NUMBER }}/locations/global/workloadIdentityPools/github-workload-pool/providers/github-provider"
+          service_account: "github-actions-deploy@${{ steps.env_resolver.outputs.PROJECT_ID }}.iam.gserviceaccount.com"
+          token_format: 'access_token'
+
+      - name: Set up Google Cloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ steps.env_resolver.outputs.PROJECT_ID }}
+
+      - name: Deploy all gateways from config.json
+        run: |
+          CONFIG_PATH="gateway/config.json"
+          API_NAME=$(jq -r '.apiName' $CONFIG_PATH)
+          LOCATION="us-central1"
+          PROJECT_ID="${{ steps.env_resolver.outputs.PROJECT_ID }}"
+          SUFFIX="${{ steps.env_resolver.outputs.GATEWAY_SUFFIX }}"
+          BACKEND_AUTH_SERVICE_ACCOUNT="community-service@${PROJECT_ID}.iam.gserviceaccount.com"
+          
+          for gw in $(jq -r '.gateways | keys[]' $CONFIG_PATH); do
+            # Use the Swagger 2.0 version of the spec (generated during the gateway build)
+            GW_SPEC="gateway/${gw}-swagger.yaml"
+            GW_NAME="${gw}${SUFFIX}"
+            SHORT_SHA=$(git rev-parse --short HEAD)
+            TIMESTAMP=$(date +'%Y%m%d%H%M%S')
+            NEW_API_CONFIG_NAME="${API_NAME}-${gw}-${{ steps.env_resolver.outputs.DEPLOY_ENV }}-${SHORT_SHA}-${TIMESTAMP}"
+            
+            echo "Deploying $GW_SPEC to $GW_NAME as $NEW_API_CONFIG_NAME"
+            gcloud api-gateway api-configs create "$NEW_API_CONFIG_NAME" \
+              --api="$API_NAME" \
+              --openapi-spec="$GW_SPEC" \
+              --project="${PROJECT_ID}" \
+              --backend-auth-service-account="${BACKEND_AUTH_SERVICE_ACCOUNT}"
+              
+            if gcloud api-gateway gateways describe "$GW_NAME" --location="${LOCATION}" --project="${PROJECT_ID}" &>/dev/null; then
+              gcloud api-gateway gateways update "$GW_NAME" \
+                --api="$API_NAME" \
+                --api-config="$NEW_API_CONFIG_NAME" \
+                --location="${LOCATION}" \
+                --project="${PROJECT_ID}"
+            else
+              gcloud api-gateway gateways create "$GW_NAME" \
+                --api="$API_NAME" \
+                --api-config="$NEW_API_CONFIG_NAME" \
+                --location="${LOCATION}" \
+                --project="${PROJECT_ID}"
+            fi
+            
+            # Prune old API configs for this gateway, keeping the newest few (new + rollback buffer)
+            KEEP_CONFIGS=3
+            echo "Pruning old API configs for $gw (keeping newest $KEEP_CONFIGS)..."
+            gcloud api-gateway api-configs list --api="$API_NAME" --project="${PROJECT_ID}" \
+              --format="value(name.basename(),createTime)" \
+              | grep "${API_NAME}-${gw}-${{ steps.env_resolver.outputs.DEPLOY_ENV }}-" \
+              | sort -k2 -r | tail -n +$((KEEP_CONFIGS + 1)) | cut -f1 \
+              | while read -r cfg; do
+                  [ -z "$cfg" ] && continue
+                  [ "$cfg" = "$NEW_API_CONFIG_NAME" ] && continue
+                  echo "  Deleting old config: $cfg"
+                  gcloud api-gateway api-configs delete "$cfg" --api="$API_NAME" --project="${PROJECT_ID}" --quiet \
+                    || echo "  Skipped $cfg (in use or delete failed)"
+                done
+                
+            GW_URL=$(gcloud api-gateway gateways describe "$GW_NAME" --location="${LOCATION}" --project="${PROJECT_ID}" --format="value(defaultHostname)")
+            echo "Gateway $GW_NAME URL: https://$GW_URL"
+          done
+
+      - name: Generate and update Postman collections (Staging Only)
+        if: steps.env_resolver.outputs.DEPLOY_ENV == 'staging'
+        run: |
+          echo "🚀 Generating Postman collections from existing Swagger specs..."
+          cd scripts
+          npm install openapi-to-postmanv2
+          mkdir -p ../postman-collections
+          CONFIG_PATH="../gateway/config.json"
+          for gw in $(jq -r '.gateways | keys[]' $CONFIG_PATH); do
+            SWAGGER_SPEC="../gateway/${gw}-swagger.yaml"
+            if [ -f "$SWAGGER_SPEC" ]; then
+              echo "Generating Postman collection from $SWAGGER_SPEC..."
+              npx openapi-to-postmanv2 -s "$SWAGGER_SPEC" -o "../postman-collections/${gw}-gateway.postman_collection.json" -p -O 'folderStrategy=Tags'
+            fi
+          done
+          
+          echo "🔄 Attempting script preservation..."
+          if node preserve-and-merge-scripts.js; then
+            echo "✅ Script preservation successful - pushing to Postman..."
+            node push-to-postman.js
+          else
+            echo "❌ Script preservation failed - skipping Postman push"
+          fi
+        env:
+          POSTMAN_API_KEY: ${{ secrets.POSTMAN_API_KEY }}
+        continue-on-error: true
+
+      - name: Commit and push changes to staging branch (Staging Only)
+        if: steps.env_resolver.outputs.DEPLOY_ENV == 'staging' && github.event_name == 'push'
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin
+          git checkout -B staging origin/staging --force
+          git add .
+          git commit -m "chore: update generated gateway specs [skip ci]" || echo "No changes to commit"
+          git push origin staging
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.OPENAPI_CICD_WORKFLOW_TOKEN || github.token }}

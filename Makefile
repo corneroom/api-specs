@@ -12,6 +12,7 @@ help: ## Show this help message
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  %-15s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 # Environment variables (set these or export them)
+ENV ?= staging
 PROJECT_ID ?= corneroom-82fbb
 LOCATION ?= us-central1
 API_NAME ?= corneroom-api
@@ -42,7 +43,7 @@ build-swagger: ## Build OpenAPI specs to Swagger 2.0
 	@echo "✅ Swagger specs built successfully"
 
 deploy-gateway: ## Deploy API Gateway configs and gateways
-	@echo "🚀 Deploying API Gateway..."
+	@echo "🚀 Deploying API Gateway for environment: $(ENV)..."
 	@if ! command -v gcloud >/dev/null 2>&1; then \
 		echo "❌ gcloud CLI not found. Please install and authenticate."; \
 		exit 1; \
@@ -55,28 +56,28 @@ deploy-gateway: ## Deploy API Gateway configs and gateways
 	@for gw in $$(jq -r '.gateways | keys[]' $(CONFIG_PATH)); do \
 		echo "🔧 Processing gateway: $$gw"; \
 		GW_SPEC="gateway/$${gw}-swagger.yaml"; \
-		STAGING_GW_NAME="$${gw}-staging-gateway"; \
-		NEW_API_CONFIG_NAME="$(API_NAME)-$${gw}-staging-$(SHORT_SHA)-$(TIMESTAMP)"; \
-		echo "📄 Deploying $$GW_SPEC to $$STAGING_GW_NAME as $$NEW_API_CONFIG_NAME"; \
+		GW_NAME="$${gw}-$(ENV)-gateway"; \
+		NEW_API_CONFIG_NAME="$(API_NAME)-$${gw}-$(ENV)-$(SHORT_SHA)-$(TIMESTAMP)"; \
+		echo "📄 Deploying $$GW_SPEC to $$GW_NAME as $$NEW_API_CONFIG_NAME"; \
 		\
 		echo "🔨 Creating API config: $$NEW_API_CONFIG_NAME"; \
 		gcloud api-gateway api-configs create "$$NEW_API_CONFIG_NAME" \
 			--api="$(API_NAME)" \
 			--openapi-spec="$$GW_SPEC" \
 			--project="$(PROJECT_ID)" \
-			--backend-auth-service-account="community-service@corneroom-82fbb.iam.gserviceaccount.com"; \
+			--backend-auth-service-account="community-service@$(PROJECT_ID).iam.gserviceaccount.com"; \
 		\
-		echo "🔍 Checking if gateway exists: $$STAGING_GW_NAME"; \
-		if gcloud api-gateway gateways describe "$$STAGING_GW_NAME" --location="$(LOCATION)" --project="$(PROJECT_ID)" >/dev/null 2>&1; then \
-			echo "🔄 Updating existing gateway: $$STAGING_GW_NAME"; \
-			gcloud api-gateway gateways update "$$STAGING_GW_NAME" \
+		echo "🔍 Checking if gateway exists: $$GW_NAME"; \
+		if gcloud api-gateway gateways describe "$$GW_NAME" --location="$(LOCATION)" --project="$(PROJECT_ID)" >/dev/null 2>&1; then \
+			echo "🔄 Updating existing gateway: $$GW_NAME"; \
+			gcloud api-gateway gateways update "$$GW_NAME" \
 				--api="$(API_NAME)" \
 				--api-config="$$NEW_API_CONFIG_NAME" \
 				--location="$(LOCATION)" \
 				--project="$(PROJECT_ID)"; \
 		else \
-			echo "🆕 Creating new gateway: $$STAGING_GW_NAME"; \
-			gcloud api-gateway gateways create "$$STAGING_GW_NAME" \
+			echo "🆕 Creating new gateway: $$GW_NAME"; \
+			gcloud api-gateway gateways create "$$GW_NAME" \
 				--api="$(API_NAME)" \
 				--api-config="$$NEW_API_CONFIG_NAME" \
 				--location="$(LOCATION)" \
@@ -86,7 +87,7 @@ deploy-gateway: ## Deploy API Gateway configs and gateways
 		echo "🧹 Pruning old API configs for $$gw (keeping newest $(KEEP_CONFIGS))..."; \
 		gcloud api-gateway api-configs list --api="$(API_NAME)" --project="$(PROJECT_ID)" \
 			--format="value(name.basename(),createTime)" \
-			| grep "$(API_NAME)-$${gw}-staging-" \
+			| grep "$(API_NAME)-$${gw}-$(ENV)-" \
 			| sort -k2 -r | tail -n +$$(($(KEEP_CONFIGS) + 1)) | cut -f1 \
 			| while read -r cfg; do \
 				[ -z "$$cfg" ] && continue; \
@@ -97,8 +98,8 @@ deploy-gateway: ## Deploy API Gateway configs and gateways
 			done; \
 		\
 		echo "🌐 Getting gateway URL..."; \
-		GW_URL=$$(gcloud api-gateway gateways describe "$$STAGING_GW_NAME" --location="$(LOCATION)" --project="$(PROJECT_ID)" --format="value(defaultHostname)"); \
-		echo "✅ Staging Gateway $$STAGING_GW_NAME URL: https://$$GW_URL"; \
+		GW_URL=$$(gcloud api-gateway gateways describe "$$GW_NAME" --location="$(LOCATION)" --project="$(PROJECT_ID)" --format="value(defaultHostname)"); \
+		echo "✅ $(ENV) Gateway $$GW_NAME URL: https://$$GW_URL"; \
 		echo ""; \
 	done
 	@echo "🎉 API Gateway deployment completed!"
@@ -125,30 +126,30 @@ test-gw: test-gateway ## Alias for test-gateway
 
 # Quick health-only ping of the deployed gateways (no auth, no suite)
 gateway-health: ## Curl /health on each deployed gateway
-	@echo "🧪 Pinging gateway health..."
+	@echo "🧪 Pinging gateway health for environment: $(ENV)..."
 	@for gw in $$(jq -r '.gateways | keys[]' $(CONFIG_PATH)); do \
-		STAGING_GW_NAME="$${gw}-staging-gateway"; \
-		GW_URL=$$(gcloud api-gateway gateways describe "$$STAGING_GW_NAME" --location="$(LOCATION)" --project="$(PROJECT_ID)" --format="value(defaultHostname)" 2>/dev/null); \
+		GW_NAME="$${gw}-$(ENV)-gateway"; \
+		GW_URL=$$(gcloud api-gateway gateways describe "$$GW_NAME" --location="$(LOCATION)" --project="$(PROJECT_ID)" --format="value(defaultHostname)" 2>/dev/null); \
 		if [ -n "$$GW_URL" ]; then \
 			echo "🌐 $$gw: https://$$GW_URL"; \
 			curl -s -o /dev/null -w "Status: %{http_code}, Time: %{time_total}s\n" "https://$$GW_URL/api/v1/health" || echo "❌ Health check failed"; \
 		else \
-			echo "❌ Gateway $$STAGING_GW_NAME not found"; \
+			echo "❌ Gateway $$GW_NAME not found"; \
 		fi; \
 	done
 
 # Show gateway status
 status: ## Show current gateway status
-	@echo "📊 Gateway Status"
+	@echo "📊 Gateway Status for environment: $(ENV)"
 	@echo "================="
 	@for gw in $$(jq -r '.gateways | keys[]' $(CONFIG_PATH)); do \
-		STAGING_GW_NAME="$${gw}-staging-gateway"; \
-		echo "🔍 Checking $$STAGING_GW_NAME..."; \
-		if gcloud api-gateway gateways describe "$$STAGING_GW_NAME" --location="$(LOCATION)" --project="$(PROJECT_ID)" >/dev/null 2>&1; then \
-			GW_URL=$$(gcloud api-gateway gateways describe "$$STAGING_GW_NAME" --location="$(LOCATION)" --project="$(PROJECT_ID)" --format="value(defaultHostname)"); \
-			echo "✅ $$STAGING_GW_NAME: https://$$GW_URL"; \
+		GW_NAME="$${gw}-$(ENV)-gateway"; \
+		echo "🔍 Checking $$GW_NAME..."; \
+		if gcloud api-gateway gateways describe "$$GW_NAME" --location="$(LOCATION)" --project="$(PROJECT_ID)" >/dev/null 2>&1; then \
+			GW_URL=$$(gcloud api-gateway gateways describe "$$GW_NAME" --location="$(LOCATION)" --project="$(PROJECT_ID)" --format="value(defaultHostname)"); \
+			echo "✅ $$GW_NAME: https://$$GW_URL"; \
 		else \
-			echo "❌ $$STAGING_GW_NAME: Not deployed"; \
+			echo "❌ $$GW_NAME: Not deployed"; \
 		fi; \
 	done
 

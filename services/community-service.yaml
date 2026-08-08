@@ -46,7 +46,7 @@ paths:
       summary: Heartbeat
       description: Public liveness check for the community service (no auth).
       tags:
-        - content
+        - heartbeat
       security: []
       x-google-backend:
         address: https://community-service-981292602655.us-central1.run.app
@@ -1879,6 +1879,14 @@ components:
                 public:
                   type: boolean
                   default: false
+                source:
+                  type: string
+                  description: >-
+                    Content source. "user" is UGC (private to authenticated feed,
+                    block-filtered); "corneroom", "partner", "sponsored" are
+                    curated content (visible on the anonymous public feed).
+                  enum: [user, corneroom, partner, sponsored]
+                  default: user
                 user_id:
                   type: string
               required:
@@ -1901,6 +1909,7 @@ components:
                 - author
                 - author_avatar
                 - public
+                - source
                 - user_id
     ReelResponse:
       allOf:
@@ -1961,6 +1970,14 @@ components:
                 public:
                   type: boolean
                   default: false
+                source:
+                  type: string
+                  description: >-
+                    Content source. "user" is UGC (private to authenticated feed,
+                    block-filtered); "corneroom", "partner", "sponsored" are
+                    curated content (visible on the anonymous public feed).
+                  enum: [user, corneroom, partner, sponsored]
+                  default: user
                 user_id:
                   type: string
               required:
@@ -1983,6 +2000,7 @@ components:
                 - author
                 - author_avatar
                 - public
+                - source
                 - user_id
     ExperienceResponse:
       type: object

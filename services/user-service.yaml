@@ -878,6 +878,35 @@ paths:
                 id_token:
                   type: string
                   description: The social media token
+                provider:
+                  type: string
+                  description: Social provider — "google", "apple", or "facebook"
+                first_name:
+                  type: string
+                  description: >-
+                    Display first name from the provider credential. Apple returns
+                    the name only in the credential on first sign-in (never in the
+                    ID token), so the client forwards it here for the backend to store.
+                last_name:
+                  type: string
+                  description: Display last name from the provider credential (see first_name)
+                avatar_url:
+                  type: string
+                  description: >-
+                    Avatar/profile photo URL captured client-side (e.g. Google's
+                    photoUrl). Optional; falls back to the ID token's "picture"
+                    claim. Only applied when creating a new user.
+                is_private_email:
+                  type: boolean
+                  description: >-
+                    True when the provider email is a forwarding/relay address
+                    (e.g. Apple's private relay, "@privaterelay.appleid.com").
+                    Optional; only applied when creating a new user.
+                locale:
+                  type: string
+                  description: >-
+                    Device/provider locale (e.g. "en", "en-GB"). Optional; only
+                    applied when creating a new user.
         description: The user cred to authenticate
         required: true
       responses:
@@ -4556,6 +4585,214 @@ paths:
               schema:
                 type: object
                 description: Standard error response model for failed requests.
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: Unauthorized.
+                required:
+                  - success
+                  - error
+  /users/blocks:
+    post:
+      description: |
+        Block another user (UGC safety — App Store Guideline 1.2). Authenticated;
+        the blocker is taken from the JWT. Idempotent — re-blocking returns 200
+        without creating a duplicate moderation report. On a state change the
+        handler also writes a `user`-type record into the `reports` collection
+        (read by the admin dashboard) so moderators are notified. The community
+        feed filters out content authored by blocked users.
+      summary: Block a user
+      tags:
+        - user
+      operationId: blockUser
+      x-google-backend:
+        address: https://user-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      requestBody:
+        description: The user to block.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - blocked_user_id
+              properties:
+                blocked_user_id:
+                  type: string
+                  description: The id of the user to block.
+                  example: usr_9f3c2a
+      responses:
+        "200":
+          description: The user was blocked (or was already blocked).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      blocked_user_id:
+                        type: string
+                        example: usr_9f3c2a
+                required:
+                  - success
+        "400":
+          description: Invalid request (missing id, or attempting to block yourself).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: cannot block yourself
+                required:
+                  - success
+                  - error
+        "401":
+          description: Unauthorized (missing or invalid access token).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: Unauthorized.
+                required:
+                  - success
+                  - error
+        "404":
+          description: The user to block was not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: user not found
+                required:
+                  - success
+                  - error
+    get:
+      description: |
+        List the ids of users the authenticated caller has blocked. Powers a
+        "blocked users" settings screen and is also read by the community feed to
+        filter blocked authors.
+      summary: List blocked users
+      tags:
+        - user
+      operationId: listBlockedUsers
+      x-google-backend:
+        address: https://user-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      responses:
+        "200":
+          description: The caller's blocked user ids.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      blocked_user_ids:
+                        type: array
+                        items:
+                          type: string
+                        example:
+                          - usr_9f3c2a
+                          - usr_1a2b3c
+                required:
+                  - success
+        "401":
+          description: Unauthorized (missing or invalid access token).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: Unauthorized.
+                required:
+                  - success
+                  - error
+  /users/blocks/{blockedUserId}:
+    delete:
+      description: |
+        Unblock a previously blocked user. Authenticated; the caller is taken from
+        the JWT. Idempotent — unblocking a user who is not blocked returns 200.
+      summary: Unblock a user
+      tags:
+        - user
+      operationId: unblockUser
+      x-google-backend:
+        address: https://user-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      parameters:
+        - name: blockedUserId
+          in: path
+          required: true
+          description: The id of the user to unblock.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: The user was unblocked (or was not blocked).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      blocked_user_id:
+                        type: string
+                        example: usr_9f3c2a
+                required:
+                  - success
+        "401":
+          description: Unauthorized (missing or invalid access token).
+          content:
+            application/json:
+              schema:
+                type: object
                 properties:
                   success:
                     type: boolean

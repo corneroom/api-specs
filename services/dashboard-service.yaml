@@ -1291,66 +1291,6 @@ paths:
         path_translation: APPEND_PATH_TO_ADDRESS
       x-codegen-request-body-name: listing
 
-  /dashboard/listings/{id}/verify:
-    put:
-      tags:
-      - listing
-      summary: Restore/Revoke a listing verification
-      operationId: verifyListing
-      description: Restore or revoke a listing's verification status.
-      parameters:
-      - name: id
-        in: path
-        description: Listing ID
-        required: true
-        schema:
-          maxLength: 32
-          type: string
-      requestBody:
-        description: Listing verified status
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                verified:
-                  type: string
-                  example: "true"
-                  enum:
-                  - "true"
-                  - "false"
-        required: true
-      responses:
-        "200":
-          description: Success
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: ok
-                  listing_id:
-                    type: string
-        "400":
-          description: Invalid listing ID
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error400Response'
-        "404":
-          description: Listing not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error404Response'
-      security:
-      - jwtAuth: []
-      x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
-        path_translation: APPEND_PATH_TO_ADDRESS
-      x-codegen-request-body-name: verify
   /dashboard/listings/{id}/export:
     get:
       tags:

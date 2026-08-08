@@ -120,7 +120,12 @@ function generateGatewaySpecs(configPath) {
       const serviceFile = path.join(CONFIG.servicesDir, `${serviceName}.yaml`);
       if (fs.existsSync(serviceFile)) {
         const convertedFile = convertSpec(serviceFile, gatewayName);
-        const serviceSpec = yaml.load(fs.readFileSync(convertedFile, 'utf8'));
+        let specContent = fs.readFileSync(convertedFile, 'utf8');
+        if (process.env.TARGET_PROJECT_NUMBER) {
+          console.log(`Substituting staging project number 981292602655 with target ${process.env.TARGET_PROJECT_NUMBER} in ${serviceName}`);
+          specContent = specContent.replace(/981292602655/g, process.env.TARGET_PROJECT_NUMBER);
+        }
+        const serviceSpec = yaml.load(specContent);
 
         // Merge paths
         gatewaySpec.paths = deepMerge(gatewaySpec.paths, serviceSpec.paths);
@@ -147,7 +152,11 @@ function generateGatewaySpecs(configPath) {
       .map(serviceName => {
         const serviceFile = path.join(CONFIG.servicesDir, `${serviceName}.yaml`);
         if (fs.existsSync(serviceFile)) {
-          const spec = yaml.load(fs.readFileSync(serviceFile, 'utf8'));
+          let specContent = fs.readFileSync(serviceFile, 'utf8');
+          if (process.env.TARGET_PROJECT_NUMBER) {
+            specContent = specContent.replace(/981292602655/g, process.env.TARGET_PROJECT_NUMBER);
+          }
+          const spec = yaml.load(specContent);
           return spec['x-google-backend'];
         }
         return undefined;

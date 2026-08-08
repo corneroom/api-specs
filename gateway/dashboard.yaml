@@ -33,7 +33,7 @@ paths:
                 $ref: '#/components/schemas/Error400Response'
       security: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/heartbeat/services:
     get:
@@ -73,7 +73,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/slack/interactive:
     post:
@@ -128,7 +128,7 @@ paths:
                 $ref: '#/components/schemas/Error400Response'
       security: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/auth/login/email:
     post:
@@ -174,7 +174,7 @@ paths:
                 $ref: '#/components/schemas/Error400Response'
       security: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       x-codegen-request-body-name: body
   /dashboard/auth/logout:
@@ -206,7 +206,7 @@ paths:
                 $ref: '#/components/schemas/Error400Response'
       security: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/auth/session:
     get:
@@ -236,7 +236,7 @@ paths:
                 $ref: '#/components/schemas/Error400Response'
       security: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/users:
     get:
@@ -311,7 +311,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/users/{id}:
     get:
@@ -350,7 +350,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
     put:
       tags:
@@ -398,7 +398,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       x-codegen-request-body-name: user
     delete:
@@ -446,7 +446,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/users/{id}/hard-delete:
     post:
@@ -495,7 +495,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/users/{id}/verify:
     put:
@@ -555,7 +555,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       x-codegen-request-body-name: verify
   /dashboard/users/{id}/status:
@@ -611,7 +611,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       x-codegen-request-body-name: status
   /dashboard/users/{id}/sendMessage:
@@ -663,7 +663,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       x-codegen-request-body-name: message
   /dashboard/users/{id}/ban:
@@ -698,7 +698,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       x-codegen-request-body-name: reason
   /dashboard/users/{id}/export:
@@ -724,7 +724,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/users/{id}/impersonate:
     post:
@@ -749,7 +749,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/users/profile/picture:
     put:
@@ -788,7 +788,7 @@ paths:
           content: {}
       security: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       x-codegen-request-body-name: file
   /dashboard/bookings:
@@ -862,7 +862,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/bookings/{id}:
     get:
@@ -896,7 +896,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
     delete:
       tags:
@@ -920,7 +920,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
     patch:
       tags:
@@ -950,7 +950,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       x-codegen-request-body-name: booking
     put:
@@ -1026,7 +1026,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/bookings/{id}/export:
     get:
@@ -1051,7 +1051,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/bookings/{id}/refund:
     post:
@@ -1088,7 +1088,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       x-codegen-request-body-name: refund
   /dashboard/listings:
@@ -1139,7 +1139,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/listings/{id}:
     get:
@@ -1184,7 +1184,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
     delete:
       tags:
@@ -1208,7 +1208,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
     patch:
       tags:
@@ -1258,69 +1258,9 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       x-codegen-request-body-name: listing
-  /dashboard/listings/{id}/verify:
-    put:
-      tags:
-        - listing
-      summary: Restore/Revoke a listing verification
-      operationId: verifyListing
-      description: Restore or revoke a listing's verification status.
-      parameters:
-        - name: id
-          in: path
-          description: Listing ID
-          required: true
-          schema:
-            maxLength: 32
-            type: string
-      requestBody:
-        description: Listing verified status
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                verified:
-                  type: string
-                  example: 'true'
-                  enum:
-                    - 'true'
-                    - 'false'
-        required: true
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: ok
-                  listing_id:
-                    type: string
-        '400':
-          description: Invalid listing ID
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error400Response'
-        '404':
-          description: Listing not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error404Response'
-      security:
-        - jwtAuth: []
-      x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
-        path_translation: APPEND_PATH_TO_ADDRESS
-      x-codegen-request-body-name: verify
   /dashboard/listings/{id}/export:
     get:
       tags:
@@ -1344,7 +1284,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/listings/{id}/moderate:
     post:
@@ -1383,7 +1323,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       x-codegen-request-body-name: action
   /dashboard/listings/{id}/revision:
@@ -1428,7 +1368,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       x-codegen-request-body-name: action
   /dashboard/documents:
@@ -1467,7 +1407,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/documents/{id}/export:
     get:
@@ -1492,7 +1432,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/documents/{id}/verify:
     post:
@@ -1531,7 +1471,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       x-codegen-request-body-name: action
   /dashboard/listings/{id}/reviews:
@@ -1608,7 +1548,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/users/{id}/reviews:
     get:
@@ -1684,7 +1624,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/reviews:
     get:
@@ -1739,7 +1679,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/reviews/{id}:
     get:
@@ -1784,7 +1724,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
     delete:
       tags:
@@ -1837,7 +1777,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/reviews/{id}/hidden:
     put:
@@ -1890,7 +1830,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       x-codegen-request-body-name: status
   /dashboard/reviews/{reviewId}/report:
@@ -1937,7 +1877,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       x-codegen-request-body-name: body
   /dashboard/reviews/{reviewId}/reports:
@@ -1973,7 +1913,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/reviews/{id}/respond:
     post:
@@ -2007,7 +1947,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       x-codegen-request-body-name: response
   /dashboard/reviews/{id}/export:
@@ -2033,7 +1973,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/audit-logs:
     get:
@@ -2067,7 +2007,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/notifications:
     get:
@@ -2097,7 +2037,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
     post:
       tags:
@@ -2121,7 +2061,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       x-codegen-request-body-name: notification
   /dashboard/guides:
@@ -2167,7 +2107,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/guides/{id}:
     get:
@@ -2195,7 +2135,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/guides/{id}/moderate:
     post:
@@ -2244,7 +2184,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/experiences:
     get:
@@ -2306,7 +2246,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/experiences/{id}:
     get:
@@ -2334,7 +2274,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/experiences/{id}/moderate:
     post:
@@ -2386,7 +2326,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/experience-reservations:
     get:
@@ -2447,7 +2387,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/verifications:
     get:
@@ -2508,7 +2448,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/verifications/{verificationId}/status:
     put:
@@ -2569,7 +2509,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/verifications/{userId}/request-reverification:
     post:
@@ -2605,7 +2545,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/verifications/user/{userId}:
     get:
@@ -2647,7 +2587,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/settings:
     get:
@@ -2669,7 +2609,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
     patch:
       tags:
@@ -2696,7 +2636,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       x-codegen-request-body-name: settings
   /dashboard/firebase/config:
@@ -2727,7 +2667,7 @@ paths:
                 $ref: '#/components/schemas/Error400Response'
       security: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
     post:
       tags:
@@ -2769,7 +2709,7 @@ paths:
                 $ref: '#/components/schemas/Error400Response'
       security: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       x-codegen-request-body-name: body
   /dashboard/firebase/config/{key}:
@@ -2819,7 +2759,7 @@ paths:
                 $ref: '#/components/schemas/Error400Response'
       security: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       x-codegen-request-body-name: body
   /dashboard/feedback:
@@ -2847,7 +2787,7 @@ paths:
           content: {}
       security: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       x-codegen-request-body-name: body
     get:
@@ -2927,7 +2867,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/analytics/summary:
     get:
@@ -2954,7 +2894,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/analytics/listing:
     get:
@@ -3012,7 +2952,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/analytics/booking:
     get:
@@ -3060,7 +3000,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/analytics/overview:
     get:
@@ -3087,7 +3027,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/analytics/dashboard2:
     get:
@@ -3102,7 +3042,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/analytics/activity-heatmap:
     get:
@@ -3117,7 +3057,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/analytics/pulse:
     get:
@@ -3148,7 +3088,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/analytics/geo:
     get:
@@ -3178,7 +3118,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/financial/overview:
     get:
@@ -3205,7 +3145,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/financial/transactions:
     get:
@@ -3240,7 +3180,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/financial/revenue-chart:
     get:
@@ -3265,7 +3205,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/financial/trend:
     get:
@@ -3345,7 +3285,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/payouts:
     get:
@@ -3407,7 +3347,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/payouts/{payoutId}:
     get:
@@ -3434,7 +3374,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/payouts/{payoutId}/approve:
     put:
@@ -3470,7 +3410,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/payouts/{payoutId}/reject:
     put:
@@ -3514,7 +3454,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/refunds:
     get:
@@ -3562,7 +3502,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/refunds/{id}:
     get:
@@ -3589,7 +3529,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/refunds/{id}/approve:
     post:
@@ -3636,7 +3576,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/refunds/{id}/reject:
     post:
@@ -3680,7 +3620,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/reports:
     get:
@@ -3718,7 +3658,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/reports/{id}/assign:
     post:
@@ -3750,7 +3690,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/reports/{id}/resolve:
     post:
@@ -3773,7 +3713,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/reports/overview:
     get:
@@ -3800,7 +3740,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/reports/breakdown:
     get:
@@ -3825,7 +3765,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/reports/workload:
     get:
@@ -3852,7 +3792,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/config/maps:
     get:
@@ -3877,7 +3817,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/proxychat:
     post:
@@ -3945,7 +3885,114 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/bot-allowlist:
+    get:
+      tags:
+        - config
+      summary: Get bot-booking QA allow-list
+      description: >-
+        Returns the user IDs allowed to book bot-host listings while the booking
+        block is on.
+      operationId: getBotAllowlist
+      responses:
+        '200':
+          description: Current allow-list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  user_ids:
+                    type: array
+                    items:
+                      type: string
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://dashboard-service-376797180502.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+    post:
+      tags:
+        - config
+      summary: Add a user to the bot-booking QA allow-list
+      description: Resolves an email to a user ID and appends it to the allow-list.
+      operationId: addBotAllowlistEntry
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+        required: true
+      responses:
+        '200':
+          description: Updated allow-list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  user_ids:
+                    type: array
+                    items:
+                      type: string
+        '400':
+          description: Bad request
+          content: {}
+        '404':
+          description: No user found for email
+          content: {}
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://dashboard-service-376797180502.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/bot-allowlist/{id}:
+    delete:
+      tags:
+        - config
+      summary: Remove a user from the bot-booking QA allow-list
+      description: Removes a user ID from the allow-list.
+      operationId: deleteBotAllowlistEntry
+      parameters:
+        - name: id
+          in: path
+          description: User ID
+          required: true
+          schema:
+            maxLength: 128
+            type: string
+      responses:
+        '200':
+          description: Updated allow-list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  user_ids:
+                    type: array
+                    items:
+                      type: string
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/maintenance:
     put:
@@ -3979,7 +4026,7 @@ paths:
           content: {}
       security: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
       x-codegen-request-body-name: body
   /dashboard/tasks:
@@ -4018,7 +4065,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
     get:
       tags:
@@ -4080,7 +4127,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/tasks/{id}/assign:
     patch:
@@ -4135,7 +4182,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/tasks/my:
     get:
@@ -4179,7 +4226,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/tasks/stats:
     get:
@@ -4204,7 +4251,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/tasks/{id}/comments:
     get:
@@ -4243,7 +4290,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
     patch:
       tags:
@@ -4291,7 +4338,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/tasks/{id}/history:
     get:
@@ -4330,7 +4377,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/roles:
     get:
@@ -4355,7 +4402,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
     post:
       tags:
@@ -4385,7 +4432,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/roles/{id}:
     get:
@@ -4416,7 +4463,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
     put:
       tags:
@@ -4458,7 +4505,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
     delete:
       tags:
@@ -4495,7 +4542,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/roles/{id}/permissions:
     get:
@@ -4526,7 +4573,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
     post:
       tags:
@@ -4580,7 +4627,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/roles/{id}/permissions/{permissionId}:
     delete:
@@ -4623,7 +4670,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/roles/initialize:
     post:
@@ -4659,7 +4706,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/user-roles/{userId}/role-names:
     get:
@@ -4690,7 +4737,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/user-roles/{userId}:
     get:
@@ -4721,7 +4768,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/user-roles:
     post:
@@ -4752,7 +4799,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/user-roles/assignment/{userRoleId}:
     delete:
@@ -4790,7 +4837,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/user-roles/assignment/{userRoleId}/extend:
     post:
@@ -4826,7 +4873,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/user-roles/bulk-assign:
     post:
@@ -4868,7 +4915,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/user-roles/bulk-remove:
     delete:
@@ -4910,7 +4957,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/user-roles/role/{roleId}/users:
     get:
@@ -4949,7 +4996,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/permissions:
     get:
@@ -4974,7 +5021,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
     post:
       tags:
@@ -5004,7 +5051,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/permissions/{id}:
     get:
@@ -5035,7 +5082,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
     put:
       tags:
@@ -5077,7 +5124,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
     delete:
       tags:
@@ -5114,7 +5161,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/permissions/initialize:
     post:
@@ -5150,7 +5197,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/{proxy}:
     options:
@@ -5175,7 +5222,7 @@ paths:
       security: []
       x-google-allow: all
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/{proxy}/{proxy1}:
     options:
@@ -5205,7 +5252,7 @@ paths:
       security: []
       x-google-allow: all
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/{proxy}/{proxy1}/{proxy2}:
     options:
@@ -5240,7 +5287,7 @@ paths:
       security: []
       x-google-allow: all
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/{proxy}/{proxy1}/{proxy2}/{proxy3}:
     options:
@@ -5280,7 +5327,7 @@ paths:
       security: []
       x-google-allow: all
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/community/stories/{id}/featured:
     put:
@@ -5329,7 +5376,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/community/reels/{id}/featured:
     put:
@@ -5378,7 +5425,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/community/content:
     get:
@@ -5474,7 +5521,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/community/content/{id}:
     get:
@@ -5507,7 +5554,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
     delete:
       tags:
@@ -5545,7 +5592,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/community/content/bulk-featured:
     post:
@@ -5578,7 +5625,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/community/featured/queue:
     get:
@@ -5620,7 +5667,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/community/users/{userId}/content:
     get:
@@ -5685,7 +5732,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/community/users/{userId}/suspend:
     put:
@@ -5728,7 +5775,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/community/analytics/overview:
     get:
@@ -5774,7 +5821,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/community/analytics/content/{id}:
     get:
@@ -5815,7 +5862,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/community/feed:
     get:
@@ -5859,7 +5906,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/community/feed/{id}:
     get:
@@ -5885,7 +5932,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/community/feed/{id}/approve:
     post:
@@ -5911,7 +5958,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/community/feed/{id}/reject:
     post:
@@ -5945,7 +5992,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/messages/audit:
     get:
@@ -5992,7 +6039,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/messages/audit/stats:
     get:
@@ -6006,7 +6053,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/messages/audit/{id}:
     get:
@@ -6026,7 +6073,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/messages/audit/{id}/flag:
     patch:
@@ -6046,7 +6093,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/messages/audit/{id}/dismiss:
     patch:
@@ -6066,7 +6113,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/messages/audit/{id}/escalate:
     patch:
@@ -6086,7 +6133,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/support-tickets:
     get:
@@ -6129,7 +6176,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/support-tickets/stats:
     get:
@@ -6143,7 +6190,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/support-tickets/{id}:
     get:
@@ -6163,7 +6210,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/support-tickets/{id}/assign:
     patch:
@@ -6183,7 +6230,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/support-tickets/{id}/resolve:
     patch:
@@ -6203,7 +6250,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/support-tickets/{id}/close:
     patch:
@@ -6223,7 +6270,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/support-tickets/{id}/priority:
     patch:
@@ -6258,7 +6305,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/support-tickets/{id}/reply:
     post:
@@ -6289,7 +6336,7 @@ paths:
       security:
         - jwtAuth: []
       x-google-backend:
-        address: https://dashboard-service-981292602655.us-central1.run.app
+        address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
 components:
   schemas:
