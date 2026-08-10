@@ -1,19 +1,41 @@
 # Project X API Gateway Deployment Makefile
 # Replicates the GitHub Actions workflow for local deployment
 
-.PHONY: help gateway build-swagger deploy-gateway clean sync
+.PHONY: help gateway build-swagger deploy-gateway clean sync check-env validate-env-specs
 
 # Default target
 help: ## Show this help message
 	@echo "Project X API Gateway Deployment"
 	@echo "================================"
 	@echo ""
+	@echo "ENV is REQUIRED for all deploy/status targets — no default."
+	@echo "  make gateway ENV=staging       # → corneroom-82fbb     (981292602655)"
+	@echo "  make gateway ENV=production     # → corneroom-prod-504810 (376797180502)"
+	@echo ""
 	@echo "Available commands:"
-	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  %-15s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  %-18s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-# Environment variables (set these or export them)
-ENV ?= staging
-PROJECT_ID ?= corneroom-82fbb
+# --- Environment (NO DEFAULT — must be set explicitly to staging or production) ---
+# PROJECT_ID and TARGET_PROJECT_NUMBER are DERIVED from ENV so the built specs and
+# the deploy target can never disagree. Do NOT set them by hand.
+#   staging    → corneroom-82fbb        / 981292602655 (specs' native project number)
+#   production → corneroom-prod-504810  / 376797180502
+# TARGET_PROJECT_NUMBER is consumed by scripts/merge-specs.js to rewrite every
+# x-google-backend.address from the staging number to the target env. If it is
+# unset/wrong, the built gateway spec points at the WRONG env's backends and the
+# gateway returns 403 on ALL routes (this caused a prod outage on 2026-08-09).
+ifeq ($(ENV),staging)
+  PROJECT_ID            := corneroom-82fbb
+  TARGET_PROJECT_NUMBER := 981292602655
+  OTHER_PROJECT_NUMBER  := 376797180502
+endif
+ifeq ($(ENV),production)
+  PROJECT_ID            := corneroom-prod-504810
+  TARGET_PROJECT_NUMBER := 376797180502
+  OTHER_PROJECT_NUMBER  := 981292602655
+endif
+export TARGET_PROJECT_NUMBER
+
 LOCATION ?= us-central1
 API_NAME ?= corneroom-api
 CONFIG_PATH ?= gateway/config.json
@@ -24,10 +46,25 @@ KEEP_CONFIGS ?= 3
 SHORT_SHA := $(shell git rev-parse --short HEAD)
 TIMESTAMP := $(shell date +'%Y%m%d%H%M%S')
 
-gateway: clean sync build-swagger deploy-gateway ## Deploy API Gateway (build + deploy)
+# check-env is a prerequisite of every env-dependent target. It fails fast if ENV
+# is missing or not exactly 'staging'/'production', so a deploy can never run
+# against an unintended/undefined environment.
+check-env: ## Validate ENV is set to staging|production (required by deploy targets)
+	@if [ -z "$(ENV)" ]; then \
+		echo "❌ ENV is not set. Usage: make <target> ENV=staging|production"; exit 1; \
+	fi
+	@if [ "$(ENV)" != "staging" ] && [ "$(ENV)" != "production" ]; then \
+		echo "❌ ENV must be 'staging' or 'production' (got '$(ENV)')"; exit 1; \
+	fi
+	@if [ -z "$(PROJECT_ID)" ] || [ -z "$(TARGET_PROJECT_NUMBER)" ]; then \
+		echo "❌ Could not derive PROJECT_ID/TARGET_PROJECT_NUMBER for ENV=$(ENV)"; exit 1; \
+	fi
+	@echo "✅ ENV=$(ENV) → PROJECT_ID=$(PROJECT_ID), TARGET_PROJECT_NUMBER=$(TARGET_PROJECT_NUMBER)"
 
-build-swagger: ## Build OpenAPI specs to Swagger 2.0
-	@echo "🔨 Building OpenAPI specs to Swagger 2.0..."
+gateway: check-env clean sync build-swagger validate-env-specs deploy-gateway ## Deploy API Gateway (build + deploy). Requires ENV=staging|production
+
+build-swagger: check-env ## Build OpenAPI specs to Swagger 2.0 (backends rewritten to ENV via TARGET_PROJECT_NUMBER)
+	@echo "🔨 Building OpenAPI specs to Swagger 2.0 for ENV=$(ENV) (backends → $(TARGET_PROJECT_NUMBER))..."
 	@if [ ! -f package.json ]; then \
 		echo "❌ package.json not found. Run 'npm init' first."; \
 		exit 1; \
@@ -39,10 +76,30 @@ build-swagger: ## Build OpenAPI specs to Swagger 2.0
 	@echo "📦 Installing dependencies..."
 	@npm ci --cache .npm-cache
 	@echo "🔄 Converting OpenAPI specs to Swagger 2.0..."
-	@npm run swagger
+	@TARGET_PROJECT_NUMBER=$(TARGET_PROJECT_NUMBER) npm run swagger
 	@echo "✅ Swagger specs built successfully"
 
-deploy-gateway: ## Deploy API Gateway configs and gateways
+# Fail-fast guard: assert every built gateway spec targets THIS env's backends
+# and none of the OTHER env's. Prevents shipping a config whose x-google-backend
+# addresses point at the wrong project (the 2026-08-09 prod outage: staging
+# backends baked into the prod config → 403 on all routes).
+validate-env-specs: check-env ## Assert built gateway specs point at ENV's backends, not the other env's
+	@echo "🔎 Validating built gateway specs target ENV=$(ENV) ($(TARGET_PROJECT_NUMBER)), not $(OTHER_PROJECT_NUMBER)..."
+	@built=0; fail=0; \
+	for spec in gateway/*-swagger.yaml; do \
+		[ -f "$$spec" ] || continue; built=$$((built+1)); \
+		if grep -q "$(OTHER_PROJECT_NUMBER)" "$$spec"; then \
+			echo "  ❌ $$spec references the WRONG env project number $(OTHER_PROJECT_NUMBER) (expected $(TARGET_PROJECT_NUMBER))"; fail=1; \
+		fi; \
+		if ! grep -q "$(TARGET_PROJECT_NUMBER)" "$$spec"; then \
+			echo "  ❌ $$spec does not reference the target project number $(TARGET_PROJECT_NUMBER)"; fail=1; \
+		fi; \
+	done; \
+	if [ "$$built" = "0" ]; then echo "  ❌ No built gateway/*-swagger.yaml found — run build-swagger first"; exit 1; fi; \
+	if [ "$$fail" = "1" ]; then echo "🛑 Spec/env mismatch — refusing to deploy to $(ENV)."; exit 1; fi; \
+	echo "  ✅ All $$built built spec(s) target ENV=$(ENV) backends."
+
+deploy-gateway: check-env validate-env-specs ## Deploy API Gateway configs and gateways
 	@echo "🚀 Deploying API Gateway for environment: $(ENV)..."
 	@if ! command -v gcloud >/dev/null 2>&1; then \
 		echo "❌ gcloud CLI not found. Please install and authenticate."; \
@@ -125,7 +182,7 @@ test-gateway: ## Run the gateway integration suite (auth-aware, per-service; see
 test-gw: test-gateway ## Alias for test-gateway
 
 # Quick health-only ping of the deployed gateways (no auth, no suite)
-gateway-health: ## Curl /health on each deployed gateway
+gateway-health: check-env ## Curl /health on each deployed gateway
 	@echo "🧪 Pinging gateway health for environment: $(ENV)..."
 	@for gw in $$(jq -r '.gateways | keys[]' $(CONFIG_PATH)); do \
 		GW_NAME="$${gw}-$(ENV)-gateway"; \
@@ -139,7 +196,7 @@ gateway-health: ## Curl /health on each deployed gateway
 	done
 
 # Show gateway status
-status: ## Show current gateway status
+status: check-env ## Show current gateway status
 	@echo "📊 Gateway Status for environment: $(ENV)"
 	@echo "================="
 	@for gw in $$(jq -r '.gateways | keys[]' $(CONFIG_PATH)); do \
@@ -208,7 +265,7 @@ sync: ## Sync API specs from backend services to services/ directory
 	@echo "📋 Copying reward-service API spec..."
 	@cp ../../../backend/reward-service/docs/api.yaml services/reward-service.yaml
 	@echo "✅ API specs sync completed!"
-auth: ## Authenticate with Google Cloud using Application Default Credentials
+auth: check-env ## Authenticate with Google Cloud using Application Default Credentials
 	@echo "🔐 Setting up Google Cloud Application Default Credentials..."
 	@gcloud auth application-default login --project="$(PROJECT_ID)"
 	@echo "✅ Authentication complete!"
