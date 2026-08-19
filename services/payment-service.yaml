@@ -1375,6 +1375,14 @@ components:
           description: Payment provider (optional, defaults to stripe)
           enum: [stripe, paypal]
           default: stripe
+        coupon_code:
+          type: string
+          description: >-
+            Optional referral coupon code. Validated against reward-service
+            and, if valid, applied as a discount on the guest-facing charge
+            (floored at 0). The host payout is unaffected — the platform
+            absorbs the discount.
+          example: "REF5"
 
     PaymentIntentResponse:
       type: object

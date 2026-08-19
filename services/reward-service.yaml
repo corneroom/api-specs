@@ -218,6 +218,49 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /rewards/me/wallet:
+    get:
+      summary: Get current user's wallet
+      description: Retrieves the currently authenticated user's active coupons.
+      tags:
+        - reward
+      operationId: getMyWallet
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://reward-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      responses:
+        "200":
+          description: User's active coupons
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WalletResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized (missing or invalid token)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 servers:
   - url: https://app-staging-gateway-cissa23j.uc.gateway.dev/api/v1
 components:
@@ -306,6 +349,45 @@ components:
       required:
         - success
         - toast
+    WalletResponse:
+      type: object
+      description: The current user's active coupons.
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            coupons:
+              type: array
+              items:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    example: "REF-A1B2C3"
+                  value_cents:
+                    type: integer
+                    example: 500
+                  currency:
+                    type: string
+                    example: "USD"
+                  applies_to:
+                    type: string
+                    example: "stay"
+                  expires_at:
+                    type: string
+                    format: date-time
+                    example: "2026-09-01T12:00:00Z"
+                  status:
+                    type: string
+                    example: "active"
+          required:
+            - coupons
+      required:
+        - success
+        - data
     ErrorResponse:
       type: object
       description: Standard error response model for failed requests.

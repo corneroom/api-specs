@@ -3260,6 +3260,7 @@ paths:
       summary: List experiences
       x-google-backend:
         address: 'https://listing-service-376797180502.us-central1.run.app'
+        deadline: 90
         path_translation: APPEND_PATH_TO_ADDRESS
     post:
       consumes:
@@ -3292,6 +3293,7 @@ paths:
       summary: Create a new experience
       x-google-backend:
         address: 'https://listing-service-376797180502.us-central1.run.app'
+        deadline: 90
         path_translation: APPEND_PATH_TO_ADDRESS
   /experiences/mine:
     get:
@@ -3321,6 +3323,95 @@ paths:
       summary: List the current guide's experiences (incl. drafts)
       x-google-backend:
         address: 'https://listing-service-376797180502.us-central1.run.app'
+        deadline: 90
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /experiences/public:
+    get:
+      produces:
+        - application/json
+      parameters:
+        - default: 1
+          in: query
+          name: page
+          type: integer
+        - default: 10
+          in: query
+          name: limit
+          type: integer
+        - in: query
+          name: country
+          type: string
+        - in: query
+          name: category
+          type: string
+        - in: query
+          name: vibe
+          type: string
+      responses:
+        '200':
+          description: Public experience list
+          schema:
+            properties:
+              data:
+                properties:
+                  experiences:
+                    items:
+                      properties:
+                        category:
+                          type: string
+                        cover_image_url:
+                          type: string
+                        currency:
+                          type: string
+                        duration_minutes:
+                          type: integer
+                        guide_avatar:
+                          type: string
+                        guide_name:
+                          type: string
+                        id:
+                          type: string
+                        price:
+                          type: number
+                        pricing_mode:
+                          type: string
+                        rating_avg:
+                          type: number
+                        rating_count:
+                          type: integer
+                        title:
+                          type: string
+                      type: object
+                    type: array
+                  pagination:
+                    properties:
+                      limit:
+                        type: integer
+                      page:
+                        type: integer
+                      total:
+                        type: integer
+                    type: object
+                type: object
+              success:
+                type: boolean
+              toast:
+                type: string
+            type: object
+      security: []
+      tags:
+        - experiences
+      description: >
+        Anonymous-safe discovery feed for the Explore "Things to do" carousel.
+        Requires no authentication, mirroring GET /listings. Returns only the
+        fields the carousel card renders; the full record (meeting point,
+        description, safety info, guide identity) stays behind auth on GET
+        /experiences and GET /experiences/{id}.
+      operationId: experiencesPublicList
+      summary: Public experience carousel feed
+      x-google-backend:
+        address: 'https://listing-service-376797180502.us-central1.run.app'
+        deadline: 90
         path_translation: APPEND_PATH_TO_ADDRESS
   '/experiences/{id}':
     delete:
@@ -3343,6 +3434,7 @@ paths:
       summary: Delete experience
       x-google-backend:
         address: 'https://listing-service-376797180502.us-central1.run.app'
+        deadline: 90
         path_translation: APPEND_PATH_TO_ADDRESS
     get:
       produces:
@@ -3368,6 +3460,7 @@ paths:
       summary: Get experience details
       x-google-backend:
         address: 'https://listing-service-376797180502.us-central1.run.app'
+        deadline: 90
         path_translation: APPEND_PATH_TO_ADDRESS
     put:
       consumes:
@@ -3400,6 +3493,7 @@ paths:
       summary: Update experience
       x-google-backend:
         address: 'https://listing-service-376797180502.us-central1.run.app'
+        deadline: 90
         path_translation: APPEND_PATH_TO_ADDRESS
   '/experiences/{id}/sessions':
     get:
@@ -3560,6 +3654,7 @@ paths:
       summary: List guides
       x-google-backend:
         address: 'https://listing-service-376797180502.us-central1.run.app'
+        deadline: 90
         path_translation: APPEND_PATH_TO_ADDRESS
     post:
       consumes:
@@ -3590,6 +3685,7 @@ paths:
       summary: Become a guide
       x-google-backend:
         address: 'https://listing-service-376797180502.us-central1.run.app'
+        deadline: 90
         path_translation: APPEND_PATH_TO_ADDRESS
   /guides/apply:
     post:
@@ -3623,6 +3719,7 @@ paths:
       summary: Apply to become a guide
       x-google-backend:
         address: 'https://listing-service-376797180502.us-central1.run.app'
+        deadline: 90
         path_translation: APPEND_PATH_TO_ADDRESS
   /guides/me:
     get:
@@ -3644,6 +3741,7 @@ paths:
       summary: Get the current user's guide profile/status
       x-google-backend:
         address: 'https://listing-service-376797180502.us-central1.run.app'
+        deadline: 90
         path_translation: APPEND_PATH_TO_ADDRESS
   '/guides/{id}':
     get:
@@ -3670,6 +3768,7 @@ paths:
       summary: Get guide profile
       x-google-backend:
         address: 'https://listing-service-376797180502.us-central1.run.app'
+        deadline: 90
         path_translation: APPEND_PATH_TO_ADDRESS
   /health:
     get:
@@ -4039,6 +4138,7 @@ paths:
       summary: Get all listings
       x-google-backend:
         address: 'https://listing-service-376797180502.us-central1.run.app'
+        deadline: 90
         path_translation: APPEND_PATH_TO_ADDRESS
     post:
       consumes:
@@ -4390,6 +4490,7 @@ paths:
       summary: Create a new listing (publish)
       x-google-backend:
         address: 'https://listing-service-376797180502.us-central1.run.app'
+        deadline: 90
         path_translation: APPEND_PATH_TO_ADDRESS
   /listings/address:
     get:
@@ -4564,6 +4665,7 @@ paths:
       summary: Address auto complete
       x-google-backend:
         address: 'https://listing-service-376797180502.us-central1.run.app'
+        deadline: 90
         path_translation: APPEND_PATH_TO_ADDRESS
   /listings/categories:
     get:
@@ -4621,6 +4723,7 @@ paths:
       summary: Get all available categories
       x-google-backend:
         address: 'https://listing-service-376797180502.us-central1.run.app'
+        deadline: 90
         path_translation: APPEND_PATH_TO_ADDRESS
   '/listings/dashboard/{section}':
     get:
@@ -4749,6 +4852,7 @@ paths:
       summary: Get dashboard section data
       x-google-backend:
         address: 'https://listing-service-376797180502.us-central1.run.app'
+        deadline: 90
         path_translation: APPEND_PATH_TO_ADDRESS
   /listings/drafts:
     post:
@@ -5091,6 +5195,7 @@ paths:
       summary: Save listing draft
       x-google-backend:
         address: 'https://listing-service-376797180502.us-central1.run.app'
+        deadline: 90
         path_translation: APPEND_PATH_TO_ADDRESS
     put:
       consumes:
@@ -5420,6 +5525,7 @@ paths:
       summary: Update listing draft
       x-google-backend:
         address: 'https://listing-service-376797180502.us-central1.run.app'
+        deadline: 90
         path_translation: APPEND_PATH_TO_ADDRESS
   /listings/grouped:
     get:
@@ -5533,6 +5639,7 @@ paths:
       summary: Get grouped listings (sample for all groups)
       x-google-backend:
         address: 'https://listing-service-376797180502.us-central1.run.app'
+        deadline: 90
         path_translation: APPEND_PATH_TO_ADDRESS
   /listings/heartbeat:
     get:
@@ -5638,6 +5745,7 @@ paths:
       summary: Heartbeat
       x-google-backend:
         address: 'https://listing-service-376797180502.us-central1.run.app'
+        deadline: 90
         path_translation: APPEND_PATH_TO_ADDRESS
   '/listings/host/{host_id}':
     get:
@@ -5815,6 +5923,7 @@ paths:
       summary: Get public listing cards for a host profile
       x-google-backend:
         address: 'https://listing-service-376797180502.us-central1.run.app'
+        deadline: 90
         path_translation: APPEND_PATH_TO_ADDRESS
   /listings/locations/detect:
     post:
@@ -6190,6 +6299,7 @@ paths:
       summary: Get all listings for the authenticated user ("my listings")
       x-google-backend:
         address: 'https://listing-service-376797180502.us-central1.run.app'
+        deadline: 90
         path_translation: APPEND_PATH_TO_ADDRESS
   '/listings/user/{id}':
     get:
@@ -6285,6 +6395,7 @@ paths:
       summary: Get host-owned listing detail by ID
       x-google-backend:
         address: 'https://listing-service-376797180502.us-central1.run.app'
+        deadline: 90
         path_translation: APPEND_PATH_TO_ADDRESS
   '/listings/{id}':
     delete:
@@ -6405,6 +6516,7 @@ paths:
       summary: Delete a listing
       x-google-backend:
         address: 'https://listing-service-376797180502.us-central1.run.app'
+        deadline: 90
         path_translation: APPEND_PATH_TO_ADDRESS
     get:
       produces:
@@ -6597,6 +6709,7 @@ paths:
       summary: Get a listing
       x-google-backend:
         address: 'https://listing-service-376797180502.us-central1.run.app'
+        deadline: 90
         path_translation: APPEND_PATH_TO_ADDRESS
     put:
       consumes:
@@ -6961,6 +7074,7 @@ paths:
       summary: Update a listing
       x-google-backend:
         address: 'https://listing-service-376797180502.us-central1.run.app'
+        deadline: 90
         path_translation: APPEND_PATH_TO_ADDRESS
   '/listings/{id}/availability':
     get:
@@ -7072,6 +7186,7 @@ paths:
       summary: Get listing availability
       x-google-backend:
         address: 'https://listing-service-376797180502.us-central1.run.app'
+        deadline: 90
         path_translation: APPEND_PATH_TO_ADDRESS
   '/listings/{id}/availability/calendar':
     get:
@@ -7129,6 +7244,7 @@ paths:
       summary: Get listing availability calendar
       x-google-backend:
         address: 'https://listing-service-376797180502.us-central1.run.app'
+        deadline: 90
         path_translation: APPEND_PATH_TO_ADDRESS
   '/listings/{id}/blackout':
     post:
@@ -7252,6 +7368,7 @@ paths:
       summary: Add blackout dates to a listing
       x-google-backend:
         address: 'https://listing-service-376797180502.us-central1.run.app'
+        deadline: 90
         path_translation: APPEND_PATH_TO_ADDRESS
   '/listings/{id}/blackout-dates':
     get:
@@ -7331,6 +7448,7 @@ paths:
       summary: Get blackout dates for a listing
       x-google-backend:
         address: 'https://listing-service-376797180502.us-central1.run.app'
+        deadline: 90
         path_translation: APPEND_PATH_TO_ADDRESS
   '/listings/{id}/blackout/{blackout_id}':
     delete:
@@ -7379,6 +7497,192 @@ paths:
       summary: Remove a blackout date from a listing
       x-google-backend:
         address: 'https://listing-service-376797180502.us-central1.run.app'
+        deadline: 90
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/listings/{id}/edit':
+    get:
+      produces:
+        - application/json
+      parameters:
+        - description: Listing ID
+          in: path
+          name: id
+          required: true
+          type: string
+      responses:
+        '200':
+          description: 'The listing, full detail'
+          schema:
+            properties:
+              data:
+                properties:
+                  accept_same_day_booking:
+                    type: boolean
+                  address:
+                    properties:
+                      city:
+                        type: string
+                      country:
+                        type: string
+                      flag:
+                        type: string
+                      postal_code:
+                        type: string
+                      province:
+                        type: string
+                      street:
+                        type: string
+                      unit_number:
+                        type: string
+                    type: object
+                  amenities:
+                    items:
+                      type: string
+                    type: array
+                  baggage_drop:
+                    type: boolean
+                  cancellation_policy:
+                    type: string
+                  category_code:
+                    type: string
+                  check_in_instructions:
+                    type: string
+                  check_out_instructions:
+                    type: string
+                  currency:
+                    type: string
+                  description:
+                    type: string
+                  emergency_contact:
+                    type: string
+                  house_rules:
+                    items:
+                      type: string
+                    type: array
+                  id:
+                    type: string
+                  instant_book:
+                    type: boolean
+                  latitude:
+                    format: double
+                    type: number
+                  local_recommendations:
+                    type: string
+                  longitude:
+                    format: double
+                    type: number
+                  max_guests:
+                    format: int32
+                    type: integer
+                  max_stay_days:
+                    type: integer
+                  min_stay_days:
+                    type: integer
+                  nearby_places:
+                    items:
+                      type: string
+                    type: array
+                  photos:
+                    items:
+                      format: uri
+                      type: string
+                    type: array
+                  price:
+                    format: double
+                    type: number
+                  pricing_type:
+                    type: string
+                  space_type:
+                    type: string
+                  status:
+                    type: string
+                  thumbnail:
+                    format: uri
+                    type: string
+                  timezone:
+                    type: string
+                  title:
+                    type: string
+                  wifi_details:
+                    properties:
+                      network_name:
+                        type: string
+                      notes:
+                        type: string
+                      password:
+                        type: string
+                    type: object
+                type: object
+              success:
+                type: boolean
+              toast:
+                type: string
+            required:
+              - success
+              - data
+            type: object
+        '403':
+          description: Forbidden (caller is not the listing's host)
+          schema:
+            description: Standard error response model for failed requests.
+            properties:
+              error:
+                type: string
+              success:
+                example: false
+                type: boolean
+              toast:
+                type: string
+            required:
+              - success
+              - error
+            type: object
+        '404':
+          description: Listing not found
+          schema:
+            description: Standard error response model for failed requests.
+            properties:
+              error:
+                type: string
+              success:
+                example: false
+                type: boolean
+              toast:
+                type: string
+            required:
+              - success
+              - error
+            type: object
+        default:
+          description: Default error response
+          schema:
+            description: Standard error response model for failed requests.
+            properties:
+              error:
+                type: string
+              success:
+                example: false
+                type: boolean
+              toast:
+                type: string
+            required:
+              - success
+              - error
+            type: object
+      security:
+        - jwtAuth: []
+      tags:
+        - listing
+      description: |
+        Returns the full listing, including operational fields the public/guest
+        detail response deliberately omits (WiFi password, check-in/out
+        instructions, emergency contact) — for prefilling the host's edit flow.
+        Only the listing's host may call this; any other caller gets 403.
+      operationId: listingsGetListingForEdit
+      summary: Get a listing for editing (host-only)
+      x-google-backend:
+        address: 'https://listing-service-376797180502.us-central1.run.app'
+        deadline: 90
         path_translation: APPEND_PATH_TO_ADDRESS
   '/listings/{id}/host-calendar':
     get:
@@ -7428,6 +7732,7 @@ paths:
       summary: Host-only classified availability calendar
       x-google-backend:
         address: 'https://listing-service-376797180502.us-central1.run.app'
+        deadline: 90
         path_translation: APPEND_PATH_TO_ADDRESS
   '/listings/{id}/report':
     post:
@@ -7577,6 +7882,7 @@ paths:
       summary: Report a listing
       x-google-backend:
         address: 'https://listing-service-376797180502.us-central1.run.app'
+        deadline: 90
         path_translation: APPEND_PATH_TO_ADDRESS
   '/listings/{id}/weather/forecast':
     get:
@@ -7759,6 +8065,7 @@ paths:
       summary: Get weather forecast for a listing
       x-google-backend:
         address: 'https://listing-service-376797180502.us-central1.run.app'
+        deadline: 90
         path_translation: APPEND_PATH_TO_ADDRESS
   '/messages/{messageId}':
     get:
@@ -9074,6 +9381,7 @@ paths:
       summary: Report content
       x-google-backend:
         address: 'https://listing-service-376797180502.us-central1.run.app'
+        deadline: 90
         path_translation: APPEND_PATH_TO_ADDRESS
   /reviews:
     get:
@@ -9616,6 +9924,42 @@ paths:
         authenticated user.
       operationId: getMyReferrals
       summary: List people I referred
+      x-google-backend:
+        address: 'https://reward-service-376797180502.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /rewards/me/wallet:
+    get:
+      produces:
+        - application/json
+      parameters: []
+      responses:
+        '200':
+          description: User's active coupons
+          schema:
+            $ref: '#/definitions/WalletResponse'
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '401':
+          description: Unauthorized (missing or invalid token)
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '404':
+          description: Not found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        default:
+          description: Default error response
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+        - jwtAuth: []
+      tags:
+        - reward
+      description: Retrieves the currently authenticated user's active coupons.
+      operationId: getMyWallet
+      summary: Get current user's wallet
       x-google-backend:
         address: 'https://reward-service-376797180502.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
@@ -16311,6 +16655,13 @@ definitions:
         description: Booking ID
         example: booking_123
         type: string
+      coupon_code:
+        description: >-
+          Optional referral coupon code. Validated against reward-service and,
+          if valid, applied as a discount on the guest-facing charge (floored at
+          0). The host payout is unaffected — the platform absorbs the discount.
+        example: REF5
+        type: string
       currency:
         description: Currency code
         example: CAD
@@ -19897,6 +20248,45 @@ definitions:
         type: object
     required:
       - audio_url
+    type: object
+  WalletResponse:
+    description: The current user's active coupons.
+    properties:
+      data:
+        properties:
+          coupons:
+            items:
+              properties:
+                applies_to:
+                  example: stay
+                  type: string
+                code:
+                  example: REF-A1B2C3
+                  type: string
+                currency:
+                  example: USD
+                  type: string
+                expires_at:
+                  example: '2026-09-01T12:00:00Z'
+                  format: date-time
+                  type: string
+                status:
+                  example: active
+                  type: string
+                value_cents:
+                  example: 500
+                  type: integer
+              type: object
+            type: array
+        required:
+          - coupons
+        type: object
+      success:
+        example: true
+        type: boolean
+    required:
+      - success
+      - data
     type: object
   WifiDetail:
     properties:

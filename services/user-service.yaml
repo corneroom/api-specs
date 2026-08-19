@@ -1357,12 +1357,28 @@ paths:
                       type: string
                     device_type:
                       type: string
+                      description: >-
+                        The OS the client is running on. Stored as the device's
+                        `platform`, so it must be the real platform.
+                      enum:
+                        - ios
+                        - android
+                        - web
                     device_model:
                       type: string
                     app_version:
                       type: string
                     system_name:
                       type: string
+                    language:
+                      type: string
+                      description: Client locale, e.g. en_CA
+                    timezone:
+                      type: string
+                      description: UTC offset, e.g. UTC-04:00
+                    is_simulator:
+                      type: boolean
+                      description: True when running on a simulator or emulator
         description: Contact information and delivery method
         required: true
       responses:
@@ -1517,12 +1533,28 @@ paths:
                       type: string
                     device_type:
                       type: string
+                      description: >-
+                        The OS the client is running on. Stored as the device's
+                        `platform`, so it must be the real platform.
+                      enum:
+                        - ios
+                        - android
+                        - web
                     device_model:
                       type: string
                     app_version:
                       type: string
                     system_name:
                       type: string
+                    language:
+                      type: string
+                      description: Client locale, e.g. en_CA
+                    timezone:
+                      type: string
+                      description: UTC offset, e.g. UTC-04:00
+                    is_simulator:
+                      type: boolean
+                      description: True when running on a simulator or emulator
                 fcm_token:
                   type: string
                   description: Optional FCM token for push notifications
