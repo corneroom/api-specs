@@ -23,6 +23,7 @@ Any new route in a backend service **must** be added to the API Gateway spec, or
    ```
 3. Commit the updated `services/<service>.yaml` and `gateway/dashboard-swagger.yaml` (or `app-swagger.yaml`)
 4. Verify the route is live: unauthenticated `curl` should return **401** (routed, auth required), not 404/405 — then run `make test-gateway`
+5. Sanity-check the whole environment with the read-only smoke suite: `make smoke ENV=staging` (or `ENV=prod`). It needs no credentials and performs no writes, so it is the only suite safe to run against production — see `tests/README.md`.
 
 **Two separate gateways — never cross-wire:**
 - `app` gateway → mobile app traffic (`backend/*-service` endpoints under `/api/v1/`)

@@ -177,9 +177,19 @@ check-prereqs: ## Check if all required tools are installed
 	@echo "✅ All prerequisites met"
 
 # Gateway integration test suite (tests/)
-test-gateway: ## Run the gateway integration suite (auth-aware, per-service; see tests/)
+# STAGING ONLY — it writes (blocks users, edits wishlists). Never point it at prod.
+test-gateway: ## Run the gateway integration suite (auth-aware, per-service, STAGING only; see tests/)
 	@node tests/run.mjs
 test-gw: test-gateway ## Alias for test-gateway
+
+# Read-only smoke suite — no credentials, no writes, safe against production.
+# ENV is required (no default) for the same reason `gateway` requires it: a
+# silent default is how you end up verifying the wrong environment.
+smoke: ## Read-only gateway smoke test. Usage: make smoke ENV=staging|prod
+	@if [ -z "$(ENV)" ]; then \
+		echo "❌ ENV is required.  Usage: make smoke ENV=staging|prod"; exit 2; \
+	fi
+	@node tests/smoke.mjs $(ENV)
 
 # Quick health-only ping of the deployed gateways (no auth, no suite)
 gateway-health: check-env ## Curl /health on each deployed gateway
