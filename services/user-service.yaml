@@ -3479,6 +3479,126 @@ paths:
                     type: boolean
                   error:
                     type: string
+  /users/me/email:
+    delete:
+      description: |
+        Removes the current user's email address as a login method (CR-543).
+        Refused with 409 when the email is the account's only remaining way to
+        sign in (no verified phone, no social provider).
+      summary: Remove the current user's email
+      tags:
+        - user
+      operationId: removeCurrentUserEmail
+      x-google-backend:
+        address: https://user-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      responses:
+        "200":
+          description: Email removed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        "404":
+          description: No email linked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  error:
+                    type: string
+        "409":
+          description: Email is the only remaining login method
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  error:
+                    type: string
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  error:
+                    type: string
+  /users/me/phone:
+    delete:
+      description: |
+        Removes the current user's phone number as a login method (CR-543).
+        Refused with 409 when the phone is the account's only remaining way to
+        sign in (no verified email + password, no social provider).
+      summary: Remove the current user's phone
+      tags:
+        - user
+      operationId: removeCurrentUserPhone
+      x-google-backend:
+        address: https://user-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      responses:
+        "200":
+          description: Phone removed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        "404":
+          description: No phone linked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  error:
+                    type: string
+        "409":
+          description: Phone is the only remaining login method
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  error:
+                    type: string
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  error:
+                    type: string
   /users/me/email/add:
     patch:
       description: Adds a new email address to the user's profile.
