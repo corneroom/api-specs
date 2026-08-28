@@ -146,6 +146,17 @@ for (const [name, path] of [
     : bad(name, `expected 401/403, got ${r.status}`);
 }
 
+// document-service — POST /documents/upload (chat-message attachment
+// multipart upload, gateway-exposed). Routing/auth smoke check only: proves
+// the route is registered and JWT-protected. The full authenticated
+// upload/write path is make test-gateway's territory, not this suite's.
+{
+  const r = await get(`${gwUrl}/documents/upload`, { method: 'POST' });
+  r.status === 401 || r.status === 403
+    ? ok(`POST /documents/upload → ${r.status}`)
+    : bad('POST /documents/upload', `expected 401/403, got ${r.status}`);
+}
+
 // The internal KYC-status write must never be reachable from the app gateway
 // (it was an unauthenticated verification bypass). Mirrors services/security.mjs.
 {
