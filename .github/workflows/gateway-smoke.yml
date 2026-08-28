@@ -1,0 +1,77 @@
+name: Gateway Smoke
+
+# Read-only, no credentials, safe against production (see tests/README.md).
+# Runs on a schedule because gateway deploys are LOCAL (make gateway) and
+# backend services deploy independently on their own schedules — nothing else
+# in CI would catch a routing/auth/privacy regression that either introduces.
+on:
+  schedule:
+    - cron: '*/30 * * * *'   # staging, every 30 min
+    - cron: '5,35 * * * *'   # prod, offset by 5 min so the two runs don't collide
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to smoke-test'
+        required: true
+        default: 'both'
+        type: choice
+        options:
+          - both
+          - staging
+          - prod
+
+concurrency:
+  group: gateway-smoke-${{ github.event.schedule || inputs.environment }}
+  cancel-in-progress: false
+
+jobs:
+  resolve-env:
+    runs-on: ubuntu-latest
+    outputs:
+      envs: ${{ steps.resolve.outputs.envs }}
+    steps:
+      - id: resolve
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            case "${{ inputs.environment }}" in
+              staging) echo 'envs=["staging"]' >> "$GITHUB_OUTPUT" ;;
+              prod)    echo 'envs=["prod"]' >> "$GITHUB_OUTPUT" ;;
+              *)       echo 'envs=["staging","prod"]' >> "$GITHUB_OUTPUT" ;;
+            esac
+          elif [[ "${{ github.event.schedule }}" == "5,35 * * * *" ]]; then
+            echo 'envs=["prod"]' >> "$GITHUB_OUTPUT"
+          else
+            echo 'envs=["staging"]' >> "$GITHUB_OUTPUT"
+          fi
+
+  smoke:
+    needs: resolve-env
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        env: ${{ fromJson(needs.resolve-env.outputs.envs) }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Smoke test ${{ matrix.env }}
+        id: smoke
+        run: node tests/smoke.mjs ${{ matrix.env }}
+
+      - name: Notify Slack on failure
+        if: failure()
+        continue-on-error: true
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_USERNAME: 'GitHub Actions'
+          SLACK_ICON_EMOJI: ':rotating_light:'
+          SLACK_COLOR: '#E01E5A'
+          SLACK_TITLE: '🚨 Gateway smoke failed — ${{ matrix.env }}'
+          SLACK_MESSAGE: 'A read-only gateway check failed against ${{ matrix.env }}. See the run for which endpoint/check.'

@@ -29,5 +29,10 @@ export default {
     // Auth-header regression guards (the gotcha that cost us a debugging round):
     { name: 'GET /payments/methods rejects access-only header', path: '/payments/methods', auth: 'access-only', expect: 401 },
     { name: 'GET /payments/methods rejects missing auth', path: '/payments/methods', auth: 'none', expect: 401 },
+    // Same auth group as /payments/methods (internal/server.go's JWT-guarded
+    // /api/v1 route tree) — same header requirement applies. No positive case:
+    // creating an intent/charge is a real write against the payment provider.
+    { name: 'POST /payments/intents rejects missing auth', method: 'POST', path: '/payments/intents', auth: 'none', body: { booking_id: 'gw-test-does-not-exist' }, expect: 401 },
+    { name: 'POST /payments/charges rejects missing auth', method: 'POST', path: '/payments/charges', auth: 'none', body: { type: 'experience', reference: 'gw-test-does-not-exist' }, expect: 401 },
   ],
 };

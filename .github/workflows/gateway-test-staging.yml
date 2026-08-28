@@ -1,0 +1,46 @@
+name: Gateway Integration Suite (Staging)
+
+# Authenticated, STAGING ONLY — this suite writes (blocks users, edits
+# wishlists; see tests/README.md). Never point it at prod. Runs less often
+# than the smoke suite: it does real writes against a live account, and the
+# behaviour it covers (per-service auth headers, block/wishlist/booking-read
+# flows) changes far less often than routing/privacy does.
+on:
+  schedule:
+    - cron: '0 */6 * * *'   # every 6 hours
+  workflow_dispatch: {}
+
+concurrency:
+  group: gateway-test-staging
+  cancel-in-progress: false
+
+jobs:
+  test-gateway:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Run authenticated gateway suite
+        run: node tests/run.mjs
+        env:
+          GW_URL: https://app-staging-gateway-cissa23j.uc.gateway.dev/api/v1
+          TEST_EMAIL: ${{ secrets.GATEWAY_TEST_EMAIL }}
+          TEST_PASSWORD: ${{ secrets.GATEWAY_TEST_PASSWORD }}
+
+      - name: Notify Slack on failure
+        if: failure()
+        continue-on-error: true
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_USERNAME: 'GitHub Actions'
+          SLACK_ICON_EMOJI: ':rotating_light:'
+          SLACK_COLOR: '#E01E5A'
+          SLACK_TITLE: '🚨 Gateway integration suite failed — staging'
+          SLACK_MESSAGE: 'An authenticated per-service gateway check failed against staging. See the run for which case.'
