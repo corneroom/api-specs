@@ -169,6 +169,45 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /bookings/host/past:
+    get:
+      summary: Get cursor-paginated past bookings where the authenticated user is the host
+      description: |
+        Returns older host bookings not covered by GET /bookings/host's bounded window,
+        cursor-paginated (check_out DESC). Cancelled/rejected bookings with a future
+        check_out are NOT included here — they appear in GET /bookings/host's `past`
+        bucket instead.
+      tags: [booking]
+      operationId: bookingsHostPast
+      security: [{ jwtAuth: [] }]
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20, minimum: 1, maximum: 50 }
+        - name: cursor
+          in: query
+          schema: { type: string }
+          description: Opaque pagination cursor from a previous response's next_cursor
+      responses:
+        "200":
+          description: Cursor-paginated page of past host bookings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HostBookingsPastResponse"
+        "400":
+          description: Bad Request (e.g. invalid cursor)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /bookings/initiate:
     post:
       summary: Initiate a booking (draft)
@@ -1203,6 +1242,14 @@ components:
           type: boolean
           description: Whether the host can cancel this booking (based on booking status)
           example: true
+        has_dispute:
+          type: boolean
+          description: CR-612 — a card dispute (chargeback) is open on this booking's payment; refunds are held until it resolves
+          example: false
+        dispute_status:
+          type: string
+          description: Provider dispute status while/after a dispute (needs_response, under_review, won, lost)
+          example: under_review
         pricing_breakdown:
           $ref: "#/components/schemas/PricingBreakdown"
           description: Computed pricing breakdown (subtotal, fees, taxes, total). Present when booking has amount (dates selected).
@@ -1359,6 +1406,29 @@ components:
           type: string
           example: ""
       required: [success, upcoming, past, pagination]
+    HostBookingsPastResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/Booking"
+            next_cursor:
+              type: string
+              nullable: true
+              description: Opaque cursor to fetch the next page, or null if there are no more pages
+            total:
+              type: integer
+              example: 123
+              description: Approximate total matching count (may be off by a few boundary docs)
+          required: [items, next_cursor, total]
+      required: [success, data]
     BookingRequest:
       type: object
       properties:
@@ -1443,6 +1513,10 @@ components:
           type: string
           description: Optional message from guest to host. If provided, will be stored in draft booking.
           example: "Hi, I'm looking forward to staying at your place! I have a couple of questions about parking."
+        arrival_window:
+          type: string
+          description: "Optional guest arrival window for flexible check-in (stays only; ignored for slot bookings). One of: morning, afternoon, evening, late. If provided, will be stored on the draft booking so it survives a failed payment (CR-646) — finalize still accepts and can override it."
+          example: "evening"
         slots:
           type: array
           description: Optional array of time slots for slot-based bookings. When provided with slot_date, creates a slot booking.

@@ -239,6 +239,56 @@ paths:
       x-google-backend:
         address: 'https://booking-service-376797180502.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
+  /bookings/host/past:
+    get:
+      produces:
+        - application/json
+      parameters:
+        - default: 20
+          in: query
+          maximum: 50
+          minimum: 1
+          name: limit
+          type: integer
+        - description: Opaque pagination cursor from a previous response's next_cursor
+          in: query
+          name: cursor
+          type: string
+      responses:
+        '200':
+          description: Cursor-paginated page of past host bookings
+          schema:
+            $ref: '#/definitions/HostBookingsPastResponse'
+        '400':
+          description: Bad Request (e.g. invalid cursor)
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        default:
+          description: Default error response
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+        - jwtAuth: []
+      tags:
+        - booking
+      description: >
+        Returns older host bookings not covered by GET /bookings/host's bounded
+        window,
+
+        cursor-paginated (check_out DESC). Cancelled/rejected bookings with a
+        future
+
+        check_out are NOT included here — they appear in GET /bookings/host's
+        `past`
+
+        bucket instead.
+      operationId: bookingsHostPast
+      summary: >-
+        Get cursor-paginated past bookings where the authenticated user is the
+        host
+      x-google-backend:
+        address: 'https://booking-service-376797180502.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
   /bookings/initiate:
     post:
       consumes:
@@ -3040,6 +3090,72 @@ paths:
         running.
       operationId: documentsHeartbeat
       summary: Heartbeat
+      x-google-backend:
+        address: 'https://document-service-376797180502.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /documents/upload:
+    post:
+      consumes:
+        - multipart/form-data
+      produces:
+        - application/json
+      parameters:
+        - description: Document type/category. Only "Messaging" is accepted.
+          enum:
+            - Messaging
+          in: formData
+          name: type
+          required: true
+          type: string
+        - description: The attachment file to upload.
+          format: binary
+          in: formData
+          name: file
+          required: true
+          type: string
+      responses:
+        '200':
+          description: File uploaded successfully
+          schema:
+            $ref: '#/definitions/UploadAttachmentResponse'
+        '400':
+          description: >-
+            Bad request (invalid form, unsupported type, disallowed MIME type,
+            or file too large)
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '401':
+          description: Unauthorized (missing or invalid token)
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '500':
+          description: Internal server error (failed to upload file)
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        default:
+          description: Default error response
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+        - jwtAuth: []
+      tags:
+        - document
+      description: >
+        Upload a single chat-message attachment (image, PDF, or Word document)
+        as
+
+        multipart/form-data. Unlike POST /documents (base64 JSON body), this is
+        a
+
+        direct file upload used by the messaging feature. Restricted to
+
+        `type=Messaging`; max file size 10MB; allowed MIME types: image/jpeg,
+
+        image/png, image/webp, image/heic, application/pdf, application/msword,
+
+        application/vnd.openxmlformats-officedocument.wordprocessingml.document.
+      operationId: documentsUploadAttachment
+      summary: Upload a chat message attachment
       x-google-backend:
         address: 'https://document-service-376797180502.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
@@ -6830,7 +6946,7 @@ paths:
                   format: uri
                   type: string
                 maxItems: 10
-                minItems: 1
+                minItems: 3
                 type: array
               price:
                 description: Price per night
@@ -7291,7 +7407,7 @@ paths:
                     - reason
                   type: object
                 maxItems: 10
-                minItems: 1
+                minItems: 3
                 type: array
             required:
               - blackout_dates
@@ -8156,6 +8272,65 @@ paths:
       description: 'Update a message (edit, delete, etc.)'
       operationId: updateMessage
       summary: Update message
+      x-google-backend:
+        address: 'https://chat-service-376797180502.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/messages/{messageId}/attachment':
+    get:
+      produces:
+        - application/octet-stream
+        - application/json
+      parameters:
+        - description: Unique identifier of the message
+          in: path
+          name: messageId
+          required: true
+          type: string
+      responses:
+        '200':
+          description: >-
+            Attachment bytes. Content-Type varies with the attachment's original
+            MIME type.
+          schema:
+            format: binary
+            type: string
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '403':
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '404':
+          description: Not found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '500':
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '502':
+          description: >-
+            Attachment unavailable (document-service unreachable or not
+            configured)
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+        - jwtAuth: []
+      tags:
+        - Messages
+      description: |
+        Fetch the binary attachment for a message (image, PDF, or Word
+        document). Brokered through chat-service, rather than fetched from
+        document-service directly, so the caller's conversation participancy
+        can be verified before the bytes are released. The response
+        Content-Type mirrors the attachment's original MIME type when it is
+        one of the allowed upload types, otherwise application/octet-stream.
+        The response also sets X-Content-Type-Options: nosniff,
+        Content-Disposition: attachment, and Cache-Control: private, no-store.
+      operationId: getMessageAttachment
+      summary: Get message attachment
       x-google-backend:
         address: 'https://chat-service-376797180502.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
@@ -10011,6 +10186,39 @@ paths:
       x-google-backend:
         address: 'https://reward-service-376797180502.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
+  '/rewards/referral/codes/{code}':
+    get:
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          name: code
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Code found
+          schema:
+            $ref: '#/definitions/ReferralLookupResponse'
+        '404':
+          description: Code not found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        default:
+          description: Default error response
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security: []
+      tags:
+        - reward
+      description: >-
+        Public. Returns whether the code exists and the referrer's first name
+        only.
+      operationId: lookupReferralCode
+      summary: Check an invite (referral) code before sign-up
+      x-google-backend:
+        address: 'https://reward-service-376797180502.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
   /users/blocks:
     get:
       produces:
@@ -10513,8 +10721,24 @@ paths:
                   device_model:
                     type: string
                   device_type:
+                    description: >-
+                      The OS the client is running on. Stored as the device's
+                      `platform`, so it must be the real platform.
+                    enum:
+                      - ios
+                      - android
+                      - web
+                    type: string
+                  is_simulator:
+                    description: True when running on a simulator or emulator
+                    type: boolean
+                  language:
+                    description: 'Client locale, e.g. en_CA'
                     type: string
                   system_name:
+                    type: string
+                  timezone:
+                    description: 'UTC offset, e.g. UTC-04:00'
                     type: string
                 type: object
               method:
@@ -10669,8 +10893,24 @@ paths:
                   device_model:
                     type: string
                   device_type:
+                    description: >-
+                      The OS the client is running on. Stored as the device's
+                      `platform`, so it must be the real platform.
+                    enum:
+                      - ios
+                      - android
+                      - web
+                    type: string
+                  is_simulator:
+                    description: True when running on a simulator or emulator
+                    type: boolean
+                  language:
+                    description: 'Client locale, e.g. en_CA'
                     type: string
                   system_name:
+                    type: string
+                  timezone:
+                    description: 'UTC offset, e.g. UTC-04:00'
                     type: string
                 type: object
               fcm_token:
@@ -11991,6 +12231,61 @@ paths:
       x-google-backend:
         address: 'https://user-service-376797180502.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
+  /users/me/email:
+    delete:
+      produces:
+        - application/json
+      parameters: []
+      responses:
+        '200':
+          description: Email removed
+          schema:
+            properties:
+              message:
+                type: string
+              success:
+                type: boolean
+            type: object
+        '404':
+          description: No email linked
+          schema:
+            properties:
+              error:
+                type: string
+              success:
+                type: boolean
+            type: object
+        '409':
+          description: Email is the only remaining login method
+          schema:
+            properties:
+              error:
+                type: string
+              success:
+                type: boolean
+            type: object
+        default:
+          description: Default error response
+          schema:
+            properties:
+              error:
+                type: string
+              success:
+                type: boolean
+            type: object
+      security:
+        - jwtAuth: []
+      tags:
+        - user
+      description: |
+        Removes the current user's email address as a login method (CR-543).
+        Refused with 409 when the email is the account's only remaining way to
+        sign in (no verified phone, no social provider).
+      operationId: removeCurrentUserEmail
+      summary: Remove the current user's email
+      x-google-backend:
+        address: 'https://user-service-376797180502.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
   /users/me/email/add:
     patch:
       consumes:
@@ -12626,6 +12921,61 @@ paths:
       description: Mark a notification as read.
       operationId: markNotificationRead
       summary: Mark notification read
+      x-google-backend:
+        address: 'https://user-service-376797180502.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /users/me/phone:
+    delete:
+      produces:
+        - application/json
+      parameters: []
+      responses:
+        '200':
+          description: Phone removed
+          schema:
+            properties:
+              message:
+                type: string
+              success:
+                type: boolean
+            type: object
+        '404':
+          description: No phone linked
+          schema:
+            properties:
+              error:
+                type: string
+              success:
+                type: boolean
+            type: object
+        '409':
+          description: Phone is the only remaining login method
+          schema:
+            properties:
+              error:
+                type: string
+              success:
+                type: boolean
+            type: object
+        default:
+          description: Default error response
+          schema:
+            properties:
+              error:
+                type: string
+              success:
+                type: boolean
+            type: object
+      security:
+        - jwtAuth: []
+      tags:
+        - user
+      description: |
+        Removes the current user's phone number as a login method (CR-543).
+        Refused with 409 when the phone is the account's only remaining way to
+        sign in (no verified email + password, no social provider).
+      operationId: removeCurrentUserPhone
+      summary: Remove the current user's phone
       x-google-backend:
         address: 'https://user-service-376797180502.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
@@ -15818,6 +16168,12 @@ definitions:
           different from listing charge currency.
         example: CAD
         type: string
+      dispute_status:
+        description: >-
+          Provider dispute status while/after a dispute (needs_response,
+          under_review, won, lost)
+        example: under_review
+        type: string
       exchange_rate:
         description: >-
           Exchange rate used at booking time: 1 charge_currency = X
@@ -15840,6 +16196,12 @@ definitions:
       guests:
         example: 2
         type: integer
+      has_dispute:
+        description: >-
+          CR-612 — a card dispute (chargeback) is open on this booking's
+          payment; refunds are held until it resolves
+        example: false
+        type: boolean
       host_review_guest:
         description: Whether the host has reviewed the guest
         type: boolean
@@ -17961,6 +18323,38 @@ definitions:
       - timestamp
       - version
     type: object
+  HostBookingsPastResponse:
+    properties:
+      data:
+        properties:
+          items:
+            items:
+              $ref: '#/definitions/Booking'
+            type: array
+          next_cursor:
+            description: >-
+              Opaque cursor to fetch the next page, or null if there are no more
+              pages
+            type: string
+            x-nullable: true
+          total:
+            description: >-
+              Approximate total matching count (may be off by a few boundary
+              docs)
+            example: 123
+            type: integer
+        required:
+          - items
+          - next_cursor
+          - total
+        type: object
+      success:
+        example: true
+        type: boolean
+    required:
+      - success
+      - data
+    type: object
   HostCalendarBooking:
     description: Guest context attached to a booked day.
     properties:
@@ -18051,6 +18445,14 @@ definitions:
       Minimal payload to initiate a draft booking. All fields except listing_id
       are optional to allow progressive booking flow.
     properties:
+      arrival_window:
+        description: >-
+          Optional guest arrival window for flexible check-in (stays only;
+          ignored for slot bookings). One of: morning, afternoon, evening, late.
+          If provided, will be stored on the draft booking so it survives a
+          failed payment (CR-646) — finalize still accepts and can override it.
+        example: evening
+        type: string
       category:
         description: Optional category code for filtering/follow-up purposes
         enum:
@@ -18975,6 +19377,11 @@ definitions:
                 type: string
               image_url:
                 type: string
+              liked:
+                description: >-
+                  Whether the requesting user has liked this item (always false
+                  for anonymous requests)
+                type: boolean
               likes:
                 type: integer
               location:
@@ -19044,9 +19451,47 @@ definitions:
             example: '2026-01-15T12:00:00Z'
             format: date-time
             type: string
+          referred_by:
+            description: Present when this user signed up with someone's invite code.
+            properties:
+              first_name:
+                example: Zoey
+                type: string
+              status:
+                enum:
+                  - pending
+                  - completed
+                  - void
+                type: string
+            type: object
+            x-nullable: true
         required:
           - code
           - created_at
+        type: object
+      success:
+        example: true
+        type: boolean
+    required:
+      - success
+      - data
+    type: object
+  ReferralLookupResponse:
+    properties:
+      data:
+        properties:
+          code:
+            example: ZOEY-4F2A
+            type: string
+          referrer_first_name:
+            example: Zoey
+            type: string
+          valid:
+            example: true
+            type: boolean
+        required:
+          - valid
+          - code
         type: object
       success:
         example: true
@@ -19616,6 +20061,11 @@ definitions:
                 type: string
               image_url:
                 type: string
+              liked:
+                description: >-
+                  Whether the requesting user has liked this item (always false
+                  for anonymous requests)
+                type: boolean
               likes:
                 type: integer
               location:
@@ -19957,6 +20407,47 @@ definitions:
       start_date:
         format: date-time
         type: string
+    type: object
+  UploadAttachmentResponse:
+    description: |
+      Response from POST /documents/upload. This is a flat object (not
+      wrapped in the {success, data, toast, error} envelope used by other
+      document endpoints) -- its field names are a contract consumed
+      directly by other services (chat-service, mobile app).
+    properties:
+      document_id:
+        description: Full storage object key (bucket-relative path) of the uploaded file
+        example: Messaging/user-123/8251e74f-b8d1-478d-913d-90a72de9-photo.png
+        type: string
+      file_name:
+        description: Original filename as uploaded
+        example: photo.png
+        type: string
+      file_size:
+        description: File size in bytes
+        format: int64
+        type: integer
+      file_url:
+        description: Storage object URL -- not publicly fetchable; display/debug only
+        format: uri
+        type: string
+      mime_type:
+        description: MIME type of the uploaded file
+        example: image/png
+        type: string
+      storage_filename:
+        description: >-
+          The "{uuid}-{originalFilename}" component of the storage path, used by
+          chat-service to rebuild the internal fetch path
+        example: 8251e74f-b8d1-478d-913d-90a72de9-photo.png
+        type: string
+    required:
+      - document_id
+      - file_url
+      - file_name
+      - file_size
+      - mime_type
+      - storage_filename
     type: object
   User:
     properties:

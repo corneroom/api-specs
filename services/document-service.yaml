@@ -272,6 +272,76 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /documents/upload:
+    post:
+      summary: Upload a chat message attachment
+      description: |
+        Upload a single chat-message attachment (image, PDF, or Word document) as
+        multipart/form-data. Unlike POST /documents (base64 JSON body), this is a
+        direct file upload used by the messaging feature. Restricted to
+        `type=Messaging`; max file size 10MB; allowed MIME types: image/jpeg,
+        image/png, image/webp, image/heic, application/pdf, application/msword,
+        application/vnd.openxmlformats-officedocument.wordprocessingml.document.
+      tags:
+        - document
+      operationId: documentsUploadAttachment
+      x-google-backend:
+        address: https://document-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                type:
+                  type: string
+                  description: Document type/category. Only "Messaging" is accepted.
+                  enum:
+                    - Messaging
+                file:
+                  type: string
+                  format: binary
+                  description: The attachment file to upload.
+              required:
+                - type
+                - file
+        description: Multipart form containing the document type and the file to upload
+        required: true
+      responses:
+        "200":
+          description: File uploaded successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UploadAttachmentResponse"
+        "400":
+          description: Bad request (invalid form, unsupported type, disallowed MIME type, or file too large)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized (missing or invalid token)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error (failed to upload file)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
 servers:
   - url: https://app-staging-gateway-cissa23j.uc.gateway.dev/api/v1
 
@@ -315,6 +385,46 @@ components:
       required:
         - name
         - content
+
+    UploadAttachmentResponse:
+      type: object
+      description: |
+        Response from POST /documents/upload. This is a flat object (not
+        wrapped in the {success, data, toast, error} envelope used by other
+        document endpoints) -- its field names are a contract consumed
+        directly by other services (chat-service, mobile app).
+      properties:
+        document_id:
+          type: string
+          description: Full storage object key (bucket-relative path) of the uploaded file
+          example: "Messaging/user-123/8251e74f-b8d1-478d-913d-90a72de9-photo.png"
+        file_url:
+          type: string
+          format: uri
+          description: Storage object URL -- not publicly fetchable; display/debug only
+        file_name:
+          type: string
+          description: Original filename as uploaded
+          example: "photo.png"
+        file_size:
+          type: integer
+          format: int64
+          description: File size in bytes
+        mime_type:
+          type: string
+          description: MIME type of the uploaded file
+          example: "image/png"
+        storage_filename:
+          type: string
+          description: The "{uuid}-{originalFilename}" component of the storage path, used by chat-service to rebuild the internal fetch path
+          example: "8251e74f-b8d1-478d-913d-90a72de9-photo.png"
+      required:
+        - document_id
+        - file_url
+        - file_name
+        - file_size
+        - mime_type
+        - storage_filename
 
     ErrorResponse:
       type: object

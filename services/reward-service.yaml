@@ -218,6 +218,42 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /rewards/referral/codes/{code}:
+    get:
+      summary: Check an invite (referral) code before sign-up
+      description: Public. Returns whether the code exists and the referrer's first name only.
+      tags:
+        - reward
+      operationId: lookupReferralCode
+      security: []
+      parameters:
+        - name: code
+          in: path
+          required: true
+          schema:
+            type: string
+      x-google-backend:
+        address: https://reward-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      responses:
+        "200":
+          description: Code found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReferralLookupResponse"
+        "404":
+          description: Code not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /rewards/me/wallet:
     get:
       summary: Get current user's wallet
@@ -282,9 +318,44 @@ components:
               type: string
               format: date-time
               example: "2026-01-15T12:00:00Z"
+            referred_by:
+              type: object
+              nullable: true
+              description: Present when this user signed up with someone's invite code.
+              properties:
+                first_name:
+                  type: string
+                  example: "Zoey"
+                status:
+                  type: string
+                  enum: [pending, completed, void]
           required:
             - code
             - created_at
+      required:
+        - success
+        - data
+    ReferralLookupResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            valid:
+              type: boolean
+              example: true
+            code:
+              type: string
+              example: "ZOEY-4F2A"
+            referrer_first_name:
+              type: string
+              example: "Zoey"
+          required:
+            - valid
+            - code
       required:
         - success
         - data

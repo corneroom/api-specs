@@ -1841,6 +1841,9 @@ components:
                   type: string
                 likes:
                   type: integer
+                liked:
+                  type: boolean
+                  description: Whether the requesting user has liked this item (always false for anonymous requests)
                 views:
                   type: integer
                 comments:
@@ -1935,6 +1938,9 @@ components:
                   type: string
                 likes:
                   type: integer
+                liked:
+                  type: boolean
+                  description: Whether the requesting user has liked this item (always false for anonymous requests)
                 views:
                   type: integer
                 comments:

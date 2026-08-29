@@ -532,6 +532,56 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
+  /messages/{messageId}/attachment:
+    get:
+      summary: Get message attachment
+      description: |
+        Fetch the binary attachment for a message (image, PDF, or Word
+        document). Brokered through chat-service, rather than fetched from
+        document-service directly, so the caller's conversation participancy
+        can be verified before the bytes are released. The response
+        Content-Type mirrors the attachment's original MIME type when it is
+        one of the allowed upload types, otherwise application/octet-stream.
+        The response also sets X-Content-Type-Options: nosniff,
+        Content-Disposition: attachment, and Cache-Control: private, no-store.
+      operationId: getMessageAttachment
+      x-google-backend:
+        address: https://chat-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      tags:
+        - Messages
+      parameters:
+        - name: messageId
+          in: path
+          required: true
+          description: Unique identifier of the message
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Attachment bytes. Content-Type varies with the attachment's original MIME type.
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '502':
+          description: Attachment unavailable (document-service unreachable or not configured)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
   /conversations/{conversationId}/read:
     put:
       summary: Mark all messages as read
