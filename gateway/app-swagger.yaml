@@ -289,6 +289,54 @@ paths:
       x-google-backend:
         address: 'https://booking-service-376797180502.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
+  /bookings/host/storage:
+    get:
+      produces:
+        - application/json
+      parameters: []
+      responses:
+        '200':
+          description: Host's in-progress storage bookings
+          schema:
+            properties:
+              data:
+                items:
+                  $ref: '#/definitions/Booking'
+                type: array
+              error:
+                example: ''
+                type: string
+              success:
+                example: true
+                type: boolean
+              toast:
+                type: string
+            required:
+              - success
+              - data
+            type: object
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        default:
+          description: Default error response
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+        - jwtAuth: []
+      tags:
+        - booking
+      description: |
+        Bookings for this host whose luggage.status is checked_in, stored, or
+        released, plus today's Confirmed storage bookings that have no luggage
+        yet (so the list also shows who's due to arrive). Sorted by check_out
+        ascending. See luggage_contract.md §4.
+      operationId: bookingsHostStorage
+      summary: Get the authenticated host's in-progress storage (luggage) bookings
+      x-google-backend:
+        address: 'https://booking-service-376797180502.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
   /bookings/initiate:
     post:
       consumes:
@@ -680,6 +728,232 @@ paths:
         status accordingly.
       operationId: bookingsFinalize
       summary: Finalize a booking
+      x-google-backend:
+        address: 'https://booking-service-376797180502.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/bookings/{id}/luggage/checkin':
+    post:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          maxLength: 32
+          name: id
+          required: true
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/LuggageCheckinRequest'
+      responses:
+        '200':
+          description: Bags checked in
+          schema:
+            $ref: '#/definitions/ApiResponseBooking'
+        '403':
+          description: Forbidden (not the host)
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '409':
+          description: Wrong luggage state (already checked in)
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '422':
+          description: 'Not a storage listing, or invalid bags'
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        default:
+          description: Default error response
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+        - jwtAuth: []
+      tags:
+        - booking
+      description: |
+        Host records one photo per bag plus a handover photo. Requires the
+        booking be Confirmed, the listing category storage, and no existing
+        luggage sub-document. See luggage_contract.md §4.
+      operationId: luggageCheckin
+      summary: Host check-in for a storage booking's bags
+      x-google-backend:
+        address: 'https://booking-service-376797180502.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/bookings/{id}/luggage/confirm':
+    post:
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          maxLength: 32
+          name: id
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Drop-off confirmed
+          schema:
+            $ref: '#/definitions/ApiResponseBooking'
+        '403':
+          description: Forbidden (not the guest)
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '409':
+          description: Wrong luggage state
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        default:
+          description: Default error response
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+        - jwtAuth: []
+      tags:
+        - booking
+      description: |
+        Guest confirms the host's check-in photos are their bags. checked_in →
+        stored. Idempotent: repeating this once already stored returns 200
+        with the booking, no error. See luggage_contract.md §4.
+      operationId: luggageConfirm
+      summary: Guest confirms bag drop-off
+      x-google-backend:
+        address: 'https://booking-service-376797180502.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/bookings/{id}/luggage/confirm-release':
+    post:
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          maxLength: 32
+          name: id
+          required: true
+          type: string
+      responses:
+        '200':
+          description: 'Pick-up confirmed, booking completed'
+          schema:
+            $ref: '#/definitions/ApiResponseBooking'
+        '403':
+          description: Forbidden (not the guest)
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '409':
+          description: Wrong luggage state
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        default:
+          description: Default error response
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+        - jwtAuth: []
+      tags:
+        - booking
+      description: |
+        Guest confirms they have their bags. released → completed, and
+        booking.status becomes Completed (reuses the existing completion path:
+        payout + review reminder). Idempotent: repeating this once already
+        completed returns 200 with the booking, no error. See
+        luggage_contract.md §4.
+      operationId: luggageConfirmRelease
+      summary: Guest confirms bag pick-up
+      x-google-backend:
+        address: 'https://booking-service-376797180502.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/bookings/{id}/luggage/photos/{filename}':
+    get:
+      produces:
+        - application/octet-stream
+        - application/json
+      parameters:
+        - in: path
+          maxLength: 32
+          name: id
+          required: true
+          type: string
+        - in: path
+          name: filename
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Photo bytes
+          schema:
+            format: binary
+            type: string
+        '403':
+          description: Forbidden (not a participant on this booking)
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '404':
+          description: Booking or photo not found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        default:
+          description: Default error response
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+        - jwtAuth: []
+      tags:
+        - booking
+      description: |
+        Streams a bag/handover/release photo's bytes. Only the booking's
+        guest or host may fetch. Mirrors chat-service's message attachment
+        proxy — brokers the fetch from document-service rather than exposing
+        a signed URL. See luggage_contract.md §3.
+      operationId: luggagePhoto
+      summary: Fetch a luggage photo
+      x-google-backend:
+        address: 'https://booking-service-376797180502.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  '/bookings/{id}/luggage/release':
+    post:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: path
+          maxLength: 32
+          name: id
+          required: true
+          type: string
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/LuggageReleaseRequest'
+      responses:
+        '200':
+          description: Bags released
+          schema:
+            $ref: '#/definitions/ApiResponseBooking'
+        '403':
+          description: Forbidden (not the host)
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '409':
+          description: Wrong luggage state
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        default:
+          description: Default error response
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+        - jwtAuth: []
+      tags:
+        - booking
+      description: |
+        Host records a release photo. stored → released. See
+        luggage_contract.md §4.
+      operationId: luggageRelease
+      summary: Host releases bags for pick-up
       x-google-backend:
         address: 'https://booking-service-376797180502.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
@@ -3100,12 +3374,19 @@ paths:
       produces:
         - application/json
       parameters:
-        - description: Document type/category. Only "Messaging" is accepted.
+        - description: Document type/category.
           enum:
             - Messaging
+            - Luggage
           in: formData
           name: type
           required: true
+          type: string
+        - description: >-
+            Required when type=Luggage — the booking the photo belongs to
+            (photos are stored booking-scoped, not user-scoped).
+          in: formData
+          name: booking_id
           type: string
         - description: The attachment file to upload.
           format: binary
@@ -3140,22 +3421,21 @@ paths:
         - jwtAuth: []
       tags:
         - document
-      description: >
-        Upload a single chat-message attachment (image, PDF, or Word document)
-        as
-
-        multipart/form-data. Unlike POST /documents (base64 JSON body), this is
-        a
-
-        direct file upload used by the messaging feature. Restricted to
-
-        `type=Messaging`; max file size 10MB; allowed MIME types: image/jpeg,
-
-        image/png, image/webp, image/heic, application/pdf, application/msword,
-
-        application/vnd.openxmlformats-officedocument.wordprocessingml.document.
+      description: |
+        Upload a single attachment as multipart/form-data. Unlike POST
+        /documents (base64 JSON body), this is a direct file upload.
+        Two types are accepted:
+        - `type=Messaging`: chat-message attachment (image, PDF, or Word
+          document); max file size 10MB; allowed MIME types: image/jpeg,
+          image/png, image/webp, image/heic, application/pdf,
+          application/msword,
+          application/vnd.openxmlformats-officedocument.wordprocessingml.document.
+        - `type=Luggage`: a storage-booking luggage photo (bag, contents,
+          handover, or release) — luggage_contract.md §3. Requires
+          `booking_id`; max file size 10MB; allowed MIME types: image/jpeg,
+          image/png, image/webp only (no video, no PDF/Word).
       operationId: documentsUploadAttachment
-      summary: Upload a chat message attachment
+      summary: Upload a chat message attachment or a luggage photo
       x-google-backend:
         address: 'https://document-service-376797180502.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
@@ -9573,10 +9853,11 @@ paths:
           name: target
           required: false
           type: string
-        - description: Filter by review type (user or listing)
+        - description: 'Filter by review type (user, listing or experience)'
           enum:
             - user
             - listing
+            - experience
           in: query
           name: type
           required: false
@@ -16210,6 +16491,12 @@ definitions:
         type: string
       listing:
         $ref: '#/definitions/ListingInfo'
+      luggage:
+        allOf:
+          - $ref: '#/definitions/Luggage'
+        description: >-
+          Bag check-in/release state for storage bookings. Absent for every
+          non-storage booking, and for storage bookings before host check-in.
       notes:
         example: Guest arriving late.
         type: string
@@ -18875,6 +19162,124 @@ definitions:
     required:
       - location
     type: object
+  Luggage:
+    properties:
+      bags:
+        items:
+          $ref: '#/definitions/LuggageBag'
+        type: array
+      booked_count:
+        description: booking.guests at check-in time
+        example: 3
+        type: integer
+      checked_in_at:
+        format: date-time
+        type: string
+      guest_confirmed_at:
+        format: date-time
+        type: string
+        x-nullable: true
+      guest_release_confirmed_at:
+        format: date-time
+        type: string
+        x-nullable: true
+      handover_photo:
+        description: Storage filename of the handover photo
+        type: string
+      release_photo:
+        type: string
+        x-nullable: true
+      released_at:
+        format: date-time
+        type: string
+        x-nullable: true
+      status:
+        enum:
+          - checked_in
+          - stored
+          - released
+          - completed
+        type: string
+    required:
+      - bags
+      - booked_count
+      - handover_photo
+      - checked_in_at
+      - status
+    type: object
+  LuggageBag:
+    properties:
+      contents_declined:
+        description: True when the guest declined a contents photo
+        type: boolean
+      contents_photo:
+        description: >-
+          Storage filename of the optional contents photo, or absent/null if
+          none
+        type: string
+        x-nullable: true
+      description:
+        description: Optional host-written description (e.g. "Black roller")
+        type: string
+      'n':
+        description: '1-based bag number, matches the "<booking code>-<n>" tag'
+        example: 1
+        type: integer
+      photo:
+        description: >-
+          Storage filename of the bag photo, fetch via GET
+          /bookings/{id}/luggage/photos/{filename}
+        type: string
+    required:
+      - 'n'
+      - photo
+      - contents_declined
+    type: object
+  LuggageBagInput:
+    properties:
+      contents_declined:
+        type: boolean
+      contents_photo:
+        description: Storage filename of the optional contents photo
+        type: string
+        x-nullable: true
+      description:
+        maxLength: 255
+        type: string
+      'n':
+        description: 1-based bag number; must be 1..len(bags) contiguous
+        example: 1
+        type: integer
+      photo:
+        description: Storage filename returned by POST /documents/upload (type=Luggage)
+        type: string
+    required:
+      - 'n'
+      - photo
+      - contents_declined
+    type: object
+  LuggageCheckinRequest:
+    properties:
+      bags:
+        items:
+          $ref: '#/definitions/LuggageBagInput'
+        minItems: 1
+        type: array
+      handover_photo:
+        description: Storage filename of the handover photo
+        type: string
+    required:
+      - bags
+      - handover_photo
+    type: object
+  LuggageReleaseRequest:
+    properties:
+      release_photo:
+        description: Storage filename of the release photo
+        type: string
+    required:
+      - release_photo
+    type: object
   Message:
     properties:
       content:
@@ -19044,6 +19449,28 @@ definitions:
       client_secret:
         description: Client secret for frontend
         example: pi_1234567890_secret_abc123
+        type: string
+      coupon_code:
+        description: >-
+          Normalized referral coupon code applied to this intent. Omitted when
+          no coupon was applied.
+        example: REF5
+        type: string
+      coupon_discount:
+        description: >-
+          Discount amount, major units, in the checkout currency. Omitted when
+          no coupon was applied.
+        example: 5
+        format: float
+        type: number
+      coupon_reason_code:
+        description: >-
+          Set when a coupon_code was sent on the request but rejected by
+          reward-service (e.g. "in_use", "expired", "not_found"), or when
+          reward-service could not be reached to validate it ("validation_error"
+          — a transient failure, distinct from a business rejection). Omitted
+          when no coupon_code was sent, or it was applied successfully.
+        example: in_use
         type: string
       created_at:
         description: Creation timestamp
@@ -20760,6 +21187,12 @@ definitions:
                 expires_at:
                   example: '2026-09-01T12:00:00Z'
                   format: date-time
+                  type: string
+                held_by:
+                  description: >-
+                    booking_id currently holding this coupon (taken by a
+                    successful checkout validation), or empty when free.
+                  example: ''
                   type: string
                 status:
                   example: active

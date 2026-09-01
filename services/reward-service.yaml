@@ -454,6 +454,12 @@ components:
                   status:
                     type: string
                     example: "active"
+                  held_by:
+                    type: string
+                    description: >-
+                      booking_id currently holding this coupon (taken by a
+                      successful checkout validation), or empty when free.
+                    example: ""
           required:
             - coupons
       required:

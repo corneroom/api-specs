@@ -274,14 +274,20 @@ paths:
 
   /documents/upload:
     post:
-      summary: Upload a chat message attachment
+      summary: Upload a chat message attachment or a luggage photo
       description: |
-        Upload a single chat-message attachment (image, PDF, or Word document) as
-        multipart/form-data. Unlike POST /documents (base64 JSON body), this is a
-        direct file upload used by the messaging feature. Restricted to
-        `type=Messaging`; max file size 10MB; allowed MIME types: image/jpeg,
-        image/png, image/webp, image/heic, application/pdf, application/msword,
-        application/vnd.openxmlformats-officedocument.wordprocessingml.document.
+        Upload a single attachment as multipart/form-data. Unlike POST
+        /documents (base64 JSON body), this is a direct file upload.
+        Two types are accepted:
+        - `type=Messaging`: chat-message attachment (image, PDF, or Word
+          document); max file size 10MB; allowed MIME types: image/jpeg,
+          image/png, image/webp, image/heic, application/pdf,
+          application/msword,
+          application/vnd.openxmlformats-officedocument.wordprocessingml.document.
+        - `type=Luggage`: a storage-booking luggage photo (bag, contents,
+          handover, or release) — luggage_contract.md §3. Requires
+          `booking_id`; max file size 10MB; allowed MIME types: image/jpeg,
+          image/png, image/webp only (no video, no PDF/Word).
       tags:
         - document
       operationId: documentsUploadAttachment
@@ -298,9 +304,13 @@ paths:
               properties:
                 type:
                   type: string
-                  description: Document type/category. Only "Messaging" is accepted.
+                  description: Document type/category.
                   enum:
                     - Messaging
+                    - Luggage
+                booking_id:
+                  type: string
+                  description: Required when type=Luggage — the booking the photo belongs to (photos are stored booking-scoped, not user-scoped).
                 file:
                   type: string
                   format: binary
@@ -308,7 +318,7 @@ paths:
               required:
                 - type
                 - file
-        description: Multipart form containing the document type and the file to upload
+        description: Multipart form containing the document type (+ booking_id for Luggage) and the file to upload
         required: true
       responses:
         "200":

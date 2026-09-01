@@ -208,6 +208,273 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /bookings/host/storage:
+    get:
+      summary: Get the authenticated host's in-progress storage (luggage) bookings
+      description: |
+        Bookings for this host whose luggage.status is checked_in, stored, or
+        released, plus today's Confirmed storage bookings that have no luggage
+        yet (so the list also shows who's due to arrive). Sorted by check_out
+        ascending. See luggage_contract.md §4.
+      tags: [booking]
+      operationId: bookingsHostStorage
+      security: [{ jwtAuth: [] }]
+      responses:
+        "200":
+          description: Host's in-progress storage bookings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, example: true }
+                  data:
+                    type: array
+                    items: { $ref: "#/components/schemas/Booking" }
+                  toast: { type: string }
+                  error: { type: string, example: "" }
+                required: [success, data]
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /bookings/{id}/luggage/checkin:
+    post:
+      summary: Host check-in for a storage booking's bags
+      description: |
+        Host records one photo per bag plus a handover photo. Requires the
+        booking be Confirmed, the listing category storage, and no existing
+        luggage sub-document. See luggage_contract.md §4.
+      tags: [booking]
+      operationId: luggageCheckin
+      security: [{ jwtAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, maxLength: 32 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LuggageCheckinRequest"
+      responses:
+        "200":
+          description: Bags checked in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseBooking"
+        "403":
+          description: Forbidden (not the host)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Wrong luggage state (already checked in)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: Not a storage listing, or invalid bags
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /bookings/{id}/luggage/confirm:
+    post:
+      summary: Guest confirms bag drop-off
+      description: |
+        Guest confirms the host's check-in photos are their bags. checked_in →
+        stored. Idempotent: repeating this once already stored returns 200
+        with the booking, no error. See luggage_contract.md §4.
+      tags: [booking]
+      operationId: luggageConfirm
+      security: [{ jwtAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, maxLength: 32 }
+      responses:
+        "200":
+          description: Drop-off confirmed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseBooking"
+        "403":
+          description: Forbidden (not the guest)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Wrong luggage state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /bookings/{id}/luggage/release:
+    post:
+      summary: Host releases bags for pick-up
+      description: |
+        Host records a release photo. stored → released. See
+        luggage_contract.md §4.
+      tags: [booking]
+      operationId: luggageRelease
+      security: [{ jwtAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, maxLength: 32 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LuggageReleaseRequest"
+      responses:
+        "200":
+          description: Bags released
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseBooking"
+        "403":
+          description: Forbidden (not the host)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Wrong luggage state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /bookings/{id}/luggage/confirm-release:
+    post:
+      summary: Guest confirms bag pick-up
+      description: |
+        Guest confirms they have their bags. released → completed, and
+        booking.status becomes Completed (reuses the existing completion path:
+        payout + review reminder). Idempotent: repeating this once already
+        completed returns 200 with the booking, no error. See
+        luggage_contract.md §4.
+      tags: [booking]
+      operationId: luggageConfirmRelease
+      security: [{ jwtAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, maxLength: 32 }
+      responses:
+        "200":
+          description: Pick-up confirmed, booking completed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiResponseBooking"
+        "403":
+          description: Forbidden (not the guest)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Wrong luggage state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /bookings/{id}/luggage/photos/{filename}:
+    get:
+      summary: Fetch a luggage photo
+      description: |
+        Streams a bag/handover/release photo's bytes. Only the booking's
+        guest or host may fetch. Mirrors chat-service's message attachment
+        proxy — brokers the fetch from document-service rather than exposing
+        a signed URL. See luggage_contract.md §3.
+      tags: [booking]
+      operationId: luggagePhoto
+      security: [{ jwtAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, maxLength: 32 }
+        - name: filename
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Photo bytes
+          content:
+            image/*:
+              schema: { type: string, format: binary }
+        "403":
+          description: Forbidden (not a participant on this booking)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Booking or photo not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /bookings/initiate:
     post:
       summary: Initiate a booking (draft)
@@ -1315,8 +1582,72 @@ components:
           type: string
           description: "PayPal email address used for payment"
           example: "user@example.com"
+        luggage:
+          description: "Bag check-in/release state for storage bookings. Absent for every non-storage booking, and for storage bookings before host check-in."
+          allOf:
+            - $ref: "#/components/schemas/Luggage"
 
       required: [id, listing, guest, host, check_in, check_out]
+
+    LuggageBag:
+      type: object
+      properties:
+        n: { type: integer, example: 1, description: "1-based bag number, matches the \"<booking code>-<n>\" tag" }
+        photo: { type: string, description: "Storage filename of the bag photo, fetch via GET /bookings/{id}/luggage/photos/{filename}" }
+        contents_photo:
+          type: string
+          nullable: true
+          description: "Storage filename of the optional contents photo, or absent/null if none"
+        contents_declined: { type: boolean, description: "True when the guest declined a contents photo" }
+        description: { type: string, description: "Optional host-written description (e.g. \"Black roller\")" }
+      required: [n, photo, contents_declined]
+
+    Luggage:
+      type: object
+      properties:
+        bags:
+          type: array
+          items: { $ref: "#/components/schemas/LuggageBag" }
+        booked_count: { type: integer, example: 3, description: "booking.guests at check-in time" }
+        handover_photo: { type: string, description: "Storage filename of the handover photo" }
+        checked_in_at: { type: string, format: date-time }
+        guest_confirmed_at: { type: string, format: date-time, nullable: true }
+        release_photo: { type: string, nullable: true }
+        released_at: { type: string, format: date-time, nullable: true }
+        guest_release_confirmed_at: { type: string, format: date-time, nullable: true }
+        status:
+          type: string
+          enum: [checked_in, stored, released, completed]
+      required: [bags, booked_count, handover_photo, checked_in_at, status]
+
+    LuggageBagInput:
+      type: object
+      properties:
+        n: { type: integer, example: 1, description: "1-based bag number; must be 1..len(bags) contiguous" }
+        photo: { type: string, description: "Storage filename returned by POST /documents/upload (type=Luggage)" }
+        contents_photo:
+          type: string
+          nullable: true
+          description: "Storage filename of the optional contents photo"
+        contents_declined: { type: boolean }
+        description: { type: string, maxLength: 255 }
+      required: [n, photo, contents_declined]
+
+    LuggageCheckinRequest:
+      type: object
+      properties:
+        bags:
+          type: array
+          minItems: 1
+          items: { $ref: "#/components/schemas/LuggageBagInput" }
+        handover_photo: { type: string, description: "Storage filename of the handover photo" }
+      required: [bags, handover_photo]
+
+    LuggageReleaseRequest:
+      type: object
+      properties:
+        release_photo: { type: string, description: "Storage filename of the release photo" }
+      required: [release_photo]
 
     User:
       type: object

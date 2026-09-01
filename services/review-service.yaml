@@ -81,8 +81,8 @@ paths:
           required: false
           schema:
             type: string
-            enum: [user, listing]
-          description: Filter by review type (user or listing)
+            enum: [user, listing, experience]
+          description: Filter by review type (user, listing or experience)
         - name: category
           in: query
           required: false

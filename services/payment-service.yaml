@@ -1433,6 +1433,29 @@ components:
           format: date-time
           description: Creation timestamp
           example: "2024-01-15T10:30:00Z"
+        coupon_code:
+          type: string
+          description: >-
+            Normalized referral coupon code applied to this intent. Omitted
+            when no coupon was applied.
+          example: "REF5"
+        coupon_discount:
+          type: number
+          format: float
+          description: >-
+            Discount amount, major units, in the checkout currency. Omitted
+            when no coupon was applied.
+          example: 5.00
+        coupon_reason_code:
+          type: string
+          description: >-
+            Set when a coupon_code was sent on the request but rejected by
+            reward-service (e.g. "in_use", "expired", "not_found"), or when
+            reward-service could not be reached to validate it
+            ("validation_error" — a transient failure, distinct from a
+            business rejection). Omitted when no coupon_code was sent, or it
+            was applied successfully.
+          example: "in_use"
 
     CreateRefundRequest:
       type: object
