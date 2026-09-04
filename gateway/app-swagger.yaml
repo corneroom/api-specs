@@ -9788,14 +9788,19 @@ paths:
           schema:
             properties:
               details:
-                description: Optional free-text details.
+                description: >-
+                  Optional free-text details. For `message` reports the client
+                  also includes the conversation ID here (e.g. "conversation_id:
+                  <id>"), since the schema has no separate metadata field.
                 maxLength: 1000
                 type: string
               reason:
                 description: Report reason code.
                 type: string
               target_id:
-                description: ID of the reported entity.
+                description: >-
+                  ID of the reported entity (for `message`, the chat message
+                  ID).
                 type: string
               type:
                 description: The kind of content being reported.
@@ -9804,6 +9809,7 @@ paths:
                   - user
                   - review
                   - profile
+                  - message
                 type: string
             required:
               - type
@@ -9829,9 +9835,9 @@ paths:
       tags:
         - listing
       description: >-
-        Submit a generic content report (listing, user, review). The reporter is
-        taken from the authenticated token; the report is persisted for admin
-        moderation in the dashboard.
+        Submit a generic content report (listing, user, review, chat message).
+        The reporter is taken from the authenticated token; the report is
+        persisted for admin moderation in the dashboard.
       operationId: createReport
       summary: Report content
       x-google-backend:
@@ -11971,112 +11977,6 @@ paths:
       x-google-backend:
         address: 'https://user-service-376797180502.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
-    post:
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      parameters:
-        - description: The password change request
-          in: body
-          name: body
-          required: true
-          schema:
-            properties:
-              new_password:
-                description: The new password
-                maxLength: 50
-                minLength: 8
-                type: string
-              old_password:
-                description: The current password
-                maxLength: 50
-                minLength: 8
-                type: string
-              verify_password:
-                description: Verify the new password
-                maxLength: 50
-                minLength: 8
-                type: string
-            required:
-              - old_password
-              - new_password
-              - verify_password
-            type: object
-      responses:
-        '200':
-          description: The password change response
-          schema:
-            description: Standard error response model for failed requests.
-            properties:
-              error:
-                description: Error message describing the failure.
-                example: User not found.
-                type: string
-              success:
-                description: Indicates if the request was successful.
-                example: false
-                type: boolean
-              toast:
-                description: Optional toast message for the client UI.
-                example: Unable to process your request.
-                type: string
-            required:
-              - success
-              - error
-            type: object
-        '400':
-          description: Invalid request
-          schema:
-            description: Standard error response model for failed requests.
-            properties:
-              error:
-                description: Error message describing the failure.
-                example: User not found.
-                type: string
-              success:
-                description: Indicates if the request was successful.
-                example: false
-                type: boolean
-              toast:
-                description: Optional toast message for the client UI.
-                example: Unable to process your request.
-                type: string
-            required:
-              - success
-              - error
-            type: object
-        default:
-          description: Default error response
-          schema:
-            description: Standard error response model for failed requests.
-            properties:
-              error:
-                description: Error message describing the failure.
-                example: User not found.
-                type: string
-              success:
-                description: Indicates if the request was successful.
-                example: false
-                type: boolean
-              toast:
-                description: Optional toast message for the client UI.
-                example: Unable to process your request.
-                type: string
-            required:
-              - success
-              - error
-            type: object
-      security:
-        - jwtAuth: []
-      tags:
-        - user
-      description: Uploads a new avatar image for the current user.
-      operationId: changeCurrentUserPassword
-      summary: Change current user's password
-      x-google-backend:
-        address: 'https://user-service-376797180502.us-central1.run.app'
-        path_translation: APPEND_PATH_TO_ADDRESS
   /users/me/deletion-request:
     delete:
       produces:
@@ -13202,6 +13102,117 @@ paths:
       description: Mark a notification as read.
       operationId: markNotificationRead
       summary: Mark notification read
+      x-google-backend:
+        address: 'https://user-service-376797180502.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /users/me/password/change:
+    post:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - description: The password change request
+          in: body
+          name: body
+          required: true
+          schema:
+            properties:
+              old_password:
+                description: The current password
+                maxLength: 50
+                minLength: 8
+                type: string
+              password:
+                description: The new password
+                maxLength: 50
+                minLength: 8
+                type: string
+              verify_password:
+                description: Verify the new password
+                maxLength: 50
+                minLength: 8
+                type: string
+            required:
+              - old_password
+              - password
+              - verify_password
+            type: object
+      responses:
+        '200':
+          description: The password change response
+          schema:
+            description: Standard error response model for failed requests.
+            properties:
+              error:
+                description: Error message describing the failure.
+                example: User not found.
+                type: string
+              success:
+                description: Indicates if the request was successful.
+                example: false
+                type: boolean
+              toast:
+                description: Optional toast message for the client UI.
+                example: Unable to process your request.
+                type: string
+            required:
+              - success
+              - error
+            type: object
+        '400':
+          description: Invalid request
+          schema:
+            description: Standard error response model for failed requests.
+            properties:
+              error:
+                description: Error message describing the failure.
+                example: User not found.
+                type: string
+              success:
+                description: Indicates if the request was successful.
+                example: false
+                type: boolean
+              toast:
+                description: Optional toast message for the client UI.
+                example: Unable to process your request.
+                type: string
+            required:
+              - success
+              - error
+            type: object
+        default:
+          description: Default error response
+          schema:
+            description: Standard error response model for failed requests.
+            properties:
+              error:
+                description: Error message describing the failure.
+                example: User not found.
+                type: string
+              success:
+                description: Indicates if the request was successful.
+                example: false
+                type: boolean
+              toast:
+                description: Optional toast message for the client UI.
+                example: Unable to process your request.
+                type: string
+            required:
+              - success
+              - error
+            type: object
+      security:
+        - jwtAuth: []
+      tags:
+        - user
+      description: >-
+        Allows a logged-in user to change their password. Requires the current
+        password and a new password meeting the complexity policy (min 8
+        characters, at least one uppercase letter, one lowercase letter, and one
+        digit or special character).
+      operationId: changeCurrentUserPassword
+      summary: Change current user's password
       x-google-backend:
         address: 'https://user-service-376797180502.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
@@ -17637,7 +17648,7 @@ definitions:
             format: uri
             type: string
           bio:
-            maxLength: 500
+            maxLength: 800
             type: string
           birthday:
             format: date-time

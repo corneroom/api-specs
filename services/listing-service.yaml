@@ -3158,9 +3158,9 @@ paths:
     post:
       summary: Report content
       description: >-
-        Submit a generic content report (listing, user, review). The reporter is
-        taken from the authenticated token; the report is persisted for admin
-        moderation in the dashboard.
+        Submit a generic content report (listing, user, review, chat message). The
+        reporter is taken from the authenticated token; the report is persisted for
+        admin moderation in the dashboard.
       tags:
         - listing
       operationId: createReport
@@ -3188,17 +3188,23 @@ paths:
                     - user
                     - review
                     - profile
+                    - message
                   description: The kind of content being reported.
                 target_id:
                   type: string
-                  description: ID of the reported entity.
+                  description: >-
+                    ID of the reported entity (for `message`, the chat message ID).
                 reason:
                   type: string
                   description: Report reason code.
                 details:
                   type: string
                   maxLength: 1000
-                  description: Optional free-text details.
+                  description: >-
+                    Optional free-text details. For `message` reports the client
+                    also includes the conversation ID here (e.g.
+                    "conversation_id: <id>"), since the schema has no separate
+                    metadata field.
       responses:
         "201":
           description: Report created

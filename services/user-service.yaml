@@ -3011,8 +3011,9 @@ paths:
                 required:
                   - success
                   - error
+  /users/me/password/change:
     post:
-      description: Uploads a new avatar image for the current user.
+      description: Allows a logged-in user to change their password. Requires the current password and a new password meeting the complexity policy (min 8 characters, at least one uppercase letter, one lowercase letter, and one digit or special character).
       summary: Change current user's password
       tags:
         - user
@@ -3033,7 +3034,7 @@ paths:
                   minLength: 8
                   maxLength: 50
                   description: The current password
-                new_password:
+                password:
                   type: string
                   minLength: 8
                   maxLength: 50
@@ -3045,7 +3046,7 @@ paths:
                   description: Verify the new password
               required:
                 - old_password
-                - new_password
+                - password
                 - verify_password
         description: The password change request
         required: true
@@ -5019,7 +5020,7 @@ components:
               maxLength: 50
             bio:
               type: string
-              maxLength: 500
+              maxLength: 800
             avatar_url:
               type: string
               format: uri

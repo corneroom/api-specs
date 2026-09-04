@@ -3077,8 +3077,13 @@ paths:
                 required:
                   - success
                   - error
+  /users/me/password/change:
     post:
-      description: Uploads a new avatar image for the current user.
+      description: >-
+        Allows a logged-in user to change their password. Requires the current
+        password and a new password meeting the complexity policy (min 8
+        characters, at least one uppercase letter, one lowercase letter, and one
+        digit or special character).
       summary: Change current user's password
       tags:
         - user
@@ -3099,7 +3104,7 @@ paths:
                   minLength: 8
                   maxLength: 50
                   description: The current password
-                new_password:
+                password:
                   type: string
                   minLength: 8
                   maxLength: 50
@@ -3111,7 +3116,7 @@ paths:
                   description: Verify the new password
               required:
                 - old_password
-                - new_password
+                - password
                 - verify_password
         description: The password change request
         required: true
@@ -8300,9 +8305,9 @@ paths:
     post:
       summary: Report content
       description: >-
-        Submit a generic content report (listing, user, review). The reporter is
-        taken from the authenticated token; the report is persisted for admin
-        moderation in the dashboard.
+        Submit a generic content report (listing, user, review, chat message).
+        The reporter is taken from the authenticated token; the report is
+        persisted for admin moderation in the dashboard.
       tags:
         - listing
       operationId: createReport
@@ -8330,17 +8335,24 @@ paths:
                     - user
                     - review
                     - profile
+                    - message
                   description: The kind of content being reported.
                 target_id:
                   type: string
-                  description: ID of the reported entity.
+                  description: >-
+                    ID of the reported entity (for `message`, the chat message
+                    ID).
                 reason:
                   type: string
                   description: Report reason code.
                 details:
                   type: string
                   maxLength: 1000
-                  description: Optional free-text details.
+                  description: >-
+                    Optional free-text details. For `message` reports the client
+                    also includes the conversation ID here (e.g.
+                    "conversation_id: <id>"), since the schema has no separate
+                    metadata field.
       responses:
         '201':
           description: Report created
@@ -16995,7 +17007,7 @@ components:
               maxLength: 50
             bio:
               type: string
-              maxLength: 500
+              maxLength: 800
             avatar_url:
               type: string
               format: uri
