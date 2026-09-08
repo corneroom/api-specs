@@ -2017,6 +2017,23 @@ components:
           type: string
           description: User-facing explanation when the provider is disabled.
           example: "PayPal isn't available for ZAR"
+        charge_currency:
+          type: string
+          description: >-
+            Currency the guest is charged in with this provider (lowercase ISO
+            4217). Equals the listing currency unless the provider can't
+            process it, in which case it is "usd" and `exchange_rate` is set.
+            Absent on free bookings (nothing is charged).
+          example: usd
+        exchange_rate:
+          type: number
+          format: double
+          description: >-
+            Present only when this provider converts the listing currency to
+            USD: 1 listing currency = `exchange_rate` USD. The app uses it to
+            show the USD amount (rounded up to whole dollars) before the guest
+            confirms; the exact charge comes back on the payment intent.
+          example: 0.00003924
     PricingBreakdown:
       type: object
       description: Complete pricing breakdown with fees and taxes

@@ -12694,6 +12694,48 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /payments/coupons/quote:
+    post:
+      summary: Quote a referral coupon
+      description: |
+        Prices a referral coupon against a booking's pre-discount total so the
+        review screen can show the saving. Read-only: creates no payment object
+        and takes no hold on the coupon (both happen at Reserve via
+        POST /payments/intents). A coupon that doesn't qualify is a normal 200
+        with valid=false and a coupon_reason_code.
+      tags:
+        - payment
+      operationId: quoteCoupon
+      x-google-backend:
+        address: https://payment-service-376797180502.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security:
+        - jwtAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuoteCouponRequest'
+      responses:
+        '200':
+          description: Quote (valid or rejected with a reason)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuoteCouponResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /payments/intents:
     post:
       summary: Create payment intent
@@ -19188,6 +19230,23 @@ components:
           type: string
           description: User-facing explanation when the provider is disabled.
           example: PayPal isn't available for ZAR
+        charge_currency:
+          type: string
+          description: >-
+            Currency the guest is charged in with this provider (lowercase ISO
+            4217). Equals the listing currency unless the provider can't process
+            it, in which case it is "usd" and `exchange_rate` is set. Absent on
+            free bookings (nothing is charged).
+          example: usd
+        exchange_rate:
+          type: number
+          format: double
+          description: >-
+            Present only when this provider converts the listing currency to
+            USD: 1 listing currency = `exchange_rate` USD. The app uses it to
+            show the USD amount (rounded up to whole dollars) before the guest
+            confirms; the exact charge comes back on the payment intent.
+          example: 0.00003924
     PricingBreakdown:
       type: object
       description: Complete pricing breakdown with fees and taxes
@@ -20040,6 +20099,57 @@ components:
                 totalPages:
                   type: integer
                   description: Total number of pages
+    QuoteCouponRequest:
+      type: object
+      required:
+        - booking_id
+        - coupon_code
+        - amount
+        - currency
+      properties:
+        booking_id:
+          type: string
+        coupon_code:
+          type: string
+          example: REF-B768B66F36EC
+        amount:
+          type: number
+          description: >-
+            Pre-discount total in major units of currency
+            (pricing_breakdown.total)
+        currency:
+          type: string
+          example: thb
+    QuoteCouponResponse:
+      type: object
+      properties:
+        valid:
+          type: boolean
+        coupon_code:
+          type: string
+          description: Normalized code when valid
+        coupon_discount:
+          type: number
+          description: Discount in major units of currency (0 when invalid)
+        currency:
+          type: string
+          example: THB
+        discounted_total:
+          type: number
+          description: amount minus coupon_discount, floored at 0
+        coupon_reason_code:
+          type: string
+          description: Set when valid is false
+          enum:
+            - not_found
+            - not_active
+            - expired
+            - wrong_user
+            - not_applicable
+            - in_use
+            - fx_unavailable
+            - below_minimum
+            - validation_error
     CreatePaymentIntentRequest:
       type: object
       required:
@@ -20185,6 +20295,30 @@ components:
             rejection). Omitted when no coupon_code was sent, or it was applied
             successfully.
           example: in_use
+        original_amount:
+          type: number
+          format: float
+          description: >-
+            Present only when the charge was converted to USD because the chosen
+            provider can't process the listing currency (e.g. PayPal + VND).
+            `amount`/`currency` are then the USD charge (whole dollars, rounded
+            up); this is the listing price in `original_currency`. Show it to
+            the guest before they confirm.
+          example: 420000
+        original_currency:
+          type: string
+          description: >-
+            Listing currency of `original_amount` (lowercase ISO 4217). Present
+            only on a converted charge.
+          example: vnd
+        exchange_rate:
+          type: number
+          format: double
+          description: >-
+            Locked rate used for the conversion — 1 `original_currency` =
+            `exchange_rate` USD. Refunds reverse the charged USD amount and
+            never recompute. Present only on a converted charge.
+          example: 0.00003924
     CreateRefundRequest:
       type: object
       required:

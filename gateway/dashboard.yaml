@@ -497,67 +497,6 @@ paths:
       x-google-backend:
         address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
-  /dashboard/users/{id}/verify:
-    put:
-      tags:
-        - user
-      summary: Restore/Revoke a user verification
-      operationId: verifyUser
-      description: Restore or revoke a user's email verification status
-      parameters:
-        - name: id
-          in: path
-          description: User ID
-          required: true
-          schema:
-            maxLength: 32
-            type: string
-      requestBody:
-        description: User verified status
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                verified:
-                  type: string
-                  example: 'true'
-                  enum:
-                    - 'true'
-                    - 'false'
-        required: true
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: ok
-                  user_id:
-                    type: string
-                    example: user_id123
-        '400':
-          description: Invalid User ID
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error400Response'
-        '404':
-          description: User not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error404Response'
-      security:
-        - jwtAuth: []
-      x-google-backend:
-        address: https://dashboard-service-376797180502.us-central1.run.app
-        path_translation: APPEND_PATH_TO_ADDRESS
-      x-codegen-request-body-name: verify
   /dashboard/users/{id}/status:
     put:
       tags:
@@ -5908,6 +5847,77 @@ paths:
       x-google-backend:
         address: https://dashboard-service-376797180502.us-central1.run.app
         path_translation: APPEND_PATH_TO_ADDRESS
+    post:
+      tags:
+        - community
+      summary: Create a curated community feed item
+      description: >-
+        Creates a staff-authored story or reel (source
+        corneroom/partner/sponsored). Skips UGC's pending_review step — the
+        creating admin is the approval — and lands as either 'draft' (not
+        visible) or 'published' (live immediately).
+      operationId: createCommunityFeedItem
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - type
+                - title
+                - content
+                - image_url
+              properties:
+                type:
+                  type: string
+                  enum:
+                    - story
+                    - reel
+                title:
+                  type: string
+                content:
+                  type: string
+                image_url:
+                  type: string
+                video_url:
+                  type: string
+                  description: Required when type is "reel".
+                location:
+                  type: string
+                author:
+                  type: string
+                author_avatar:
+                  type: string
+                source:
+                  type: string
+                  enum:
+                    - corneroom
+                    - partner
+                    - sponsored
+                  default: corneroom
+                status:
+                  type: string
+                  enum:
+                    - draft
+                    - published
+                  default: published
+      responses:
+        '201':
+          description: Feed item created
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Validation error
+        '403':
+          description: Insufficient permissions
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://dashboard-service-376797180502.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/community/feed/{id}:
     get:
       tags:
@@ -5989,6 +5999,83 @@ paths:
                 type: object
         '404':
           description: Not found
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://dashboard-service-376797180502.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/exchange-rates:
+    get:
+      tags:
+        - exchange-rates
+      summary: Get current FX rates and refresh status
+      description: >-
+        Proxies listing-service's exchange-rates endpoint (rates, source,
+        cached_at, next_refresh_at).
+      operationId: getExchangeRates
+      responses:
+        '200':
+          description: Current rates
+          content:
+            application/json:
+              schema:
+                type: object
+        '403':
+          description: Insufficient permissions
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://dashboard-service-376797180502.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/exchange-rates/history:
+    get:
+      tags:
+        - exchange-rates
+      summary: Get recent FX refresh attempts
+      description: >-
+        Recent scheduled/manual refresh attempts (success/failure, source,
+        currency count, error), newest first.
+      operationId: getExchangeRateHistory
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        '200':
+          description: Refresh history
+          content:
+            application/json:
+              schema:
+                type: object
+        '403':
+          description: Insufficient permissions
+      security:
+        - jwtAuth: []
+      x-google-backend:
+        address: https://dashboard-service-376797180502.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/exchange-rates/refresh:
+    post:
+      tags:
+        - exchange-rates
+      summary: Force an immediate FX rate refresh
+      description: >-
+        Triggers listing-service's refresh-exchange-rates endpoint on demand,
+        recorded in history as manual:<adminId>.
+      operationId: forceRefreshExchangeRates
+      responses:
+        '200':
+          description: Refresh triggered
+          content:
+            application/json:
+              schema:
+                type: object
+        '403':
+          description: Insufficient permissions
+        '502':
+          description: Upstream (listing-service) refresh failed
       security:
         - jwtAuth: []
       x-google-backend:
@@ -7142,8 +7229,13 @@ components:
           type: string
         listing_id:
           type: string
+        booking_code:
+          type: string
+          example: CR-AB12CD
         payment_id:
           type: string
+        payment:
+          $ref: '#/components/schemas/BookingPayment'
         check_in:
           type: string
           format: date-time
@@ -7190,6 +7282,11 @@ components:
         id:
           type: string
           example: bkg_001
+        booking_code:
+          type: string
+          example: CR-AB12CD
+        payment:
+          $ref: '#/components/schemas/BookingPayment'
         check_in:
           type: string
           format: date-time
@@ -7211,6 +7308,30 @@ components:
             - completed
             - flagged
             - accepted
+    BookingPayment:
+      type: object
+      nullable: true
+      description: >-
+        The payment method used for the booking's charge, resolved from
+        payment-service's transactions. Null when no charge transaction exists
+        yet.
+      properties:
+        provider:
+          type: string
+          example: stripe
+          enum:
+            - stripe
+            - paypal
+        card_brand:
+          type: string
+          example: visa
+        card_last4:
+          type: string
+          example: '4242'
+        payer_email:
+          type: string
+          description: PayPal payer email (empty for card payments)
+          example: guest@example.com
     Review:
       type: object
       properties:
@@ -7838,6 +7959,22 @@ components:
                   - Pending
                   - Completed
                   - Declined
+                  - Cancelled
+              coupon_code:
+                type: string
+                nullable: true
+                description: >-
+                  Referral coupon applied at checkout (platform absorbs the
+                  discount)
+              coupon_discount_cents:
+                type: integer
+                description: >-
+                  Discount in the charge currency's minor unit (0 when no
+                  coupon)
+              coupon_discount:
+                type: string
+                nullable: true
+                description: Formatted discount in the charge currency, e.g. "฿165.00"
     RevenueChartResponse:
       type: object
       properties:

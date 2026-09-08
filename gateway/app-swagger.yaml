@@ -8731,6 +8731,46 @@ paths:
       x-google-backend:
         address: 'https://payment-service-376797180502.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
+  /payments/coupons/quote:
+    post:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/QuoteCouponRequest'
+      responses:
+        '200':
+          description: Quote (valid or rejected with a reason)
+          schema:
+            $ref: '#/definitions/QuoteCouponResponse'
+        '400':
+          description: Bad request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        '401':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+        - jwtAuth: []
+      tags:
+        - payment
+      description: |
+        Prices a referral coupon against a booking's pre-discount total so the
+        review screen can show the saving. Read-only: creates no payment object
+        and takes no hold on the coupon (both happen at Reserve via
+        POST /payments/intents). A coupon that doesn't qualify is a normal 200
+        with valid=false and a coupon_reason_code.
+      operationId: quoteCoupon
+      summary: Quote a referral coupon
+      x-google-backend:
+        address: 'https://payment-service-376797180502.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
   /payments/earnings:
     get:
       produces:
@@ -19492,9 +19532,33 @@ definitions:
         description: Currency code
         example: CAD
         type: string
+      exchange_rate:
+        description: >-
+          Locked rate used for the conversion — 1 `original_currency` =
+          `exchange_rate` USD. Refunds reverse the charged USD amount and never
+          recompute. Present only on a converted charge.
+        example: 0.00003924
+        format: double
+        type: number
       id:
         description: Payment intent ID
         example: pi_1234567890
+        type: string
+      original_amount:
+        description: >-
+          Present only when the charge was converted to USD because the chosen
+          provider can't process the listing currency (e.g. PayPal + VND).
+          `amount`/`currency` are then the USD charge (whole dollars, rounded
+          up); this is the listing price in `original_currency`. Show it to the
+          guest before they confirm.
+        example: 420000
+        format: float
+        type: number
+      original_currency:
+        description: >-
+          Listing currency of `original_amount` (lowercase ISO 4217). Present
+          only on a converted charge.
+        example: vnd
         type: string
       provider:
         description: Payment provider
@@ -19577,10 +19641,27 @@ definitions:
   PaymentOption:
     description: Whether a payment provider can be offered for the booking's currency.
     properties:
+      charge_currency:
+        description: >-
+          Currency the guest is charged in with this provider (lowercase ISO
+          4217). Equals the listing currency unless the provider can't process
+          it, in which case it is "usd" and `exchange_rate` is set. Absent on
+          free bookings (nothing is charged).
+        example: usd
+        type: string
       enabled:
         description: Whether this provider may be shown to the guest.
         example: false
         type: boolean
+      exchange_rate:
+        description: >-
+          Present only when this provider converts the listing currency to USD:
+          1 listing currency = `exchange_rate` USD. The app uses it to show the
+          USD amount (rounded up to whole dollars) before the guest confirms;
+          the exact charge comes back on the payment intent.
+        example: 0.00003924
+        format: double
+        type: number
       provider:
         description: Payment provider identifier.
         enum:
@@ -19764,6 +19845,57 @@ definitions:
       - metrics
       - created_at
       - reviewer
+    type: object
+  QuoteCouponRequest:
+    properties:
+      amount:
+        description: >-
+          Pre-discount total in major units of currency
+          (pricing_breakdown.total)
+        type: number
+      booking_id:
+        type: string
+      coupon_code:
+        example: REF-B768B66F36EC
+        type: string
+      currency:
+        example: thb
+        type: string
+    required:
+      - booking_id
+      - coupon_code
+      - amount
+      - currency
+    type: object
+  QuoteCouponResponse:
+    properties:
+      coupon_code:
+        description: Normalized code when valid
+        type: string
+      coupon_discount:
+        description: Discount in major units of currency (0 when invalid)
+        type: number
+      coupon_reason_code:
+        description: Set when valid is false
+        enum:
+          - not_found
+          - not_active
+          - expired
+          - wrong_user
+          - not_applicable
+          - in_use
+          - fx_unavailable
+          - below_minimum
+          - validation_error
+        type: string
+      currency:
+        example: THB
+        type: string
+      discounted_total:
+        description: 'amount minus coupon_discount, floored at 0'
+        type: number
+      valid:
+        type: boolean
     type: object
   ReelListResponse:
     properties:
