@@ -1473,6 +1473,150 @@ paths:
       x-google-backend:
         address: 'https://dashboard-service-376797180502.us-central1.run.app'
         path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/coupons:
+    get:
+      produces:
+        - application/json
+      parameters:
+        - in: query
+          name: user_id
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Coupon history
+          schema:
+            type: object
+        '400':
+          description: user_id is required
+        '403':
+          description: Insufficient permissions
+      security:
+        - jwtAuth: []
+      tags:
+        - coupons
+      description: >-
+        Every coupon ever issued to the user, any status
+        (active/redeemed/expired/void), newest first.
+      operationId: listUserCoupons
+      summary: Get a user's full coupon history
+      x-google-backend:
+        address: 'https://dashboard-service-376797180502.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+    post:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            properties:
+              currency:
+                type: string
+              notes:
+                type: string
+              ttl_days:
+                type: integer
+              user_id:
+                type: string
+              value_cents:
+                type: integer
+            required:
+              - user_id
+              - value_cents
+              - currency
+              - notes
+            type: object
+      responses:
+        '200':
+          description: Coupon issued
+          schema:
+            type: object
+        '400':
+          description: >-
+            Validation error (missing field, or value/currency outside the
+            allowlist)
+        '403':
+          description: Insufficient permissions
+      security:
+        - jwtAuth: []
+      tags:
+        - coupons
+      description: >-
+        value_cents/currency must be in the configured allowlist (see GET
+        /coupons/config); notes is required as the audit trail.
+      operationId: issueCoupon
+      summary: Grant a coupon to a user
+      x-google-backend:
+        address: 'https://dashboard-service-376797180502.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/coupons/config:
+    get:
+      produces:
+        - application/json
+      parameters: []
+      responses:
+        '200':
+          description: Allowlist
+          schema:
+            type: object
+        '403':
+          description: Insufficient permissions
+      security:
+        - jwtAuth: []
+      tags:
+        - coupons
+      description: >-
+        Allowed value_cents/currencies and default TTL — the "Grant Coupon"
+        form's dropdown source of truth.
+      operationId: getCouponAdminConfig
+      summary: Get the admin coupon grant allowlist
+      x-google-backend:
+        address: 'https://dashboard-service-376797180502.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/coupons/void:
+    post:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            properties:
+              code:
+                type: string
+            required:
+              - code
+            type: object
+      responses:
+        '200':
+          description: Void attempted
+          schema:
+            type: object
+        '400':
+          description: code is required
+        '403':
+          description: Insufficient permissions
+        '404':
+          description: Coupon not found
+      security:
+        - jwtAuth: []
+      tags:
+        - coupons
+      description: >-
+        voided:false with a 200 is a legitimate outcome (already
+        redeemed/void/expired/in use), not an error.
+      operationId: voidCoupon
+      summary: Void an active coupon
+      x-google-backend:
+        address: 'https://dashboard-service-376797180502.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
   /dashboard/documents:
     get:
       parameters:

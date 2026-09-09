@@ -4580,7 +4580,6 @@ paths:
                   - street
                   - city
                   - country
-                  - postal_code
                 type: object
               amenities:
                 items:
@@ -6518,6 +6517,66 @@ paths:
       summary: Location search and autocomplete
       x-google-backend:
         address: 'https://booking-service-376797180502.us-central1.run.app'
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /listings/price-ceiling:
+    get:
+      produces:
+        - application/json
+      parameters:
+        - description: 'ISO 4217 currency code (case-insensitive), e.g. VND'
+          in: query
+          name: currency
+          required: false
+          type: string
+        - description: >-
+            ISO2 country code used to derive the currency when currency is
+            omitted, e.g. VN
+          in: query
+          name: country
+          required: false
+          type: string
+      responses:
+        '200':
+          description: Price ceiling for the requested currency
+          schema:
+            properties:
+              cap_usd:
+                format: double
+                type: number
+              currency:
+                type: string
+              max_price:
+                description: Null when no exchange rate is known for the currency.
+                format: double
+                type: number
+                x-nullable: true
+              rate_date:
+                description: >-
+                  Date of the exchange rate used. Omitted when max_price is
+                  null.
+                type: string
+            required:
+              - currency
+              - cap_usd
+            type: object
+        '400':
+          description: Bad request — neither currency nor a resolvable country was supplied
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security: []
+      tags:
+        - listing
+      description: >-
+        Converts the global USD listing price cap (listing_price_cap_usd, Remote
+        Config) into a currency using live exchange rates, rounded up to 2
+        significant figures. Pass currency directly, or country to derive it.
+        When no exchange rate is known for the currency, responds 200 with
+        max_price null instead of an error.
+      operationId: listingsGetPriceCeiling
+      summary: Get the listing price ceiling for a currency
+      x-google-backend:
+        address: 'https://listing-service-376797180502.us-central1.run.app'
+        deadline: 90
         path_translation: APPEND_PATH_TO_ADDRESS
   /listings/user:
     get:

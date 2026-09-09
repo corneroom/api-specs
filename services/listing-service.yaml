@@ -217,7 +217,6 @@ paths:
                     - street
                     - city
                     - country
-                    - postal_code
                 location:
                   type: object
                   description: Optional client-provided location coordinates. If not provided, the backend will geocode the address. If provided and valid, these coordinates take precedence over geocoding.
@@ -969,6 +968,61 @@ paths:
                 required:
                   - success
                   - error
+  /listings/price-ceiling:
+    get:
+      summary: Get the listing price ceiling for a currency
+      description: "Converts the global USD listing price cap (listing_price_cap_usd, Remote Config) into a currency using live exchange rates, rounded up to 2 significant figures. Pass currency directly, or country to derive it. When no exchange rate is known for the currency, responds 200 with max_price null instead of an error."
+      tags:
+        - listing
+      operationId: listingsGetPriceCeiling
+      x-google-backend:
+        address: https://listing-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+        deadline: 90
+      security: []
+      parameters:
+        - name: currency
+          in: query
+          description: ISO 4217 currency code (case-insensitive), e.g. VND
+          required: false
+          schema:
+            type: string
+        - name: country
+          in: query
+          description: ISO2 country code used to derive the currency when currency is omitted, e.g. VN
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Price ceiling for the requested currency
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  currency:
+                    type: string
+                  max_price:
+                    type: number
+                    format: double
+                    nullable: true
+                    description: Null when no exchange rate is known for the currency.
+                  cap_usd:
+                    type: number
+                    format: double
+                  rate_date:
+                    type: string
+                    description: Date of the exchange rate used. Omitted when max_price is null.
+                required:
+                  - currency
+                  - cap_usd
+        "400":
+          description: Bad request — neither currency nor a resolvable country was supplied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /listings/address:
     get:
       summary: Address auto complete

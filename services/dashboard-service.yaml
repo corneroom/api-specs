@@ -54,6 +54,8 @@ tags:
   description: Community content management and moderation
 - name: exchange-rates
   description: FX rate monitoring — current rates, refresh history, force-refresh
+- name: coupons
+  description: Admin coupon grants — view a user's history, grant, void
 - name: webhook
   description: Webhook endpoints for external services
 paths:
@@ -5983,6 +5985,131 @@ paths:
           description: Insufficient permissions
         "502":
           description: Upstream (listing-service) refresh failed
+      security:
+      - jwtAuth: []
+      x-google-backend:
+        address: https://dashboard-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/coupons/config:
+    get:
+      tags:
+      - coupons
+      summary: Get the admin coupon grant allowlist
+      description: Allowed value_cents/currencies and default TTL — the "Grant Coupon" form's dropdown source of truth.
+      operationId: getCouponAdminConfig
+      responses:
+        "200":
+          description: Allowlist
+          content:
+            application/json:
+              schema:
+                type: object
+        "403":
+          description: Insufficient permissions
+      security:
+      - jwtAuth: []
+      x-google-backend:
+        address: https://dashboard-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/coupons:
+    get:
+      tags:
+      - coupons
+      summary: Get a user's full coupon history
+      description: Every coupon ever issued to the user, any status (active/redeemed/expired/void), newest first.
+      operationId: listUserCoupons
+      parameters:
+      - name: user_id
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Coupon history
+          content:
+            application/json:
+              schema:
+                type: object
+        "400":
+          description: user_id is required
+        "403":
+          description: Insufficient permissions
+      security:
+      - jwtAuth: []
+      x-google-backend:
+        address: https://dashboard-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+    post:
+      tags:
+      - coupons
+      summary: Grant a coupon to a user
+      description: value_cents/currency must be in the configured allowlist (see GET /coupons/config); notes is required as the audit trail.
+      operationId: issueCoupon
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [user_id, value_cents, currency, notes]
+              properties:
+                user_id:
+                  type: string
+                value_cents:
+                  type: integer
+                currency:
+                  type: string
+                ttl_days:
+                  type: integer
+                notes:
+                  type: string
+      responses:
+        "200":
+          description: Coupon issued
+          content:
+            application/json:
+              schema:
+                type: object
+        "400":
+          description: Validation error (missing field, or value/currency outside the allowlist)
+        "403":
+          description: Insufficient permissions
+      security:
+      - jwtAuth: []
+      x-google-backend:
+        address: https://dashboard-service-981292602655.us-central1.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+  /dashboard/coupons/void:
+    post:
+      tags:
+      - coupons
+      summary: Void an active coupon
+      description: voided:false with a 200 is a legitimate outcome (already redeemed/void/expired/in use), not an error.
+      operationId: voidCoupon
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties:
+                code:
+                  type: string
+      responses:
+        "200":
+          description: Void attempted
+          content:
+            application/json:
+              schema:
+                type: object
+        "400":
+          description: code is required
+        "403":
+          description: Insufficient permissions
+        "404":
+          description: Coupon not found
       security:
       - jwtAuth: []
       x-google-backend:
