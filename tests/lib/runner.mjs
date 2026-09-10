@@ -12,7 +12,8 @@ async function getMeId(tokens) {
   return meId;
 }
 
-// A test case:
+// A test case is either a single-request check against the shared logged-in
+// account:
 //   {
 //     name:   string,
 //     method: 'GET' (default) | 'POST' | 'PATCH' | 'DELETE' | ...,
@@ -22,7 +23,22 @@ async function getMeId(tokens) {
 //     expect: 200 | [200, 204]        (status or list of acceptable statuses),
 //     check:  (json, res) => string|null   (body assertion: return an error msg, or null if OK),
 //   }
+// ...or a custom multi-step flow that needs its own identities/requests (e.g.
+// a write-path flow driving several freshly-registered accounts through a
+// real booking + Stripe payment, like tests/services/rewards-referral-flow.mjs):
+//   { name: string, run: async () => void }   // throw to fail, resolve to pass
+// `run` cases bypass the shared `tokens`/`path`/`expect` machinery entirely —
+// they do their own fetches (own logins, own gateway calls, even calls to
+// Stripe) and are still reported through the same ✓/✗ pass/fail accounting.
 async function runCase(tokens, c) {
+  if (typeof c.run === 'function') {
+    try {
+      await c.run();
+      return { ok: true, status: 'custom', expected: 'custom' };
+    } catch (e) {
+      return { ok: false, status: 'custom', expected: 'custom', note: e.message };
+    }
+  }
   const method = c.method || 'GET';
   const headers = { ...authHeaders(tokens, c.auth ?? 'full') };
   let reqBody;
@@ -66,15 +82,16 @@ export async function runSuites(suites) {
   for (const suite of suites) {
     console.log(`\n${suite.name}`);
     for (const c of suite.cases) {
+      const isCustom = typeof c.run === 'function';
       const auth = c.auth ?? 'full';
       try {
         const r = await runCase(tokens, c);
         if (r.ok) {
-          console.log(`  ✓ ${c.name}  [${r.status}, auth=${auth}]`);
+          console.log(isCustom ? `  ✓ ${c.name}` : `  ✓ ${c.name}  [${r.status}, auth=${auth}]`);
           pass++;
         } else {
           const why = r.note ? `— ${r.note}` : `expected ${r.expected.join('|')} got ${r.status}`;
-          console.log(`  ✗ ${c.name}  ${why} (auth=${auth})`);
+          console.log(isCustom ? `  ✗ ${c.name}  ${why}` : `  ✗ ${c.name}  ${why} (auth=${auth})`);
           fail++;
         }
       } catch (e) {

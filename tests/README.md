@@ -104,6 +104,20 @@ Drop the file in — no wiring needed. Keep Phase 1 **read-only** (GETs + negati
 auth checks). Mutating flows (POST/DELETE) need fixtures + cleanup — add those
 deliberately per flow, not table-driven.
 
+For a flow that needs more than one identity or its own polling (e.g. a
+referral reward that has to be observed from a second account, or a
+Pub/Sub-driven side effect that lands a few seconds late), a case can supply
+`run` instead of `path`/`expect` — it does its own fetches and is still
+reported through the same ✓/✗ accounting:
+
+```js
+{ name: '...', run: async () => { /* throw to fail, resolve to pass */ } }
+```
+
+See `lib/booking-flow.mjs` (register a throwaway account, drive it through a
+real Stripe-sandbox booking) and `lib/poll.mjs` (poll-with-timeout for async
+state), and `services/rewards-referral-flow.mjs` for a full example.
+
 ## Roadmap
 - **Phase 1 (here):** read-only smoke of key endpoints + auth/security guards.
 - **Phase 2:** drive cases from `gateway/app-swagger.yaml` to cover every path
