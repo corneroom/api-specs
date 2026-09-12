@@ -118,6 +118,26 @@ See `lib/booking-flow.mjs` (register a throwaway account, drive it through a
 real Stripe-sandbox booking) and `lib/poll.mjs` (poll-with-timeout for async
 state), and `services/rewards-referral-flow.mjs` for a full example.
 
+Write flows currently here, all money state-machine transitions:
+
+| File | Guards |
+|---|---|
+| `rewards-referral-flow.mjs` | CR-588 — cancelling a referral's qualifying booking resets (or voids) the referral |
+| `payment-coupon-hold-flow.mjs` | one coupon can only discount one booking at a time; the hold releases when the booking drops it or its draft is deleted |
+| `payment-intent-reuse-flow.mjs` | one live PaymentIntent per booking — repeat/re-priced requests reuse it, and an authorized booking refuses a second one |
+
+**Every booking a write flow creates must be torn down before the file ends**
+(`teardownBooking` handles any state). The suite runs every 6 hours against a
+handful of shared staging listings; uncancelled bookings accumulate until date
+collisions make `POST /bookings/initiate` start 400ing. This has already caused
+real scheduled-CI flakiness.
+
+A `services/*.mjs.disabled` file is a finished flow that is deliberately NOT
+discovered by `run.mjs`. Today that is `payment-dispute-flow.mjs.disabled`
+(CR-612 dispute hold): it is blocked on a product race, not on the test — its
+header documents exactly what, with the staging evidence, and how to re-enable
+it (rename back).
+
 ## Roadmap
 - **Phase 1 (here):** read-only smoke of key endpoints + auth/security guards.
 - **Phase 2:** drive cases from `gateway/app-swagger.yaml` to cover every path

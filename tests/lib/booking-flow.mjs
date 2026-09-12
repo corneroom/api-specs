@@ -68,6 +68,16 @@ export async function registerFreshUser(firstName = 'GwTest') {
   return { email, tokens, id: me.id };
 }
 
+// Every currently instant-bookable listing, as the feed returns it. The list
+// response already carries `price`, `currency` and `cancellation_policy`, so a
+// flow that needs a fixture with specific properties (two DISTINCT listings, a
+// refundable policy, …) can select one here without N detail fetches. Sort
+// your own selection — feed order is not stable.
+export async function listListings(tokens) {
+  const res = await gwFetch(`${config.gwUrl}/listings?limit=100&instant_book=true`, { headers: authHeaders(tokens, 'full') });
+  return (await res.json()).data ?? [];
+}
+
 // Finds a real, currently instant-bookable listing. `price` pins an exact
 // listing price (e.g. 5 for the usual $5 seeded fixtures so a $5 referral
 // coupon leaves a non-zero balance to charge — see the coupon-vs-minimum
@@ -92,6 +102,10 @@ export function futureDates() {
   };
 }
 
+// NOTE: booking-service keeps ONE draft per (user, listing) — initiating twice
+// for the same listing returns the SAME booking id with the new dates, it does
+// not create a second booking. A flow that needs two concurrent drafts for one
+// user must use two DIFFERENT listings (see listListings).
 export async function initiateBooking(tokens, listingId, dates) {
   const res = await gwFetch(`${config.gwUrl}/bookings/initiate`, {
     method: 'POST',
@@ -115,28 +129,44 @@ export async function calcPricing(tokens, subtotal, regionCode = 'US') {
 
 // amount must be the pricing breakdown's TOTAL (post-fees/tax), not the raw
 // subtotal — a coupon is checked against the pre-discount total.
-export async function createPaymentIntent(tokens, { bookingId, guestId, hostId, listingId, amount, couponCode }) {
-  const body = { booking_id: bookingId, guest_id: guestId, host_id: hostId, listing_id: listingId, amount, currency: 'usd' };
+// Raw form: returns { status, data } without throwing, for flows that assert
+// on a REFUSAL (payment-service refuses a second intent once the booking is
+// already authorized — see open_intent.go `errIntentAlreadyAuthorized`).
+// `currency` defaults to usd; pass the listing's own currency when the fixture
+// isn't a USD listing.
+export async function createPaymentIntentRaw(tokens, { bookingId, guestId, hostId, listingId, amount, currency = 'usd', couponCode }) {
+  const body = { booking_id: bookingId, guest_id: guestId, host_id: hostId, listing_id: listingId, amount, currency };
   if (couponCode) body.coupon_code = couponCode;
   const res = await gwFetch(`${config.gwUrl}/payments/intents`, {
     method: 'POST',
     headers: { ...authHeaders(tokens, 'full'), 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
-  if (res.status !== 201) throw new Error(`POST /payments/intents failed ${res.status}: ${await res.text()}`);
-  return (await res.json()).data;
+  const json = await res.json().catch(() => ({}));
+  return { status: res.status, data: json.data };
 }
 
-// Tokenizes tok_visa (raw-card tokenization is disabled for this Stripe
-// sandbox's publishable key) and confirms directly against Stripe — exactly
-// what the mobile PaymentSheet does client-side, publishable key only, no
-// backend secret involved.
-async function confirmWithTestCard(kind, intent) {
+export async function createPaymentIntent(tokens, opts) {
+  const { status, data } = await createPaymentIntentRaw(tokens, opts);
+  if (status !== 201) throw new Error(`POST /payments/intents failed ${status}: ${JSON.stringify(data)}`);
+  return data;
+}
+
+// Tokenizes a Stripe TEST TOKEN (raw-card tokenization is disabled for this
+// Stripe sandbox's publishable key) and confirms directly against Stripe —
+// exactly what the mobile PaymentSheet does client-side, publishable key only,
+// no backend secret involved.
+//
+// `cardToken` defaults to the plain success card. Pass another documented test
+// token to drive a different outcome — e.g. `tok_createDispute` (card
+// 4000 0000 0000 0259), which succeeds and is then disputed as fraudulent by
+// Stripe a few seconds after capture. See https://docs.stripe.com/testing.
+async function confirmWithTestCard(kind, intent, cardToken = 'tok_visa') {
   const auth = 'Basic ' + Buffer.from(`${intent.publishable_key}:`).toString('base64');
   const pmRes = await fetch('https://api.stripe.com/v1/payment_methods', {
     method: 'POST',
     headers: { Authorization: auth, 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: 'type=card&card[token]=tok_visa',
+    body: `type=card&card[token]=${cardToken}`,
   });
   const pm = await pmRes.json();
   if (!pm.id) throw new Error(`Stripe payment_methods tokenize failed: ${JSON.stringify(pm)}`);
@@ -154,10 +184,27 @@ async function confirmWithTestCard(kind, intent) {
 // Paid bookings use a manual-capture PaymentIntent (moves to
 // requires_capture; payment-service auto-captures on the
 // amount_capturable_updated webhook).
-export const payWithTestCard = (intent) => confirmWithTestCard('payment_intents', intent);
+export const payWithTestCard = (intent, cardToken) => confirmWithTestCard('payment_intents', intent, cardToken);
 
 // Free ($0) bookings route through a SetupIntent instead (no charge).
 export const confirmSetupIntent = (intent) => confirmWithTestCard('setup_intents', intent);
+
+// Reads a PaymentIntent back from Stripe with the PUBLISHABLE key + the
+// intent's client_secret — the only Stripe read a client is allowed to make,
+// and the same one the mobile SDK does. Returns Stripe's (client-scoped)
+// object: `status` and `amount` are present, secret-key-only fields are not.
+// Use it to prove what actually happened on Stripe's side rather than
+// trusting our own API's echo of it.
+export async function getStripeIntent(intent) {
+  const auth = 'Basic ' + Buffer.from(`${intent.publishable_key}:`).toString('base64');
+  const res = await fetch(
+    `https://api.stripe.com/v1/payment_intents/${intent.id}?client_secret=${encodeURIComponent(intent.client_secret)}`,
+    { headers: { Authorization: auth } }
+  );
+  const json = await res.json();
+  if (json.error) throw new Error(`Stripe payment_intents retrieve failed: ${JSON.stringify(json.error)}`);
+  return json;
+}
 
 export async function finalizeBooking(tokens, bookingId, { dates, paymentReference, amount }) {
   const res = await gwFetch(`${config.gwUrl}/bookings/${bookingId}/finalize`, {
@@ -193,13 +240,48 @@ export async function cancelBooking(tokens, bookingId, reasonLabel = 'gateway te
   return (await res.json()).data;
 }
 
+// Removes a booking that never got paid (status `draft`). The cancel endpoint
+// is for CONFIRMED bookings; a draft is deleted. Use this to clean up any
+// draft a flow initiates, so it stops occupying its listing's dates and its
+// coupon hold (payment-service releases the hold on draft delete).
+export async function deleteDraftBooking(tokens, bookingId) {
+  const res = await gwFetch(`${config.gwUrl}/bookings/${bookingId}`, {
+    method: 'DELETE',
+    headers: authHeaders(tokens, 'full'),
+  });
+  if (![200, 204, 404].includes(res.status)) {
+    throw new Error(`DELETE /bookings/${bookingId} failed ${res.status}: ${await res.text()}`);
+  }
+}
+
+// Leak-safe teardown for a booking in ANY state: a draft is deleted, an
+// already-cancelled booking is left alone, anything else is cancelled. Use it
+// from a flow's trailing cleanup case (lib/runner.mjs keeps running cases past
+// a failure precisely so cleanup still executes) so a mid-flow failure can't
+// leave a booking squatting on a shared staging listing's dates.
+export async function teardownBooking(tokens, bookingId) {
+  if (!bookingId) return;
+  const booking = await getBooking(tokens, bookingId);
+  if (booking.status === 'draft') await deleteDraftBooking(tokens, bookingId);
+  else if (booking.status !== 'cancelled') await cancelBooking(tokens, bookingId);
+}
+
 // Runs the full initiate -> price -> intent -> Stripe confirm -> finalize ->
 // poll-until-confirmed dance for a real paid (or free, if listing.price===0)
-// booking. Returns { bookingId, total } once the gateway reports the booking
-// as confirmed.
-export async function bookAndConfirm(tokens, listing, { guestId, hostId, couponCode } = {}) {
+// booking. Returns { bookingId, total, currency, intentId } once the gateway
+// reports the booking as confirmed.
+//
+// `currency` defaults to usd (all callers historically used the $5 USD
+// fixture); pass the listing's own currency for a non-USD fixture.
+// `cardToken` is handed to Stripe — pass `tok_createDispute` to end up with a
+// charge that Stripe disputes.
+// `onDraft` is called with the booking id the instant it exists, BEFORE
+// anything that can fail (payment, finalize, the confirm poll) — record it so
+// a cleanup case can still tear the booking down if this throws half way.
+export async function bookAndConfirm(tokens, listing, { guestId, hostId, couponCode, currency = 'usd', cardToken, onDraft } = {}) {
   const dates = futureDates();
   const draft = await initiateBooking(tokens, listing.id, dates);
+  if (onDraft) onDraft(draft.id);
   const pricing = await calcPricing(tokens, listing.price);
   const intent = await createPaymentIntent(tokens, {
     bookingId: draft.id,
@@ -207,12 +289,13 @@ export async function bookAndConfirm(tokens, listing, { guestId, hostId, couponC
     hostId,
     listingId: listing.id,
     amount: pricing.total,
+    currency,
     couponCode,
   });
   if (intent.intent_type === 'setup_intent') {
     await confirmSetupIntent(intent);
   } else {
-    await payWithTestCard(intent);
+    await payWithTestCard(intent, cardToken);
   }
   await finalizeBooking(tokens, draft.id, { dates, paymentReference: intent.id, amount: pricing.total });
   await poll(
@@ -222,5 +305,5 @@ export async function bookAndConfirm(tokens, listing, { guestId, hostId, couponC
     },
     { timeoutMs: 45000, intervalMs: 4000, desc: `booking ${draft.id} to reach status=confirmed` }
   );
-  return { bookingId: draft.id, total: pricing.total };
+  return { bookingId: draft.id, total: pricing.total, currency, intentId: intent.id };
 }
