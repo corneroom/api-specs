@@ -24,11 +24,24 @@ function randDigits() {
 // (see the startup-probe drift history in tests/README.md's sibling notes) —
 // retry once after a short delay before giving up, rather than failing a
 // whole multi-minute flow over a single transient upstream timeout.
+//
+// 429 is retried too, and much more patiently: user-service rate-limits its
+// whole auth group (register / confirm / login / refresh / password reset) to
+// **10 requests per minute per IP** (`httprate.LimitByIP(10, 1*time.Minute)`,
+// user-service internal/rest/controller.go:93). Every registerFreshUser call
+// costs TWO of those, so several write flows registering throwaway accounts
+// back to back will trip it from a single CI runner IP — as this suite did on
+// 2026-09-12 (8 cases failed with "register/confirm failed 429"). The limiter
+// is a one-minute window, so back off past it rather than working around a
+// real product protection.
+const RATE_LIMIT_BACKOFF_MS = 30000;
+
 async function gwFetch(url, opts, { retries = 1, delayMs = 3000 } = {}) {
   for (let attempt = 0; ; attempt++) {
     const res = await fetch(url, opts);
-    if (![502, 503, 504].includes(res.status) || attempt >= retries) return res;
-    await new Promise((r) => setTimeout(r, delayMs));
+    const retryable = res.status === 429 || [502, 503, 504].includes(res.status);
+    if (!retryable || attempt >= retries) return res;
+    await new Promise((r) => setTimeout(r, res.status === 429 ? RATE_LIMIT_BACKOFF_MS : delayMs));
   }
 }
 
@@ -42,16 +55,26 @@ async function gwFetch(url, opts, { retries = 1, delayMs = 3000 } = {}) {
 export async function registerFreshUser(firstName = 'GwTest') {
   const email = `qa+${randDigits()}@bot.com`;
   const password = `Aa1!${randDigits()}zz`;
-  await gwFetch(`${config.gwUrl}/users/register/email`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
-  });
-  const confirmRes = await gwFetch(`${config.gwUrl}/users/register/email/confirm`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ contact: email, otp: OTP_BYPASS }),
-  });
+  // Two extra attempts each: these are the auth-group calls the 10/min/IP
+  // limiter guards, and a whole flow should wait it out rather than fail.
+  await gwFetch(
+    `${config.gwUrl}/users/register/email`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    },
+    { retries: 2 }
+  );
+  const confirmRes = await gwFetch(
+    `${config.gwUrl}/users/register/email/confirm`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contact: email, otp: OTP_BYPASS }),
+    },
+    { retries: 2 }
+  );
   if (confirmRes.status !== 200) {
     throw new Error(`register/confirm failed ${confirmRes.status}: ${await confirmRes.text()}`);
   }

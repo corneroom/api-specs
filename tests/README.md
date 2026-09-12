@@ -126,6 +126,12 @@ Write flows currently here, all money state-machine transitions:
 | `payment-coupon-hold-flow.mjs` | one coupon can only discount one booking at a time; the hold releases when the booking drops it or its draft is deleted |
 | `payment-intent-reuse-flow.mjs` | one live PaymentIntent per booking — repeat/re-priced requests reuse it, and an authorized booking refuses a second one |
 
+Write flows register throwaway `qa+<digits>@bot.com` accounts, and user-service
+rate-limits its auth group (register/confirm/login/refresh/password reset) to
+**10 requests per minute per IP**. Each `registerFreshUser` costs two of them,
+so `lib/booking-flow.mjs` backs off 30s and retries on a 429 rather than
+failing the run — keep new flows frugal with fresh identities anyway.
+
 **Every booking a write flow creates must be torn down before the file ends**
 (`teardownBooking` handles any state). The suite runs every 6 hours against a
 handful of shared staging listings; uncancelled bookings accumulate until date
