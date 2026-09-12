@@ -23,6 +23,18 @@
 // server-side, so we register new qa+<digits>@bot.com throwaways per pair
 // rather than reusing tests/.env's shared account. See
 // lib/booking-flow.mjs's `registerFreshUser`.
+//
+// LEAK DISCIPLINE: `pickListing()` always returns the same single staging
+// fixture for a given price ($5 / $0 — there's only one of each), and every
+// booking here parks on a far-future but bounded date window
+// (`futureDates()`). Every confirmed booking this file creates MUST be
+// cancelled by the end of the run, or repeated 6h-cadence CI runs
+// accumulate uncancelled bookings on those two listings until random date
+// collisions make `POST /bookings/initiate` start 400ing ("listing is not
+// available for these dates") — this caused real scheduled-CI flakiness in
+// Sep 2026 (see the dedicated "cleanup" cases below, one per booking that
+// isn't already cancelled as part of a scenario's own assertions). When
+// adding a new scenario here, add its cleanup in the same PR.
 import { registerFreshUser, pickListing, bookAndConfirm, cancelBooking } from '../lib/booking-flow.mjs';
 import { getWallet, getMyReferral, applyReferralCode } from '../lib/reward-helpers.mjs';
 import { poll } from '../lib/poll.mjs';
@@ -139,6 +151,16 @@ export default {
         assert(referral?.status === 'completed', `expected referral status=completed again, got ${JSON.stringify(referral)}`);
       },
     },
+    {
+      // Cleanup only — booking2 has no coupon on it, so cancelling it just
+      // resets pairA's referral again (harmless, nothing asserts on pairA
+      // after this point). Without this, booking2 leaks on the shared $5
+      // fixture listing forever (see the LEAK DISCIPLINE note up top).
+      name: "cleanup: cancel pair A's re-completion booking",
+      run: async () => {
+        await cancelBooking(pairA.referred.tokens, pairA.booking2.bookingId);
+      },
+    },
 
     // ---------------------------------------------------------------
     // Pair B: abuse guard — coupon already spent before the cancellation
@@ -171,7 +193,12 @@ export default {
         const couponCode = referredWallet[0].code;
 
         // Spend it for real: apply it to a second, independent paid booking.
-        await bookAndConfirm(referred.tokens, listing, { guestId: referred.id, hostId: listing.host.id, couponCode });
+        // Captured for cleanup below (NOT cancelled here — cancelling a
+        // booking that redeemed a coupon triggers payment-service's
+        // full-refund coupon release, which would put a coupon back in
+        // referred's wallet and break scenario 4c's "wallet is empty"
+        // assertion; it must only be cancelled once pairB is fully done).
+        pairB.spendBooking = await bookAndConfirm(referred.tokens, listing, { guestId: referred.id, hostId: listing.host.id, couponCode });
 
         const referredWalletAfterSpend = await poll(
           async () => {
@@ -222,7 +249,7 @@ export default {
       name: 'scenario 4c: a further paid booking by the same referred user issues NO new coupons to either party (referral stays void)',
       run: async () => {
         const { referrer, referred, listing } = pairB;
-        await bookAndConfirm(referred.tokens, listing, { guestId: referred.id, hostId: listing.host.id });
+        pairB.furtherBooking = await bookAndConfirm(referred.tokens, listing, { guestId: referred.id, hostId: listing.host.id });
         // No event to poll FOR here (we're proving something does NOT
         // happen) — give the async completion path a fair chance to
         // (wrongly) fire before asserting the negative.
@@ -235,6 +262,21 @@ export default {
 
         const referral = (await getMyReferral(referred.tokens)).referred_by;
         assert(referral?.status === 'void', `expected referral to remain void, got ${JSON.stringify(referral)}`);
+      },
+    },
+    {
+      // Cleanup only, for BOTH of pairB's still-confirmed bookings
+      // (qualifyingBooking was already cancelled by scenario 4b's own
+      // assertions). Order matters: this must run AFTER scenario 4c's wallet
+      // assertions, since cancelling spendBooking (it has a coupon on it)
+      // triggers a full-refund coupon release back into referred's wallet —
+      // doing this any earlier would falsely populate the wallet 4c checks
+      // is empty. furtherBooking carries no coupon, so its cancellation has
+      // no such side effect and could safely happen earlier too.
+      name: "cleanup: cancel pair B's spend + further bookings",
+      run: async () => {
+        await cancelBooking(pairB.referred.tokens, pairB.spendBooking.bookingId);
+        await cancelBooking(pairB.referred.tokens, pairB.furtherBooking.bookingId);
       },
     },
 
@@ -251,7 +293,7 @@ export default {
         pairC.listing = await pickListing(pairC.referred.tokens, { price: 0 });
         assert(pairC.listing, 'no $0 instant-book listing found on staging to seed a free-stay booking with');
 
-        await bookAndConfirm(pairC.referred.tokens, pairC.listing, { guestId: pairC.referred.id, hostId: pairC.listing.host.id });
+        pairC.booking = await bookAndConfirm(pairC.referred.tokens, pairC.listing, { guestId: pairC.referred.id, hostId: pairC.listing.host.id });
         await new Promise((r) => setTimeout(r, 8000)); // give the async completion path a fair chance to (wrongly) fire
 
         const referrerWallet = await getWallet(pairC.referrer.tokens);
@@ -261,6 +303,16 @@ export default {
 
         const referral = (await getMyReferral(pairC.referred.tokens)).referred_by;
         assert(referral?.status === 'pending', `free stay must leave the referral at 'pending', got ${JSON.stringify(referral)}`);
+      },
+    },
+    {
+      // Cleanup only — a $0/free booking (SetupIntent path, no coupon, no
+      // refund) so cancelling it has no side effects on anything asserted
+      // above; it just avoids leaking a confirmed booking on the shared $0
+      // fixture listing.
+      name: "cleanup: cancel pair C's free-stay booking",
+      run: async () => {
+        await cancelBooking(pairC.referred.tokens, pairC.booking.bookingId);
       },
     },
   ],
