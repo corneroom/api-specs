@@ -2,53 +2,53 @@
 // money, and must NOT disturb the booking's own lifecycle.
 //
 // ─────────────────────────────────────────────────────────────────────────────
-// DISABLED ON PURPOSE — this file is NOT run by tests/run.mjs (it discovers
-// `*.mjs`; this one is `*.mjs.disabled`). It is kept, complete and working, so
-// it can be switched on the moment the product bug below is fixed: rename it
-// back to `payment-dispute-flow.mjs`.
+// THIS FILE WAS DISABLED 2026-09-12 AND RE-ENABLED 2026-09-13, once the write
+// race it exposed was fixed. Kept as history, because it is the reason two of
+// the assertions below are shaped the way they are.
 //
-// WHY IT IS OFF (found 2026-09-12 while writing it; reported, NOT patched —
-// no backend change was made):
+// WHAT IT CAUGHT: a dispute raised by Stripe's test card races the
+// payment-success path, and the loser's write was silently clobbered, because
+// both handlers read-modify-WROTE THE WHOLE booking document:
+//   - booking-service `ConfirmBooking` set Status=Confirmed, PaymentStatus=paid,
+//     then `Collection("bookings").Doc(id).Set(ctx, booking)`
+//   - booking-service `updateBookingStatusOnDispute` set the dispute flags on
+//     ITS OWN snapshot, then Set()s the whole doc
+// The two arrive as separate Pub/Sub deliveries (`payment_succeeded` and
+// `payment_dispute_created`) within a second or two of each other, because
+// Stripe raises the dispute as soon as the charge is captured and capture is
+// what triggers the success path. Whichever landed second overwrote the other's
+// fields with its stale read.
 //
-//   A dispute raised by Stripe's test card races the payment-success path, and
-//   the loser's write is silently clobbered, because both handlers
-//   read-modify-WRITE THE WHOLE booking document:
-//     - booking-service `ConfirmBooking`            (internal/service/booking.go
-//       ~:3270) sets Status=Confirmed, PaymentStatus=paid, then
-//       `Collection("bookings").Doc(id).Set(ctx, booking)`
-//     - booking-service `updateBookingStatusOnDispute` (booking.go:3702-3718)
-//       sets the dispute flags on ITS OWN snapshot, then Set()s the whole doc
-//   The two arrive as separate Pub/Sub deliveries (`payment_succeeded` and
-//   `payment_dispute_created`) within a second or two of each other, because
-//   Stripe raises the dispute as soon as the charge is captured and capture is
-//   what triggers the success path. Whichever lands second overwrites the
-//   other's fields with its stale read.
+// Observed on staging, 2026-09-12 19:03-19:04Z, booking `tts1EgWyp4ssKROAYZDw`
+// (listing maclmSLlYYdkbcY9WDsI, guest a throwaway qa+ bot): created 19:03:58,
+// last updated 19:04:06 by the dispute handler, and left permanently at
+// `status=Accepted, payment_status=pending, has_dispute=true`. The guest's card
+// was captured and disputed, yet the booking never reached Confirmed — it would
+// never auto-complete, no payout would ever be created, and the app showed an
+// unpaid booking for a charge that was taken. Five other runs the same hour
+// landed in the other order and were fine. A coin flip.
 //
-//   Observed on staging, 2026-09-12 19:03-19:04Z, booking
-//   `tts1EgWyp4ssKROAYZDw` (listing maclmSLlYYdkbcY9WDsI, guest a throwaway
-//   qa+ bot): created 19:03:58, last updated 19:04:06 by the dispute handler,
-//   and left permanently at `status=Accepted, payment_status=pending,
-//   has_dispute=true`. The guest's card was captured and disputed, yet the
-//   booking never reached Confirmed — so it will never auto-complete, no
-//   payout is ever created, and the app shows an unpaid booking for a charge
-//   that was taken. Five other runs the same hour landed in the other order
-//   and were fine. It is a coin flip, so this flow cannot be made
-//   deterministic from outside, and shipping it into the 6-hourly CI job would
-//   mean a Slack page on roughly every other run.
+// THE FIX (booking-service, `confirmedPaymentUpdate` / `disputeCreatedUpdate`
+// in internal/service/booking.go): each handler now persists ONLY the fields it
+// owns, via a partial update, and appends lifecycle events with ArrayUnion
+// instead of rewriting the array. The two field sets are disjoint, so they
+// commute and both delivery orders converge on the same document. The setup
+// case below polling for `status=confirmed` while the dispute is in flight is
+// precisely the regression guard for that.
 //
-//   Same root shape, lower stakes, in payment-service: `charge.dispute.created`
-//   writes the charge row's `status=disputed` (payment_dispute.go:84) while
-//   `payment_intent.succeeded` writes `status=completed` whenever it isn't
-//   already (payment.go:4073-4074), with no guard either way — one run ended
-//   `status=completed, dispute_status=needs_response` (the "Disputed" badge
-//   lost from history), the next ended `status=disputed`. The dispute_* fields
-//   themselves survive both orders (that path updates only `status`), which is
-//   why the assertions below key on `dispute_status` rather than `status`.
+// Same root shape, lower stakes, in payment-service: `charge.dispute.created`
+// writes the charge row's `status=disputed` (payment_dispute.go:84) while
+// `payment_intent.succeeded` wrote `status=completed` whenever it wasn't
+// already (payment.go:4073), with no guard either way — one run ended
+// `status=completed, dispute_status=needs_response` (the "Disputed" badge lost
+// from history), the next ended `status=disputed`. `completed` now yields to an
+// already-`disputed` row. The assertions below still key on `dispute_status`
+// rather than `status`: `dispute_status` is the field that survived both orders
+// even before the fix, so it remains the stabler thing to assert, and
+// `recordDisputeClosed` legitimately moves `status` back to `completed`.
 //
-//   Re-enabling requires the two writers to stop clobbering each other
-//   (targeted field updates or a transaction), NOT a change to the assertions
-//   here — 'Accepted with payment pending' after a successful capture is not
-//   acceptable behaviour to encode in a test.
+// If this flow ever goes red on 'Accepted with payment pending' again, that is
+// the race returning — do NOT loosen these assertions to tolerate it.
 // ─────────────────────────────────────────────────────────────────────────────
 //
 // Disputes are never initiated in the app or the portal: they are chargebacks
@@ -246,16 +246,32 @@ export default {
       },
     },
     {
-      // Cleanup only, and deliberately tolerant: whatever state the flow
-      // reached (draft that never paid, paid-but-unconfirmed, confirmed, or
-      // already cancelled by the case above), the booking must not be left
+      // Cleanup, deliberately tolerant about the state it finds: whatever the
+      // flow reached (draft that never paid, paid-but-unconfirmed, confirmed,
+      // or already cancelled by the case above), the booking must not be left
       // occupying its listing's dates.
-      name: 'cleanup: tear down the booking whatever state it reached',
+      //
+      // It is NOT tolerant about the state it leaves. This runs on the failure
+      // path too (lib/runner.mjs keeps going past a failed case precisely so
+      // cleanup still runs), which is exactly when a leak would otherwise slip
+      // through unnoticed and silently block those dates on a staging listing
+      // for every later run. So the teardown is verified, not assumed.
+      name: 'cleanup: tear down the booking, and prove it ended cancelled',
       run: async () => {
-        if (!ctx.bookingId || ctx.cancelled) return;
+        if (!ctx.bookingId) return;
         const booking = await getBooking(ctx.guest.tokens, ctx.bookingId);
-        if (booking.status === 'draft') await deleteDraftBooking(ctx.guest.tokens, ctx.bookingId);
-        else if (booking.status !== 'cancelled') await cancelBooking(ctx.guest.tokens, ctx.bookingId);
+        if (booking.status === 'draft') {
+          await deleteDraftBooking(ctx.guest.tokens, ctx.bookingId);
+          return; // deleted outright — nothing left to read back
+        }
+        if (booking.status !== 'cancelled') await cancelBooking(ctx.guest.tokens, ctx.bookingId);
+
+        const final = await getBooking(ctx.guest.tokens, ctx.bookingId);
+        assert(
+          final.status === 'cancelled',
+          `LEAK: booking ${ctx.bookingId} was left at status='${final.status}' instead of 'cancelled' — ` +
+            `it is still holding its listing's dates on staging`
+        );
       },
     },
   ],
