@@ -125,6 +125,7 @@ Write flows currently here, all money state-machine transitions:
 | `rewards-referral-flow.mjs` | CR-588 — cancelling a referral's qualifying booking resets (or voids) the referral |
 | `payment-coupon-hold-flow.mjs` | one coupon can only discount one booking at a time; the hold releases when the booking drops it or its draft is deleted |
 | `payment-intent-reuse-flow.mjs` | one live PaymentIntent per booking — repeat/re-priced requests reuse it, and an authorized booking refuses a second one |
+| `booking-lifecycle-flow.mjs` | a request-to-book stay is AUTHORIZED and never captured while it waits for the host; a guest cancellation refunds exactly the policy tier (`full_refund_24h` / `fifty_percent_24h` / `no_refund`) |
 
 Write flows register throwaway `qa+<digits>@bot.com` accounts, and user-service
 rate-limits its auth group (register/confirm/login/refresh/password reset) to

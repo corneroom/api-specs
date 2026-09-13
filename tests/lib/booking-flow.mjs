@@ -124,13 +124,37 @@ const FIXTURE_CURRENCY = 'usd';
 
 // The feed caps `limit` at 100 and pages by `cursor` = the last doc id it
 // returned (listing-service internal/rest/controller.go:624-634), so the full
-// instant-bookable set needs several passes.
-async function listAllInstantBookListings(tokens) {
+// bookable set needs several passes.
+//
+// `instantBook` selects which half of the marketplace to keep:
+//   true  — instant-book listings. finalize lands the booking straight at
+//           `Accepted` and CreateBooking publishes `awaiting_payment`, so the
+//           hold is captured immediately (booking-service
+//           internal/service/booking.go:2556, :2633).
+//   false — request-to-book. finalize lands at `Pending` and NO
+//           `awaiting_payment` is published until the HOST accepts
+//           (booking.go:2559, :2646 and AcceptBooking at :1119) — i.e. the
+//           card is authorized but never captured while the request is
+//           pending. That asymmetry is what services/booking-lifecycle-flow.mjs
+//           exists to guard, so it needs its own pool.
+//
+// IMPORTANT — the `instant_book` QUERY PARAM can only narrow to `true`.
+// listing-service applies it as `filter.InstantBook != nil && *filter.InstantBook`
+// in all three places it is read (internal/service/listing.go:407, :468, :813),
+// so `instant_book=false` parses fine and is then a silent no-op: the feed comes
+// back unfiltered. That is invisible today because the mobile app only ever
+// sends `true` (`section_query_resolver.dart:92`, `infinite_scroll_provider.dart:148`),
+// but a test asking for the request-to-book half MUST NOT trust the server here
+// — a run that did got handed an instant-book fixture. So the param is only sent
+// when it actually filters, and the `false` half is selected client-side from the
+// full feed. Do not "simplify" this back into a query param.
+async function listAllBookableListings(tokens, instantBook) {
   const out = [];
   const seen = new Set();
   let cursor = '';
+  const filterParam = instantBook ? '&instant_book=true' : '';
   for (let page = 0; page < 10; page++) {
-    const url = `${config.gwUrl}/listings?limit=100&instant_book=true${cursor ? `&cursor=${cursor}` : ''}`;
+    const url = `${config.gwUrl}/listings?limit=100${filterParam}${cursor ? `&cursor=${cursor}` : ''}`;
     const res = await gwFetch(url, { headers: authHeaders(tokens, 'full') });
     const batch = (await res.json()).data ?? [];
     if (batch.length === 0) break;
@@ -143,7 +167,7 @@ async function listAllInstantBookListings(tokens) {
     if (seen.size === before) break; // cursor stopped advancing — we've seen it all
     cursor = batch[batch.length - 1].id;
   }
-  return out;
+  return instantBook ? out : out.filter((l) => l.instant_book === false);
 }
 
 // The single listing read that exposes `host.is_bot` (see the note above).
@@ -153,23 +177,30 @@ export async function getListingDetail(tokens, id) {
   return (await res.json()).data;
 }
 
-// Built once per process — it's public, read-only data and every flow wants
-// the same answer, so paying for ~13 detail fetches per test file would be
-// pure waste. A failed build is not cached, so a transient 502 mid-pool
-// doesn't poison the whole run.
-let botPoolPromise;
-async function botFixturePool(tokens) {
-  if (!botPoolPromise) {
-    botPoolPromise = buildBotFixturePool(tokens).catch((e) => {
-      botPoolPromise = undefined;
-      throw e;
-    });
+// Built once per process PER instant_book value — it's public, read-only data
+// and every flow wants the same answer, so paying for ~13 detail fetches per
+// test file would be pure waste. A failed build is not cached, so a transient
+// 502 mid-pool doesn't poison the whole run.
+const botPoolPromises = new Map(); // instantBook(bool) -> Promise<listing[]>
+async function botFixturePool(tokens, instantBook = true) {
+  if (!botPoolPromises.has(instantBook)) {
+    botPoolPromises.set(
+      instantBook,
+      buildBotFixturePool(tokens, instantBook).catch((e) => {
+        botPoolPromises.delete(instantBook);
+        throw e;
+      })
+    );
   }
-  return botPoolPromise;
+  return botPoolPromises.get(instantBook);
 }
 
-async function buildBotFixturePool(tokens) {
-  const candidates = (await listAllInstantBookListings(tokens))
+async function buildBotFixturePool(tokens, instantBook) {
+  const label = instantBook ? 'instant-book' : 'request-to-book';
+  // Currency is filtered BEFORE the detail fetches on purpose: `is_bot` costs
+  // one request per candidate, and the USD slice is small (13 instant-book /
+  // 5 request-to-book on staging today) while the full feed is ~376.
+  const candidates = (await listAllBookableListings(tokens, instantBook))
     .filter((l) => l.currency === FIXTURE_CURRENCY && typeof l.price === 'number')
     .sort((a, b) => a.price - b.price || a.id.localeCompare(b.id));
   const pool = [];
@@ -179,11 +210,11 @@ async function buildBotFixturePool(tokens) {
   }
   if (pool.length === 0) {
     throw new Error(
-      `no bot-hosted ${FIXTURE_CURRENCY.toUpperCase()} instant-book listing found among ${candidates.length} candidates — ` +
+      `no bot-hosted ${FIXTURE_CURRENCY.toUpperCase()} ${label} listing found among ${candidates.length} candidates — ` +
         'this suite must never book a real host (they get a push notification per booking); reseed staging bot listings'
     );
   }
-  console.log(`    · bot fixture pool: ${pool.length} ${FIXTURE_CURRENCY} instant-book listings (${pool.map((l) => l.price).join(', ')})`);
+  console.log(`    · bot fixture pool: ${pool.length} ${FIXTURE_CURRENCY} ${label} listings (${pool.map((l) => l.price).join(', ')})`);
   return pool;
 }
 
@@ -206,14 +237,17 @@ function shuffled(items) {
 // Throws (rather than returning null) when staging can't satisfy the request —
 // a missing fixture is an environment problem and the message should say which
 // constraint failed, not surface as a bare "listing is undefined" later.
-export async function pickListings(tokens, count, { minPrice = 1, maxPrice = Infinity, policy, exclude = [] } = {}) {
-  const pool = await botFixturePool(tokens);
+// `instantBook` defaults to true — that is what every money flow written before
+// booking-lifecycle-flow.mjs assumed, and what "just give me a bookable fixture"
+// should keep meaning. Pass false for the request-to-book half.
+export async function pickListings(tokens, count, { minPrice = 1, maxPrice = Infinity, policy, exclude = [], instantBook = true } = {}) {
+  const pool = await botFixturePool(tokens, instantBook);
   const qualifying = pool.filter(
     (l) => l.price >= minPrice && l.price <= maxPrice && !exclude.includes(l.id) && (!policy || l.cancellation_policy === policy)
   );
   if (qualifying.length < count) {
     throw new Error(
-      `need ${count} bot-hosted ${FIXTURE_CURRENCY} listing(s) priced ${minPrice}-${maxPrice}` +
+      `need ${count} bot-hosted ${FIXTURE_CURRENCY} ${instantBook ? 'instant-book' : 'request-to-book'} listing(s) priced ${minPrice}-${maxPrice}` +
         `${policy ? ` with cancellation_policy=${policy}` : ''}, found ${qualifying.length} in a pool of ${pool.length}`
     );
   }
