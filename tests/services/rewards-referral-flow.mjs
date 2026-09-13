@@ -24,18 +24,18 @@
 // rather than reusing tests/.env's shared account. See
 // lib/booking-flow.mjs's `registerFreshUser`.
 //
-// LEAK DISCIPLINE: `pickListing()` always returns the same single staging
-// fixture for a given price ($5 / $0 — there's only one of each), and every
-// booking here parks on a far-future but bounded date window
-// (`futureDates()`). Every confirmed booking this file creates MUST be
-// cancelled by the end of the run, or repeated 6h-cadence CI runs
-// accumulate uncancelled bookings on those two listings until random date
-// collisions make `POST /bookings/initiate` start 400ing ("listing is not
-// available for these dates") — this caused real scheduled-CI flakiness in
-// Sep 2026 (see the dedicated "cleanup" cases below, one per booking that
-// isn't already cancelled as part of a scenario's own assertions). When
-// adding a new scenario here, add its cleanup in the same PR.
-import { registerFreshUser, pickListing, bookAndConfirm, cancelBooking } from '../lib/booking-flow.mjs';
+// LEAK DISCIPLINE: every booking here parks on a far-future but bounded date
+// window (`futureDates()`), and every confirmed booking this file creates
+// MUST be cancelled by the end of the run, or repeated 6h-cadence CI runs
+// accumulate uncancelled bookings until random date collisions make
+// `POST /bookings/initiate` start 400ing ("listing is not available for these
+// dates") — this caused real scheduled-CI flakiness in Sep 2026 (see the
+// dedicated "cleanup" cases below, one per booking that isn't already
+// cancelled as part of a scenario's own assertions). When adding a new
+// scenario here, add its cleanup in the same PR. `pickListing()` now spreads
+// picks at random across the whole bot-hosted fixture pool, which widens the
+// margin but does not replace cleanup.
+import { registerFreshUser, pickListing, pickFreeListing, bookAndConfirm, cancelBooking } from '../lib/booking-flow.mjs';
 import { getWallet, getMyReferral, applyReferralCode } from '../lib/reward-helpers.mjs';
 import { poll } from '../lib/poll.mjs';
 
@@ -63,8 +63,9 @@ export default {
         assert(code, 'referrer has no referral code');
         const applied = await applyReferralCode(pairA.referred.tokens, code);
         assert(applied.status === 'pending', `expected fresh referral status=pending, got ${applied.status}`);
-        pairA.listing = await pickListing(pairA.referred.tokens, { price: 5 });
-        assert(pairA.listing, 'no $5 instant-book listing found on staging to seed a booking with');
+        // >= 5 so the $5 coupon minted here always leaves a chargeable
+        // remainder when it is spent (scenario 4a).
+        pairA.listing = await pickListing(pairA.referred.tokens, { minPrice: 5 });
       },
     },
     {
@@ -154,8 +155,8 @@ export default {
     {
       // Cleanup only — booking2 has no coupon on it, so cancelling it just
       // resets pairA's referral again (harmless, nothing asserts on pairA
-      // after this point). Without this, booking2 leaks on the shared $5
-      // fixture listing forever (see the LEAK DISCIPLINE note up top).
+      // after this point). Without this, booking2 leaks on pair A's fixture
+      // listing forever (see the LEAK DISCIPLINE note up top).
       name: "cleanup: cancel pair A's re-completion booking",
       run: async () => {
         await cancelBooking(pairA.referred.tokens, pairA.booking2.bookingId);
@@ -172,8 +173,7 @@ export default {
         pairB.referred = await registerFreshUser('ReferredB');
         const code = (await getMyReferral(pairB.referrer.tokens)).code;
         await applyReferralCode(pairB.referred.tokens, code);
-        pairB.listing = await pickListing(pairB.referred.tokens, { price: 5 });
-        assert(pairB.listing, 'no $5 instant-book listing found on staging to seed a booking with');
+        pairB.listing = await pickListing(pairB.referred.tokens, { minPrice: 5 });
       },
     },
     {
@@ -290,8 +290,7 @@ export default {
         pairC.referred = await registerFreshUser('ReferredC');
         const code = (await getMyReferral(pairC.referrer.tokens)).code;
         await applyReferralCode(pairC.referred.tokens, code);
-        pairC.listing = await pickListing(pairC.referred.tokens, { price: 0 });
-        assert(pairC.listing, 'no $0 instant-book listing found on staging to seed a free-stay booking with');
+        pairC.listing = await pickFreeListing(pairC.referred.tokens);
 
         pairC.booking = await bookAndConfirm(pairC.referred.tokens, pairC.listing, { guestId: pairC.referred.id, hostId: pairC.listing.host.id });
         await new Promise((r) => setTimeout(r, 8000)); // give the async completion path a fair chance to (wrongly) fire
@@ -308,7 +307,7 @@ export default {
     {
       // Cleanup only — a $0/free booking (SetupIntent path, no coupon, no
       // refund) so cancelling it has no side effects on anything asserted
-      // above; it just avoids leaking a confirmed booking on the shared $0
+      // above; it just avoids leaking a confirmed booking on the free
       // fixture listing.
       name: "cleanup: cancel pair C's free-stay booking",
       run: async () => {

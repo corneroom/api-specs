@@ -132,6 +132,18 @@ rate-limits its auth group (register/confirm/login/refresh/password reset) to
 so `lib/booking-flow.mjs` backs off 30s and retries on a 429 rather than
 failing the run — keep new flows frugal with fresh identities anyway.
 
+**Never book a listing hosted by a real account.** Every booking, payment and
+cancellation notifies the host for real (messaging-service reacts to
+`booking-events`) — the owner was getting push notifications on his phone every
+six hours because the old fixture picker took the first `$5` instant-book
+listing, which belonged to a genuine signed-in host. Use
+`lib/booking-flow.mjs`'s `pickListing` / `pickListings` / `pickFreeListing`:
+they build a pool of **bot-hosted USD** listings and pick at random from it.
+Note that `host.is_bot` is only present on `GET /listings/{id}`, never on the
+`GET /listings` feed, so the pool is built with one detail fetch per candidate
+(cached per process). Don't reintroduce a raw feed pick, and don't hardcode
+host ids — staging gets reseeded.
+
 **Every booking a write flow creates must be torn down before the file ends**
 (`teardownBooking` handles any state). The suite runs every 6 hours against a
 handful of shared staging listings; uncancelled bookings accumulate until date

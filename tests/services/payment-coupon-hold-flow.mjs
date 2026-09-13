@@ -36,15 +36,17 @@
 // POST /bookings/initiate start 400ing. When adding a scenario here, add its
 // cleanup in the same change.
 //
-// Fixtures: the qualifying booking needs the $5 USD listing (a $5 coupon must
-// leave a non-zero, above-Stripe-minimum balance). Bookings A and B must be on
-// two DIFFERENT listings — booking-service keeps one draft per (user, listing),
-// so initiating twice on one listing returns the same booking and proves
-// nothing.
+// Fixtures: all three are bot-hosted USD listings (see the fixture note in
+// lib/booking-flow.mjs — a real host gets a push notification for every
+// booking this suite makes). The qualifying booking must cost at least $5 so
+// the $5 coupon leaves a non-zero, above-Stripe-minimum balance. Bookings A
+// and B must be on two DIFFERENT listings — booking-service keeps one draft
+// per (user, listing), so initiating twice on one listing returns the same
+// booking and proves nothing.
 import {
   registerFreshUser,
   pickListing,
-  listListings,
+  pickListings,
   futureDates,
   initiateBooking,
   calcPricing,
@@ -112,8 +114,7 @@ export default {
         const code = (await getMyReferral(ctx.referrer.tokens)).code;
         await applyReferralCode(ctx.referred.tokens, code);
 
-        const qualifyingListing = await pickListing(ctx.referred.tokens, { price: 5 });
-        assert(qualifyingListing, 'no $5 instant-book listing found on staging to mint a coupon with');
+        const qualifyingListing = await pickListing(ctx.referred.tokens, { minPrice: 5 });
         ctx.qualifying = await bookAndConfirm(ctx.referred.tokens, qualifyingListing, {
           guestId: ctx.referred.id,
           hostId: qualifyingListing.host.id,
@@ -132,15 +133,16 @@ export default {
         assert(ctx.coupon, `expected a coupon code in the wallet, got ${JSON.stringify(wallet)}`);
         assert(!wallet[0].held_by, `a freshly issued coupon must be unheld, got held_by=${wallet[0].held_by}`);
 
-        // Two DIFFERENT listings, deterministically chosen: cheapest first,
-        // excluding the $5 fixture. Priced 6-30 so the ~$5 discount always
-        // leaves a chargeable remainder above Stripe's minimum.
-        const candidates = (await listListings(ctx.referred.tokens))
-          .filter((l) => l.id !== qualifyingListing.id && l.price >= 6 && l.price <= 30)
-          .sort((a, b) => a.price - b.price || a.id.localeCompare(b.id));
-        assert(candidates.length >= 2, `need 2 bookable listings priced 6-30 on staging, found ${candidates.length}`);
-        ctx.a = await openCheckout(candidates[0]);
-        ctx.b = await openCheckout(candidates[1]);
+        // Two DIFFERENT bot-hosted listings, excluding the qualifying fixture.
+        // Priced 6-30 so the ~$5 discount always leaves a chargeable remainder
+        // above Stripe's minimum.
+        const [listingA, listingB] = await pickListings(ctx.referred.tokens, 2, {
+          minPrice: 6,
+          maxPrice: 30,
+          exclude: [qualifyingListing.id],
+        });
+        ctx.a = await openCheckout(listingA);
+        ctx.b = await openCheckout(listingB);
         assert(ctx.a.id !== ctx.b.id, 'checkouts A and B must be two distinct bookings');
       },
     },
@@ -250,7 +252,7 @@ export default {
       // (CR-588 — covered by rewards-referral-flow.mjs, not re-asserted here);
       // it must therefore run last, after every wallet assertion above.
       // Tolerant of any state: setup may have failed before the booking was
-      // ever paid, and it still must not be left on the shared $5 listing.
+      // ever paid, and it still must not be left on its fixture listing.
       name: 'cleanup: cancel the qualifying paid booking',
       run: async () => {
         await teardownBooking(ctx.referred.tokens, ctx.qualifyingId);

@@ -91,27 +91,153 @@ export async function registerFreshUser(firstName = 'GwTest') {
   return { email, tokens, id: me.id };
 }
 
-// Every currently instant-bookable listing, as the feed returns it. The list
-// response already carries `price`, `currency` and `cancellation_policy`, so a
-// flow that needs a fixture with specific properties (two DISTINCT listings, a
-// refundable policy, …) can select one here without N detail fetches. Sort
-// your own selection — feed order is not stable.
-export async function listListings(tokens) {
-  const res = await gwFetch(`${config.gwUrl}/listings?limit=100&instant_book=true`, { headers: authHeaders(tokens, 'full') });
-  return (await res.json()).data ?? [];
+// ─── Fixture selection: BOT HOSTS ONLY ──────────────────────────────────────
+//
+// Every booking and cancellation this suite makes notifies the listing's HOST
+// for real — push to their phone, email, the lot (messaging-service reacts to
+// booking-events). Until 2026-09-12 the pickers below returned whatever the
+// feed happened to list first at a given price, and on staging that was
+// `UaoXDcGpcjVP2z0BauQY` ($5 "Reserved Parking Spot"), hosted by a genuine
+// signed-in account — so the 6-hourly CI run was paging a real person a
+// dozen times a night. Seeded QA/bot hosts have no device and no inbox, so
+// every fixture used here MUST be bot-hosted.
+//
+// HOW "is this host a bot?" IS DERIVED — this is the fiddly part:
+//   - `GET /listings` (the feed) does NOT tell you. Its mapper builds the host
+//     object from the listing's denormalised snapshot and simply omits the
+//     field (listing-service internal/rest/util.go:346-353), and the response
+//     struct has `json:"is_bot,omitempty"`, so it is absent, not false.
+//   - `GET /listings/{id}` DOES tell you: the detail path loads the live host
+//     via listingService.GetHost and copies IsBot through
+//     (listing-service internal/rest/controller.go:862), reading the user
+//     doc's `bot` flag (user-service internal/data/user.go:52).
+// So the pool is built the only honest way available over the gateway: list,
+// then one detail fetch per candidate. Hard-coding known bot host ids would be
+// brittle the moment staging is reseeded — the flag is re-derived every run.
+//
+// The pool is deliberately restricted to `usd` fixtures: coupons are USD, and
+// `calcPricing`/`createPaymentIntent` default to usd, so a non-USD fixture
+// silently mixes currencies into money assertions. That keeps the pool small
+// enough (13 USD instant-book listings on staging today) that verifying every
+// one of them costs ~13 requests, cached for the whole process.
+const FIXTURE_CURRENCY = 'usd';
+
+// The feed caps `limit` at 100 and pages by `cursor` = the last doc id it
+// returned (listing-service internal/rest/controller.go:624-634), so the full
+// instant-bookable set needs several passes.
+async function listAllInstantBookListings(tokens) {
+  const out = [];
+  const seen = new Set();
+  let cursor = '';
+  for (let page = 0; page < 10; page++) {
+    const url = `${config.gwUrl}/listings?limit=100&instant_book=true${cursor ? `&cursor=${cursor}` : ''}`;
+    const res = await gwFetch(url, { headers: authHeaders(tokens, 'full') });
+    const batch = (await res.json()).data ?? [];
+    if (batch.length === 0) break;
+    const before = seen.size;
+    for (const l of batch) {
+      if (seen.has(l.id)) continue;
+      seen.add(l.id);
+      out.push(l);
+    }
+    if (seen.size === before) break; // cursor stopped advancing — we've seen it all
+    cursor = batch[batch.length - 1].id;
+  }
+  return out;
 }
 
-// Finds a real, currently instant-bookable listing. `price` pins an exact
-// listing price (e.g. 5 for the usual $5 seeded fixtures so a $5 referral
-// coupon leaves a non-zero balance to charge — see the coupon-vs-minimum
-// gotcha in tests/README.md); `price: 0` finds a free listing (SetupIntent
-// path). Falls back to the cheapest paid listing if no exact match exists.
-export async function pickListing(tokens, { price } = {}) {
-  const res = await gwFetch(`${config.gwUrl}/listings?limit=100&instant_book=true`, { headers: authHeaders(tokens, 'full') });
-  const listings = (await res.json()).data ?? [];
-  if (price === 0) return listings.find((l) => l.price === 0) ?? null;
-  if (price) return listings.find((l) => l.price === price) ?? listings.find((l) => l.price > 0) ?? null;
-  return listings.find((l) => typeof l.price === 'number' && l.price > 0) ?? null;
+// The single listing read that exposes `host.is_bot` (see the note above).
+export async function getListingDetail(tokens, id) {
+  const res = await gwFetch(`${config.gwUrl}/listings/${id}`, { headers: authHeaders(tokens, 'full') });
+  if (res.status !== 200) throw new Error(`GET /listings/${id} failed ${res.status}: ${await res.text()}`);
+  return (await res.json()).data;
+}
+
+// Built once per process — it's public, read-only data and every flow wants
+// the same answer, so paying for ~13 detail fetches per test file would be
+// pure waste. A failed build is not cached, so a transient 502 mid-pool
+// doesn't poison the whole run.
+let botPoolPromise;
+async function botFixturePool(tokens) {
+  if (!botPoolPromise) {
+    botPoolPromise = buildBotFixturePool(tokens).catch((e) => {
+      botPoolPromise = undefined;
+      throw e;
+    });
+  }
+  return botPoolPromise;
+}
+
+async function buildBotFixturePool(tokens) {
+  const candidates = (await listAllInstantBookListings(tokens))
+    .filter((l) => l.currency === FIXTURE_CURRENCY && typeof l.price === 'number')
+    .sort((a, b) => a.price - b.price || a.id.localeCompare(b.id));
+  const pool = [];
+  for (const l of candidates) {
+    const detail = await getListingDetail(tokens, l.id);
+    if (detail?.host?.is_bot === true) pool.push({ ...l, host: { ...l.host, is_bot: true } });
+  }
+  if (pool.length === 0) {
+    throw new Error(
+      `no bot-hosted ${FIXTURE_CURRENCY.toUpperCase()} instant-book listing found among ${candidates.length} candidates — ` +
+        'this suite must never book a real host (they get a push notification per booking); reseed staging bot listings'
+    );
+  }
+  console.log(`    · bot fixture pool: ${pool.length} ${FIXTURE_CURRENCY} instant-book listings (${pool.map((l) => l.price).join(', ')})`);
+  return pool;
+}
+
+function shuffled(items) {
+  const copy = [...items];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+// Picks `count` DISTINCT bot-hosted USD fixtures, at random across everything
+// that qualifies rather than always the cheapest. Spreading bookings over the
+// whole pool is the cheap defence against the date-crowding flake that a
+// single shared fixture kept causing ("listing is not available for these
+// dates" — see tests/README.md's leak-discipline note): `futureDates()` picks
+// from a ~300-day window, so ten listings means ten times the room.
+//
+// Throws (rather than returning null) when staging can't satisfy the request —
+// a missing fixture is an environment problem and the message should say which
+// constraint failed, not surface as a bare "listing is undefined" later.
+export async function pickListings(tokens, count, { minPrice = 1, maxPrice = Infinity, policy, exclude = [] } = {}) {
+  const pool = await botFixturePool(tokens);
+  const qualifying = pool.filter(
+    (l) => l.price >= minPrice && l.price <= maxPrice && !exclude.includes(l.id) && (!policy || l.cancellation_policy === policy)
+  );
+  if (qualifying.length < count) {
+    throw new Error(
+      `need ${count} bot-hosted ${FIXTURE_CURRENCY} listing(s) priced ${minPrice}-${maxPrice}` +
+        `${policy ? ` with cancellation_policy=${policy}` : ''}, found ${qualifying.length} in a pool of ${pool.length}`
+    );
+  }
+  const chosen = shuffled(qualifying).slice(0, count);
+  for (const l of chosen) {
+    console.log(`    · fixture ${l.id} — ${l.price} ${l.currency}, ${l.cancellation_policy}, bot host ${l.host.id}`);
+  }
+  return chosen;
+}
+
+// One bot-hosted USD fixture. `minPrice` is what the money flows actually care
+// about: a referral coupon is worth $5, so a qualifying booking has to cost at
+// least that much for the discount to leave a real, above-Stripe-minimum
+// balance to charge (the coupon-vs-minimum gotcha in tests/README.md). There
+// is no bot-hosted $5 listing on staging — the only $5 one is the real host's
+// — hence ">= 5", not "== 5".
+export async function pickListing(tokens, opts = {}) {
+  const [listing] = await pickListings(tokens, 1, opts);
+  return listing;
+}
+
+// A bot-hosted free fixture — the SetupIntent path, no charge.
+export async function pickFreeListing(tokens) {
+  return pickListing(tokens, { minPrice: 0, maxPrice: 0 });
 }
 
 // A far-future, semi-randomized 1-night date range (avoids booking-overlap
@@ -128,7 +254,7 @@ export function futureDates() {
 // NOTE: booking-service keeps ONE draft per (user, listing) — initiating twice
 // for the same listing returns the SAME booking id with the new dates, it does
 // not create a second booking. A flow that needs two concurrent drafts for one
-// user must use two DIFFERENT listings (see listListings).
+// user must use two DIFFERENT listings (see pickListings).
 export async function initiateBooking(tokens, listingId, dates) {
   const res = await gwFetch(`${config.gwUrl}/bookings/initiate`, {
     method: 'POST',
@@ -294,8 +420,8 @@ export async function teardownBooking(tokens, bookingId) {
 // booking. Returns { bookingId, total, currency, intentId } once the gateway
 // reports the booking as confirmed.
 //
-// `currency` defaults to usd (all callers historically used the $5 USD
-// fixture); pass the listing's own currency for a non-USD fixture.
+// `currency` defaults to usd, which is also all the fixture pool contains
+// (see FIXTURE_CURRENCY); pass the listing's own currency for anything else.
 // `cardToken` is handed to Stripe — pass `tok_createDispute` to end up with a
 // charge that Stripe disputes.
 // `onDraft` is called with the booking id the instant it exists, BEFORE

@@ -33,8 +33,11 @@
 //
 // LEAK DISCIPLINE (see rewards-referral-flow.mjs's header): the one booking
 // this file creates is paid, so it is CANCELLED at the end — otherwise the
-// 6h-cadence CI run accumulates confirmed bookings on the shared $5 staging
-// fixture until date collisions make POST /bookings/initiate start 400ing.
+// 6h-cadence CI run accumulates confirmed bookings on the staging fixture
+// until date collisions make POST /bookings/initiate start 400ing.
+//
+// Fixture: a bot-hosted USD listing (lib/booking-flow.mjs's picker — a real
+// host would be pushed a notification for every booking this suite makes).
 import {
   registerFreshUser,
   pickListing,
@@ -71,11 +74,10 @@ export default {
   name: 'payment-service (one live PaymentIntent per booking — no orphans, no double authorization)',
   cases: [
     {
-      name: 'setup: a fresh guest opens a checkout on the $5 listing',
+      name: 'setup: a fresh guest opens a checkout on a bot-hosted USD listing',
       run: async () => {
         ctx.guest = await registerFreshUser('IntentReuse');
-        ctx.listing = await pickListing(ctx.guest.tokens, { price: 5 });
-        assert(ctx.listing, 'no $5 instant-book listing found on staging to open a checkout on');
+        ctx.listing = await pickListing(ctx.guest.tokens, { minPrice: 5 });
         ctx.dates = futureDates();
         ctx.booking = await initiateBooking(ctx.guest.tokens, ctx.listing.id, ctx.dates);
         ctx.pricing = await calcPricing(ctx.guest.tokens, ctx.listing.price);
@@ -178,7 +180,7 @@ export default {
     {
       // Cleanup only — see the LEAK DISCIPLINE note up top. Tolerant of any
       // state, so a failure earlier in the flow still can't leave a booking
-      // squatting on the shared $5 listing's dates.
+      // squatting on its fixture listing's dates.
       name: 'cleanup: cancel the paid booking',
       run: async () => {
         await teardownBooking(ctx.guest.tokens, ctx.booking?.id);

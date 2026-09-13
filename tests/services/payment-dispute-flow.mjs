@@ -103,14 +103,18 @@
 // staging keeps one `refund_requests` row in `held_dispute` — that row IS the
 // behaviour under test. Both belong to a throwaway qa+<digits>@bot.com guest.
 //
-// Fixture: the cheapest instant-bookable listing whose cancellation policy is
+// Fixture: a bot-hosted USD listing whose cancellation policy is
 // `full_refund_24h`, booked ~a year out, so the policy refund is the FULL
 // total. That makes "the refund was held" a statement about real money — on a
 // `no_refund` listing the held amount would be 0 and the assertion would be
-// vacuous.
+// vacuous. Bot-hosted matters independently: this flow pays, disputes AND
+// cancels, and a real host would be notified for each (see the fixture note in
+// lib/booking-flow.mjs). Nothing here asserts an absolute amount — every
+// money assertion is relative to the fixture's own `calcPricing` total — so
+// the pool may hand back any qualifying price.
 import {
   registerFreshUser,
-  listListings,
+  pickListing,
   futureDates,
   initiateBooking,
   calcPricing,
@@ -137,11 +141,7 @@ export default {
       name: 'setup: a fresh guest pays for a fully-refundable stay with the dispute-triggering test card',
       run: async () => {
         ctx.guest = await registerFreshUser('DisputeGuest');
-        const candidates = (await listListings(ctx.guest.tokens))
-          .filter((l) => l.price > 0 && l.cancellation_policy === 'full_refund_24h')
-          .sort((a, b) => a.price - b.price || a.id.localeCompare(b.id));
-        assert(candidates.length > 0, 'no instant-book listing with a full_refund_24h policy on staging to test a held refund with');
-        const listing = candidates[0];
+        const listing = await pickListing(ctx.guest.tokens, { minPrice: 1, policy: 'full_refund_24h' });
 
         // Spelled out rather than using bookAndConfirm(), so the booking id is
         // in ctx before anything can throw and the cleanup case can always
