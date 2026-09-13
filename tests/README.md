@@ -128,6 +128,7 @@ Write flows currently here, all money state-machine transitions:
 | `booking-lifecycle-flow.mjs` | a request-to-book stay is AUTHORIZED and never captured while it waits for the host; a guest cancellation refunds exactly the policy tier (`full_refund_24h` / `fifty_percent_24h` / `no_refund`) |
 | `experience-reservations-flow.mjs` | guide-led Experiences end to end — reserve holds one seat (a repeat Reserve reuses it), the standalone `/payments/charges` captures immediately, a `flexible` cancel >24h out refunds the FULL gross and releases the seat, and a repeat cancel is a no-op |
 | `payouts-flow.mjs` | the host-money reads — `/payouts/connect/status`'s documented no-method shape, `/payments/earnings`'s full shape, and that a GUEST who pays for a stay is credited no earnings and no payout account. Its header records why Connect onboarding and "earnings moved" are descoped |
+| `verification-flow.mjs` | a selfie KYC submission is validated, auto-decided (staging `AI_MODE=mock`), and the approval lands on the user's profile as a verified entry via `verification-events`. Reading it back is blocked — see `verification-history-read.mjs.disabled` |
 
 Write flows register throwaway `qa+<digits>@bot.com` accounts, and user-service
 rate-limits its auth group (register/confirm/login/refresh/password reset) to
@@ -154,10 +155,19 @@ collisions make `POST /bookings/initiate` start 400ing. This has already caused
 real scheduled-CI flakiness.
 
 A `services/*.mjs.disabled` file is a finished flow that is deliberately NOT
-discovered by `run.mjs`. Today that is `payment-dispute-flow.mjs.disabled`
-(CR-612 dispute hold): it is blocked on a product race, not on the test — its
-header documents exactly what, with the staging evidence, and how to re-enable
-it (rename back).
+discovered by `run.mjs` because it is blocked on a **product** bug, not on the
+test. Its header must document exactly what, with the staging evidence, and how
+to re-enable it (rename back to `.mjs` — nothing else). Today that is:
+
+- `verification-history-read.mjs.disabled` — a user cannot read their own
+  verification back (`GET /verifications`, `GET /verifications/{id}`) once they
+  own any non-document verification: `VerificationStatusResponse.document_type`
+  is a required enum and a selfie has none, so the response fails to serialize
+  and the router returns 200 + `success:false`. The write half works and IS
+  asserted, live, in `verification-flow.mjs`.
+
+(`payment-dispute-flow.mjs.disabled` used to be listed here; the write race it
+exposed was fixed and it is enabled again.)
 
 ## Roadmap
 - **Phase 1 (here):** read-only smoke of key endpoints + auth/security guards.
