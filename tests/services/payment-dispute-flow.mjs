@@ -42,10 +42,12 @@
 // already (payment.go:4073), with no guard either way — one run ended
 // `status=completed, dispute_status=needs_response` (the "Disputed" badge lost
 // from history), the next ended `status=disputed`. `completed` now yields to an
-// already-`disputed` row. The assertions below still key on `dispute_status`
-// rather than `status`: `dispute_status` is the field that survived both orders
-// even before the fix, so it remains the stabler thing to assert, and
-// `recordDisputeClosed` legitimately moves `status` back to `completed`.
+// already-`disputed` row, via the single `shouldCompleteTransaction` rule every
+// success path goes through (Stripe, both PayPal paths, standalone charges), so
+// the charge row's `status` is deterministic while the dispute is open and the
+// case below asserts it alongside `dispute_status`. Note `recordDisputeClosed`
+// legitimately moves `status` back to `completed` once the dispute RESOLVES —
+// only assert `disputed` while it is still open.
 //
 // If this flow ever goes red on 'Accepted with payment pending' again, that is
 // the race returning — do NOT loosen these assertions to tolerate it.
@@ -203,8 +205,17 @@ export default {
           },
           { timeoutMs: 90000, intervalMs: 5000, desc: 'the charge ledger row to carry the dispute' }
         );
-        // `charge.status` is deliberately not asserted — see the clobbering
-        // race documented at the top of this file.
+        // `charge.status` IS asserted now: with the completed-yields-to-disputed
+        // guard (payment-service `shouldCompleteTransaction`, applied on every
+        // success path — Stripe payment_intent.succeeded, the PayPal confirm and
+        // PAYMENT.CAPTURE.COMPLETED paths, and standalone charges) the charge row
+        // stays `disputed` for as long as the dispute is open, in BOTH delivery
+        // orders. If this goes red with `completed`, a success path has stopped
+        // honouring that guard — do not loosen it back.
+        assert(
+          charge.status === 'disputed',
+          `expected the charge row to stay 'disputed' while the dispute is open, got '${charge.status}'`
+        );
         assert(
           ['needs_response', 'under_review', 'warning_needs_response', 'warning_under_review'].includes(charge.dispute_status),
           `expected an OPEN dispute_status on the charge row, got '${charge.dispute_status}'`
