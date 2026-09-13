@@ -126,6 +126,7 @@ Write flows currently here, all money state-machine transitions:
 | `payment-coupon-hold-flow.mjs` | one coupon can only discount one booking at a time; the hold releases when the booking drops it or its draft is deleted |
 | `payment-intent-reuse-flow.mjs` | one live PaymentIntent per booking — repeat/re-priced requests reuse it, and an authorized booking refuses a second one |
 | `booking-lifecycle-flow.mjs` | a request-to-book stay is AUTHORIZED and never captured while it waits for the host; a guest cancellation refunds exactly the policy tier (`full_refund_24h` / `fifty_percent_24h` / `no_refund`) |
+| `experience-reservations-flow.mjs` | guide-led Experiences end to end — reserve holds one seat (a repeat Reserve reuses it), the standalone `/payments/charges` captures immediately, a `flexible` cancel >24h out refunds the FULL gross and releases the seat, and a repeat cancel is a no-op |
 
 Write flows register throwaway `qa+<digits>@bot.com` accounts, and user-service
 rate-limits its auth group (register/confirm/login/refresh/password reset) to
