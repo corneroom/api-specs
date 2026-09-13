@@ -26,6 +26,11 @@ export default {
         return null;
       },
     },
+    // Host earnings summary. Shape + the always-zero contract are asserted in
+    // services/payouts-flow.mjs (which also documents why it is always zero);
+    // this is the routing/auth guard.
+    { name: 'GET /payments/earnings rejects missing auth', path: '/payments/earnings', auth: 'none', expect: 401 },
+    { name: 'GET /payments/earnings rejects access-only header', path: '/payments/earnings', auth: 'access-only', expect: 401 },
     // Auth-header regression guards (the gotcha that cost us a debugging round):
     { name: 'GET /payments/methods rejects access-only header', path: '/payments/methods', auth: 'access-only', expect: 401 },
     { name: 'GET /payments/methods rejects missing auth', path: '/payments/methods', auth: 'none', expect: 401 },
