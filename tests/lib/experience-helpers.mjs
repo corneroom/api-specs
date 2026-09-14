@@ -65,18 +65,61 @@ async function guideIsBot(tokens, userId) {
   if (!botGuideCache) botGuideCache = new Map();
   if (botGuideCache.has(userId)) return botGuideCache.get(userId);
   const { status, json } = await gw(tokens, `/users/${userId}/profile`);
-  // Unknown = NOT a bot. An unreadable profile must never be treated as safe
-  // to reserve; the whole point is that a real person's phone buzzes.
-  const email = status === 200 ? json?.data?.basic_info?.email ?? '' : '';
-  const isBot = typeof email === 'string' && email.toLowerCase().endsWith(BOT_EMAIL_SUFFIX);
+  // An unreadable profile = NOT a bot. That is a safe answer: it only ever
+  // makes the picker skip a candidate, and the whole point is that a real
+  // person's phone buzzes.
+  if (status !== 200) {
+    botGuideCache.set(userId, false);
+    return false;
+  }
+  // A profile that no longer carries an email is NOT a safe answer — it would
+  // make every guide look like a real person and the picker would report
+  // "guided by REAL people", which is a lie about the catalogue and hides that
+  // the proxy itself broke. `basic_info.email` is explicitly on its way out of
+  // the public profile (user-service internal/rest/profile_handler.go:194-199
+  // keeps it only "until the mobile DTO makes email nullable"), so name that.
+  const email = json?.data?.basic_info?.email;
+  if (typeof email !== 'string' || email === '') {
+    throw new Error(
+      `the bot-guide proxy is broken, not the catalogue: GET /users/${userId}/profile no longer returns ` +
+        `basic_info.email (got ${JSON.stringify(email)}), and it is the only reachable way to tell a seeded bot ` +
+        `guide from a real person — listing-service tags the authoritative flag \`json:"-"\` ` +
+        `(internal/data/experience.go:48). user-service keeps that field only until the mobile DTO makes email ` +
+        `nullable (internal/rest/profile_handler.go:194-199), so this was expected to happen one day. This suite ` +
+        `must not reserve anything until a real guide_is_bot (or is_bot) flag is exposed on GET /experiences.`
+    );
+  }
+  const isBot = email.toLowerCase().endsWith(BOT_EMAIL_SUFFIX);
   botGuideCache.set(userId, isBot);
   return isBot;
 }
 
-export async function listExperiences(tokens, limit = 50) {
-  const { status, json, text } = await gw(tokens, `/experiences?limit=${limit}`);
-  if (status !== 200) throw new Error(`GET /experiences failed ${status}: ${text}`);
-  return json?.data?.experiences ?? [];
+// Paged, like the listing pool (lib/booking-flow.mjs `listAllBookableListings`)
+// and for the same reason: stopping at the first page silently narrows the
+// fixture set, and a bot-guided experience sitting on page 2 would read as
+// "staging has none" — an environment claim the failure message then makes out
+// loud. listing-service pages this endpoint by `page` (1-based) + `limit`,
+// capping limit at 100 (internal/service/experience.go:343-354, :484-488), and
+// a short batch is the last one.
+export async function listExperiences(tokens, limit = 100) {
+  const out = [];
+  const seen = new Set();
+  for (let page = 1; page <= 10; page++) {
+    const { status, json, text } = await gw(tokens, `/experiences?limit=${limit}&page=${page}`);
+    if (status !== 200) throw new Error(`GET /experiences failed ${status}: ${text}`);
+    const batch = json?.data?.experiences ?? [];
+    if (batch.length === 0) break;
+    const before = seen.size;
+    for (const e of batch) {
+      if (seen.has(e.id)) continue;
+      seen.add(e.id);
+      out.push(e);
+    }
+    // Offset paging that stopped advancing means we've seen everything.
+    if (seen.size === before) break;
+    if (batch.length < limit) break;
+  }
+  return out;
 }
 
 export async function listSessions(tokens, experienceId) {
@@ -152,8 +195,16 @@ export async function reserveSessionRaw(tokens, experienceId, sessionId, partici
   return { status, data: json?.data, text };
 }
 
-export async function reserveSession(tokens, experienceId, sessionId, participants = 1) {
+// `onReserved` is handed the reservation id the instant the 201 is parsed,
+// BEFORE anything that can throw — the same pre-throw callback the booking
+// flows use for a draft booking id (lib/booking-flow.mjs's `onDraft`, used at
+// services/booking-lifecycle-flow.mjs:145-147). Without it, a seat that was
+// genuinely held is leaked by any later failure: the caller only learns the id
+// from the return value, so a malformed body (or a validation throw in the
+// caller) holds a seat on a shared staging session that nothing can now cancel.
+export async function reserveSession(tokens, experienceId, sessionId, participants = 1, { onReserved } = {}) {
   const { status, data, text } = await reserveSessionRaw(tokens, experienceId, sessionId, participants);
+  if (status === 201 && data?.id && typeof onReserved === 'function') onReserved(data.id);
   if (status !== 201) throw new Error(`POST reserve failed ${status}: ${text}`);
   return data;
 }

@@ -85,7 +85,12 @@ function assert(cond, msg) {
 // FIRST refund in this same file, which logs its own latency — it was ~6s on
 // staging 2026-09-13, so this is a ~7x margin. Raise it if that log ever
 // creeps up; a window that is too short turns the case into a false pass.
+//
+// That margin is asserted, not just logged: the first refund fails if it takes
+// longer than GRACE/3, so a slowdown that would quietly disarm the "no second
+// refund" negative breaks the case that can still see something.
 const NO_SECOND_REFUND_GRACE_MS = 40000;
+const GRACE_HEADROOM = 3;
 
 // booked_count on the shared staging session. Every assertion on it here is a
 // DELTA from a snapshot taken at setup, not an absolute — but it still assumes
@@ -118,7 +123,13 @@ export default {
         ctx.session = session;
         ctx.seatsBefore = await seatCount(ctx.guest.tokens, experience.id, session.id);
 
-        const reservation = await reserveSession(ctx.guest.tokens, experience.id, session.id, 1);
+        // The id lands in ctx before anything below can throw — a held seat on
+        // a shared staging session is only recoverable if cleanup can name it.
+        const reservation = await reserveSession(ctx.guest.tokens, experience.id, session.id, 1, {
+          onReserved: (id) => {
+            ctx.reservationId = id;
+          },
+        });
         ctx.reservationId = reservation.id;
         ctx.reservation = reservation;
 
@@ -244,7 +255,15 @@ export default {
           { timeoutMs: 150000, intervalMs: 5000, desc: 'the experience cancellation to produce a refund ledger row' }
         );
         // Calibration for NO_SECOND_REFUND_GRACE_MS — see its comment.
-        console.log(`    · experience refund row landed ${Date.now() - startedAt}ms after cancel`);
+        const elapsed = Date.now() - startedAt;
+        console.log(`    · experience refund row landed ${elapsed}ms after cancel`);
+        assert(
+          elapsed < NO_SECOND_REFUND_GRACE_MS / GRACE_HEADROOM,
+          `the refund took ${elapsed}ms to reach the ledger — NO_SECOND_REFUND_GRACE_MS ` +
+            `(${NO_SECOND_REFUND_GRACE_MS}ms) no longer has ${GRACE_HEADROOM}x headroom over reality, so the repeat-cancel ` +
+            `case can no longer tell "refunded nothing further" from "has not refunded YET". Raise the grace window ` +
+            `(and re-check this margin), don't delete this assertion`
+        );
         const refunds = rows.filter((t) => t.type === 'refund');
         assert(refunds.length === 1, `expected exactly one refund row, got ${JSON.stringify(refunds)}`);
         assert(

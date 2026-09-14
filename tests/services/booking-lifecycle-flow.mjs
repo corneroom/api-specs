@@ -51,7 +51,7 @@
 //   full_refund_24h    (>= 24h)  -> refund the FULL captured total
 //   fifty_percent_24h  (>= 24h)  -> refund exactly HALF
 //   no_refund          (always)  -> refund NOTHING, and no refund row is even
-//                                   written (payment.go:1983 breaks out before
+//                                   written (payment.go:1985 breaks out before
 //                                   creating one)
 //
 // The bot-hosted USD fixture pool carries all three policies today, so each tier
@@ -133,7 +133,13 @@ async function hostAction(tokens, bookingId, action, body) {
 // refund rows landed ~5.6s after the cancel, so this is a >10x margin. If a
 // refund ever starts landing slower than this, the no_refund case turns into a
 // false pass — raise it, don't delete it.
+//
+// And it does not rely on someone reading that log: each POSITIVE tier asserts
+// its own measured latency is under GRACE/3, so a slowdown that would quietly
+// disarm the negative case fails loudly HERE, in the tier that still has
+// something real to observe, instead of turning no_refund green forever.
 const NO_REFUND_GRACE_MS = 60000;
+const GRACE_HEADROOM = 3;
 
 // Books a bot-hosted fixture with the given cancellation policy, cancels it,
 // and returns { total, refunds, charges } read back from the guest's ledger.
@@ -161,7 +167,14 @@ async function cancelAndReadLedger(policyKey, expectRefund) {
       { timeoutMs: 120000, intervalMs: 5000, desc: `a refund ledger row for the ${policyKey} cancellation` }
     );
     // Calibration for NO_REFUND_GRACE_MS — see its comment.
-    console.log(`    · ${policyKey}: refund row landed ${Date.now() - startedAt}ms after cancel`);
+    const elapsed = Date.now() - startedAt;
+    console.log(`    · ${policyKey}: refund row landed ${elapsed}ms after cancel`);
+    assert(
+      elapsed < NO_REFUND_GRACE_MS / GRACE_HEADROOM,
+      `a refund took ${elapsed}ms to reach the ledger — NO_REFUND_GRACE_MS (${NO_REFUND_GRACE_MS}ms) no longer has ` +
+        `${GRACE_HEADROOM}x headroom over reality, so the no_refund case can no longer tell "refunded nothing" from ` +
+        `"has not refunded YET". Raise the grace window (and re-check this margin), don't delete this assertion`
+    );
   } else {
     await new Promise((r) => setTimeout(r, NO_REFUND_GRACE_MS));
     rows = await getBookingTransactions(ctx.guest.tokens, booked.bookingId);
@@ -366,7 +379,7 @@ export default {
       // The tier that is only provable by a negative, and the one where a
       // regression costs the HOST rather than the guest: payment-service breaks
       // out before creating any refund request at all when the policy decides 0
-      // (payment.go:1983). Nothing arrives, so nothing can be polled for — the
+      // (payment.go:1985). Nothing arrives, so nothing can be polled for — the
       // helper waits a fixed grace period instead.
       name: 'tier no_refund: cancelling produces NO refund at all, and the charge stays completed',
       run: async () => {
