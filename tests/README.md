@@ -157,7 +157,12 @@ Write flows currently here, all money state-machine transitions:
 | `booking-host-flow.mjs` | the HOST side of the same stay, driven as a real seeded bot host (`TEST_HOST_EMAIL`): the request shows up in `GET /bookings/host`; a host cannot decide a booking on someone else's listing; **accept** captures the hold exactly once (booking → `confirmed`, Stripe → `succeeded`, ledger → `completed`) while crediting the host's `stats.earnings` **nothing** (that happens at completion, `booking_completion.go:358`); **decline** voids the hold (Stripe → `canceled`, ledger → `cancelled`, no refund row, nothing charged); and neither decision can be replayed |
 | `experience-reservations-flow.mjs` | guide-led Experiences end to end — reserve holds one seat (a repeat Reserve reuses it), the standalone `/payments/charges` captures immediately, a `flexible` cancel >24h out refunds the FULL gross and releases the seat, and a repeat cancel is a no-op |
 | `payouts-flow.mjs` | the host-money reads — `/payouts/connect/status`'s documented no-method shape, `/payments/earnings`'s response shape (that endpoint reads a collection nothing writes, so it can carry no money claim), and — on the ledger the product really keeps, `/users/me/stats` → `stats.earnings.<line>` — that a GUEST who pays for a stay and then cancels is credited nothing and gets no payout account. Its header records why Connect onboarding and "earnings moved" are descoped |
-| `verification-flow.mjs` | a selfie KYC submission is validated, auto-decided (staging `AI_MODE=mock`), and the approval lands on the user's profile as a verified entry via `verification-events`. Reading it back is blocked — see `verification-history-read.mjs.disabled` |
+| `verification-flow.mjs` | a selfie KYC submission is validated, auto-decided (staging `AI_MODE=mock`), and the approval lands on the user's profile as a verified entry via `verification-events`. Reading it back is covered by `verification-history-read.mjs` |
+| `listing-management-flow.mjs` | a HOST's own listing end to end — created at `status:pending`/`verified:false`, read back three ways, edited (applies directly, no admin revision, because it isn't live), NOT reachable by a guest, NOT bookable (and refused by the *discovery trust gate*, not the bot gate), not editable or deletable by anyone else, deleted and gone. Pins the three-flag model — moderation `status` vs the host's `active` toggle vs discovery `verified` — by proving a pause/resume attempt before approval is a 409 that moves neither of the other two |
+| `conversation-flow.mjs` | a guest ↔ host thread about a listing: opened (and DEDUPED — a repeat open returns the same conversation), sent, unread-counted, read (`read_by` stamped), replied to, polled, edited by its sender only, and an attachment uploaded through `POST /documents/upload` and fetched back **byte for byte** by the recipient while the raw bucket URL stays private. A third account can read none of it and cannot post into it |
+| `community-flow.mjs` | a feed post the suite owns: published public, visible in the author's feed, another user's feed and the anonymous public profile feed; likes idempotent and reversible; views counted; the feed viewer's report reaching moderation; a block hiding **exactly** that author's items and nothing else, and unblock restoring them; author-only delete, and gone from both feeds |
+| `review-flow.mjs` | who may review, and when: a stay that hasn't started can't be reviewed, a stranger to the booking can't review it, an unknown booking 404s, malformed bodies 422, an experience review can't be aimed at a space booking — and every refusal leaves no review behind |
+| `devices-flow.mjs` | the push-token registry on a throwaway account — register, read back with the token intact, update in place (no duplicate row, token preserved), unregister, idempotent repeat unregister |
 
 Write flows register throwaway `qa+<digits>@bot.com` accounts, and user-service
 rate-limits its auth group (register/confirm/login/refresh/password reset) to
@@ -188,15 +193,16 @@ discovered by `run.mjs` because it is blocked on a **product** bug, not on the
 test. Its header must document exactly what, with the staging evidence, and how
 to re-enable it (rename back to `.mjs` — nothing else). Today that is:
 
-- `verification-history-read.mjs.disabled` — a user cannot read their own
-  verification back (`GET /verifications`, `GET /verifications/{id}`) once they
-  own any non-document verification: `VerificationStatusResponse.document_type`
-  is a required enum and a selfie has none, so the response fails to serialize
-  and the router returns 200 + `success:false`. The write half works and IS
-  asserted, live, in `verification-flow.mjs`.
-
-(`payment-dispute-flow.mjs.disabled` used to be listed here; the write race it
-exposed was fixed and it is enabled again.)
+- `conversation-access-status.mjs.disabled` — chat-service refuses a
+  non-participant with **500**, not the documented 403/404, on every
+  conversation/message path except the attachment one (which maps the same
+  error values correctly). A missing conversation additionally echoes the raw
+  Firestore document path. Access control itself is correct and
+  `conversation-flow.mjs` asserts that, live; only the status codes are wrong.
+(`payment-dispute-flow.mjs.disabled` and `verification-history-read.mjs.disabled`
+used to be listed here. The dispute write race was fixed; and verification-service
+`a329289` made `document_type` optional on the status response, so a user with a
+selfie verification can read their own history again. Both are enabled.)
 
 ### Still descoped, with the reason
 
@@ -211,6 +217,38 @@ exposed was fixed and it is enabled again.)
 - **Luggage check-in / release.** Host-only, now unblocked by the host
   credential, but a separate contract (`luggage_contract.md`) with its own
   guest-confirm handshake.
+- **A listing being paused, going unbookable, and coming back on resume.** A
+  host may not touch the `active` toggle until moderation approves the listing
+  (`CanListingBeActivated`, listing-service `internal/service/listing.go:667`;
+  refused 409), and approval is a dashboard action, not an app-gateway one.
+  `listing-management-flow.mjs` covers the gate itself and proves a *pending*
+  listing is neither discoverable nor bookable. Pausing the shared host fixture
+  to fake it would break every other flow's fixture.
+- **A review on a genuinely completed stay.** review-service gates on the
+  check-in DATE, not booking status (`validate_check_in_date`,
+  review-service `app/utils/data_helpers.py:128`), and every fixture must be
+  booked hundreds of days out. `PATCH /bookings/{id}/complete` does not move
+  `check_in`, so it does not help. `review-flow.mjs`'s header has the full
+  derivation; it covers the refusals instead.
+- **Chat comments, `/community/stories/my`, `/community/reels/my`.** Routed and
+  reachable, but they answer **501 "not implemented"** — generated router stubs.
+  Covering them would only pin a stub in place.
+- **`POST /guides` / `POST /guides/apply`.** There is no gateway call that
+  deletes a guide profile, and `apply` has no body validation, so one call
+  permanently adds the caller to the public guide directory. `guides-read.mjs`
+  is read-only on purpose — its header explains, including the row that had to
+  be cleaned out of staging Firestore after an exploratory call.
+
+### Measured endpoint coverage
+
+`gateway/app-swagger.yaml` is 247 distinct (method, path) operations. The suite
+hit 75 of them before this batch and **128** after — the jump is conversations
+0→11, messages 0→4, community 2→17, reviews 2→8, guides 0→5, listings 7→11,
+documents 1→4, reports 0→1, users 14→18. The remaining gaps are mostly
+account-management (`/users/me/email|phone|notifications|avatar`, the OTP and
+phone login paths), bookings' slot endpoints, hangouts and travel plans, the
+`/*/heartbeat` pings (deliberately uncovered — infra probes, not contracts) and
+`/ws`, `/health`, `/webhooks`.
 
 ## Roadmap
 - **Phase 1 (here):** read-only smoke of key endpoints + auth/security guards.
