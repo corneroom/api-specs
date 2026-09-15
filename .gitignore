@@ -37,3 +37,6 @@ npm-debug.log*
 # Generated Flutter API client
 libs/flutter/
 .claude/agent-memory/
+# ...at any depth: agent memory lives beside the code it is about (e.g.
+# tests/.claude/agent-memory/), and a path-anchored pattern misses those.
+**/.claude/agent-memory/

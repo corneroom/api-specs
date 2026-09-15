@@ -1,5 +1,6 @@
 import { config } from './env.mjs';
 import { login, authHeaders } from './auth.mjs';
+import { isSkip } from './skip.mjs';
 
 // Resolve the logged-in user's id once, for `{me}` substitution in paths.
 let meId;
@@ -36,6 +37,11 @@ async function runCase(tokens, c) {
       await c.run();
       return { ok: true, status: 'custom', expected: 'custom' };
     } catch (e) {
+      // A `run` case may declare itself un-drivable in this environment by
+      // throwing via lib/skip.mjs (missing credential / dependency). That is
+      // reported as ⏭ and counted separately — it is NOT a pass and NOT a
+      // failure. See lib/skip.mjs for when this is legitimate.
+      if (isSkip(e)) return { skipped: true, note: e.message };
       return { ok: false, status: 'custom', expected: 'custom', note: e.message };
     }
   }
@@ -78,6 +84,7 @@ export async function runSuites(suites) {
   const tokens = await login();
   let pass = 0;
   let fail = 0;
+  let skipped = 0;
 
   for (const suite of suites) {
     console.log(`\n${suite.name}`);
@@ -86,7 +93,10 @@ export async function runSuites(suites) {
       const auth = c.auth ?? 'full';
       try {
         const r = await runCase(tokens, c);
-        if (r.ok) {
+        if (r.skipped) {
+          console.log(`  ⏭ ${c.name}  — ${r.note}`);
+          skipped++;
+        } else if (r.ok) {
           console.log(isCustom ? `  ✓ ${c.name}` : `  ✓ ${c.name}  [${r.status}, auth=${auth}]`);
           pass++;
         } else {
@@ -95,12 +105,18 @@ export async function runSuites(suites) {
           fail++;
         }
       } catch (e) {
-        console.log(`  ✗ ${c.name} — error: ${e.message}`);
-        fail++;
+        if (isSkip(e)) {
+          console.log(`  ⏭ ${c.name}  — ${e.message}`);
+          skipped++;
+        } else {
+          console.log(`  ✗ ${c.name} — error: ${e.message}`);
+          fail++;
+        }
       }
     }
   }
 
-  console.log(`\n${fail === 0 ? '✅' : '❌'} gateway suite: ${pass} passed, ${fail} failed`);
+  const skippedNote = skipped ? `, ${skipped} skipped` : '';
+  console.log(`\n${fail === 0 ? '✅' : '❌'} gateway suite: ${pass} passed, ${fail} failed${skippedNote}`);
   return fail;
 }

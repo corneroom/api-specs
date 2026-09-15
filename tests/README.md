@@ -142,6 +142,12 @@ reported through the same ✓/✗ accounting:
 { name: '...', run: async () => { /* throw to fail, resolve to pass */ } }
 ```
 
+A `run` case can also declare itself **un-drivable in this environment** by
+calling `skip('reason')` from `lib/skip.mjs`. It is reported as `⏭` and counted
+separately — neither a pass nor a failure. Only ever skip on a missing
+capability (no credential, no dependency, wrong environment); a misbehaving
+product is a failure.
+
 See `lib/booking-flow.mjs` (register a throwaway account, drive it through a
 real Stripe-sandbox booking) and `lib/poll.mjs` (poll-with-timeout for async
 state), and `services/rewards-referral-flow.mjs` for a full example.
@@ -162,7 +168,38 @@ Write flows currently here, all money state-machine transitions:
 | `conversation-flow.mjs` | a guest ↔ host thread about a listing: opened (and DEDUPED — a repeat open returns the same conversation), sent, unread-counted, read (`read_by` stamped), replied to, polled, edited by its sender only, and an attachment uploaded through `POST /documents/upload` and fetched back **byte for byte** by the recipient while the raw bucket URL stays private. A third account can read none of it and cannot post into it |
 | `community-flow.mjs` | a feed post the suite owns: published public, visible in the author's feed, another user's feed and the anonymous public profile feed; likes idempotent and reversible; views counted; the feed viewer's report reaching moderation; a block hiding **exactly** that author's items and nothing else, and unblock restoring them; author-only delete, and gone from both feeds |
 | `review-flow.mjs` | who may review, and when: a stay that hasn't started can't be reviewed, a stranger to the booking can't review it, an unknown booking 404s, malformed bodies 422, an experience review can't be aimed at a space booking — and every refusal leaves no review behind |
+| `payment-dispute-resolution-flow.mjs` | CR-650 / CR-679 — what happens when the dispute CLOSES: won → the held refund is closed WITHOUT paying (the 2026-09-01 rule, see the file header) and the dispute stops blocking the host's payout; lost → the held request settles as `settled_by_chargeback` and the payout stays blocked. **Gated + currently expected-red on the three payout cases** — see "The gated flow" below |
 | `devices-flow.mjs` | the push-token registry on a throwaway account — register, read back with the token intact, update in place (no duplicate row, token preserved), unregister, idempotent repeat unregister |
+
+### The gated flow: dispute resolution (`payment-dispute-resolution-flow.mjs`)
+
+One flow needs two capabilities the rest of the suite deliberately does not have,
+so its cases **skip** (`⏭`, via `lib/skip.mjs`) instead of failing when they are
+absent — a skip means *missing capability*, never *the product misbehaved*:
+
+| Capability | Why | Without it |
+|---|---|---|
+| `STRIPE_SECRET_KEY` in `tests/.env` | closing a test-mode dispute won/lost means submitting evidence, which is a secret-key call — everything else here uses the publishable key like the mobile SDK | the whole flow skips |
+| gcloud ADC for staging + `firebase-admin` in the sibling `test-data` repo | `payouts` and `refund_requests` are not exposed by the app gateway at all, so those two ACs can only be read from Firestore (`lib/firestore.mjs`, read-only except one guarded date fast-forward) | the whole flow skips |
+
+```bash
+CLOUDSDK_CONFIG=$HOME/.gcloud/corneroom gcloud secrets versions access latest \
+  --secret=STRIPE_SECRET_KEY --project=corneroom-82fbb   # -> tests/.env, gitignored
+```
+
+The key **must** be `sk_test_…` — `lib/stripe-dispute.mjs` refuses anything else
+before sending a byte, and also refuses to run if `GW_URL` looks like production.
+
+It is slow (four real Stripe-sandbox bookings, a Firestore fast-forward and a
+real Cloud Scheduler sweep run) and it leaves two COMPLETED bookings behind on
+purpose, so treat it as a run-on-demand flow rather than part of the 6-hourly
+cadence. Its header explains every one of those choices, including why a payout
+assertion cannot currently prove the full release: **no seeded bot host on
+staging has a `payout_method`** (checked 2026-09-15 — only three users have one,
+all real accounts), and this suite may only book bot hosts.
+
+Three of its cases are **expected red** today against real payout/dispute bugs;
+the failure messages carry the observed state. Do not loosen them.
 
 Write flows register throwaway `qa+<digits>@bot.com` accounts, and user-service
 rate-limits its auth group (register/confirm/login/refresh/password reset) to
