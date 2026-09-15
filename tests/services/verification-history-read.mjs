@@ -57,18 +57,21 @@
 // BLAST RADIUS: not staging-only, and not mode-only. The schema is hit on READ,
 // so `AI_MODE` is irrelevant — production (`AI_MODE=manual`) is affected
 // identically the moment a real user submits a selfie, voice, location or
-// background verification. The mobile app does not currently call these two
-// endpoints (it posts submissions and reads `success`;
-// app/mobile lib/features/face_verification/data/face_verification_service.dart),
-// which is presumably why it has gone unnoticed — but any screen or admin view
-// that lists a user's own verification history is broken today.
+// background verification. The mobile app DOES call the list endpoint:
+// `GET /verifications` in
+// app/mobile/lib/features/verification/data/datasources/verification_remote_datasource.dart:15-26,
+// consumed by verification_repository_impl.dart:40 to show a user's current
+// verification state (and to stop a double submission). So this broke a real
+// app read, not just an admin view — the app's own `success != true` fallback to
+// /users/me is what kept the screen from looking empty and is presumably why it
+// went unnoticed. `GET /verifications/{id}` has no mobile caller today; it is
+// covered here because it fails for the same reason and is reachable on the
+// gateway.
 //
-// NOT FIXED HERE ON PURPOSE: this suite is test-only. The fix belongs in
+// NOT FIXED HERE ON PURPOSE: this suite is test-only. The fix belonged in
 // verification-service (make `document_type` optional on the response schema,
-// or populate it per verification type) with its own unit test.
-//
-// WHAT TO DO WHEN IT IS FIXED: rename this file to `.mjs`. Every case below was
-// written against the intended behaviour and needs no other change.
+// or populate it per verification type) with its own unit test — that is what
+// a329289 did.
 //
 // ── WHY THE OWNERSHIP GUARD IS IN HERE TOO ────────────────────────────────
 // It is not merely inconvenienced by the bug — it is UNPROVABLE while the bug is
@@ -148,7 +151,7 @@ export default {
       },
     },
     {
-      name: 'THE BUG: the owner can read their own submission back by id',
+      name: 'REGRESSION GUARD: the owner can read their own submission back by id',
       run: async () => {
         const { status, json, data } = await vs(ctx.user.tokens, `/verifications/${ctx.verificationId}`);
         assert(status === 200, `expected 200, got ${status}`);
@@ -165,7 +168,7 @@ export default {
       },
     },
     {
-      name: "THE BUG: the submission appears in the owner's verification history",
+      name: "REGRESSION GUARD: the submission appears in the owner's verification history",
       run: async () => {
         const { json, data } = await vs(ctx.user.tokens, '/verifications?limit=10&offset=0');
         assert(json?.success === true, `history read failed — same schema bug: ${JSON.stringify(json)}`);
