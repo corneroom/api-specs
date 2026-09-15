@@ -1,0 +1,177 @@
+// DISABLED — finished flow, blocked on a PRODUCT bug, not on the test.
+// Rename to `.mjs` to enable. Nothing else needs changing.
+//
+// ── THE BUG ────────────────────────────────────────────────────────────────
+//
+// chat-service refuses a non-participant with **500 Internal Server Error**
+// instead of 403/404. Access control itself is CORRECT — nothing leaks, and
+// `services/conversation-flow.mjs` asserts that live — but the status code is
+// wrong on every conversation and message read/write path except the
+// attachment one.
+//
+// Staging evidence (2026-09-14, a freshly registered account against a thread
+// it is not in):
+//
+//   GET  /conversations/{id}           -> 500 {"error":"Unauthorized access","toast":"conversation_retrieval_failed"}
+//   GET  /conversations/{id}/messages  -> 500 "Unauthorized access\n"
+//   POST /conversations/{id}/messages  -> 500 {"error":"Unauthorized access","toast":"message_creation_failed"}
+//   GET  /messages/{id}                -> 500 "Unauthorized access\n"
+//   GET  /messages/{id}/attachment     -> 403 "forbidden"          <- correct
+//
+// Cause: the handlers funnel EVERY error from the service layer into a 500
+// without inspecting it —
+//   GetConversationHandler   chat-service internal/service/chat_service.go:875-887
+//   GetMessagesHandler                                          :990-1010
+//   SendMessageHandler                                          :1037-1060
+//   GetMessageHandler / UpdateMessageHandler                    :1228-1243
+// while the service layer already returns distinguishable sentinels
+// (`ErrUnauthorized`, `ErrConversationNotFound`, `ErrMessageNotFound` —
+// chat_service.go:356, :410). `GetMessageAttachmentHandler` shows the fix
+// shape exactly, mapping those same three values to 403/404
+// (chat_service.go:1180-1187), so this is a handler-mapping gap, not a design
+// question.
+//
+// A second, related defect the last case pins: a conversation id that does
+// not exist also 500s, and its body echoes the raw Firestore error —
+// including the project id and full document path:
+//
+//   GET /conversations/00000000-0000-4000-8000-000000000000
+//   -> 500 {"error":"rpc error: code = NotFound desc = \"projects/corneroom-82fbb/
+//           databases/(default)/documents/conversations/0000...\" not found"}
+//
+// Cause: `ConversationRepository.GetByID` detects not-found by comparing the
+// error's STRING to "rpc error: code = NotFound desc = Document not found"
+// (chat-service internal/repository/firestore/conversation.go:51), which the
+// real gRPC message never equals, so the not-found branch is dead and the raw
+// error is returned and rendered. The fix is `status.Code(err) ==
+// codes.NotFound`, which is what the rest of the codebase uses.
+//
+// Why it matters beyond tidiness: 500s are what alerting and error budgets
+// count. A user tapping a stale push notification for a conversation they
+// were removed from currently registers as a server fault, and the mobile
+// client cannot tell "you may not see this" from "we broke" — chat-service's
+// own spec documents 403 and 404 for these operations
+// (chat-service docs/api.yaml, /conversations/{conversationId} and
+// /conversations/{conversationId}/messages).
+//
+// ── WHAT TO DO ─────────────────────────────────────────────────────────────
+// Map the sentinels in those handlers the way the attachment handler already
+// does, then rename this file to `.mjs`. It asserts ONLY the status codes —
+// the security property is covered, live and always-on, by
+// `services/conversation-flow.mjs`, so nothing is unguarded while this sits
+// disabled.
+import { login, loginHost, authHeaders } from '../lib/auth.mjs';
+import { config } from '../lib/env.mjs';
+import { fetchMeId } from '../lib/feed-helpers.mjs';
+import { registerFreshUser } from '../lib/booking-flow.mjs';
+
+const ctx = { conversationId: null, messageId: null, guest: null, outsider: null };
+
+function assert(cond, msg) {
+  if (!cond) throw new Error(msg);
+}
+
+async function gw(tokens, path, { method = 'GET', body } = {}) {
+  const headers = { ...authHeaders(tokens, 'full') };
+  if (body !== undefined) headers['Content-Type'] = 'application/json';
+  const res = await fetch(`${config.gwUrl}${path}`, {
+    method,
+    headers,
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+  const text = await res.text();
+  let json;
+  try {
+    json = JSON.parse(text);
+  } catch {
+    json = undefined;
+  }
+  return { status: res.status, json, data: json?.data, text };
+}
+
+// Reuses the same deduped guest↔host thread services/conversation-flow.mjs
+// drives, so enabling this file costs one extra conversation-open and one
+// throwaway account, not a second fixture.
+async function setup() {
+  ctx.guest = await login();
+  const host = await loginHost();
+  const guestId = await fetchMeId(ctx.guest);
+  const hostId = await fetchMeId(host);
+  const mine = await gw(host, '/listings/user');
+  const listing = (mine.data ?? [])[0];
+  assert(listing, 'TEST_HOST_EMAIL owns no listing to anchor the conversation to');
+
+  const conv = await gw(ctx.guest, '/conversations', {
+    method: 'POST',
+    body: { participants: [guestId, hostId], type: 'direct', metadata: { listing_id: listing.ID } },
+  });
+  assert(conv.status === 201, `POST /conversations expected 201, got ${conv.status}: ${conv.text}`);
+  ctx.conversationId = conv.data.id;
+  if (conv.data.status === 'archived') {
+    await gw(ctx.guest, `/conversations/${ctx.conversationId}`, { method: 'PUT', body: { status: 'active' } });
+  }
+
+  const msg = await gw(ctx.guest, `/conversations/${ctx.conversationId}/messages`, {
+    method: 'POST',
+    body: { content: 'Gateway suite: access-status fixture message.', message_type: 'text' },
+  });
+  assert(msg.status === 201, `seed message expected 201, got ${msg.status}: ${msg.text}`);
+  ctx.messageId = msg.data.id;
+
+  ctx.outsider = await registerFreshUser('Outsider');
+}
+
+export default {
+  name: 'chat-service (non-participant access returns the DOCUMENTED status — currently 500; see file header)',
+  cases: [
+    {
+      name: 'GET /conversations/{id} — a non-participant gets 403, not 500',
+      run: async () => {
+        await setup();
+        const res = await gw(ctx.outsider.tokens, `/conversations/${ctx.conversationId}`);
+        assert(res.status === 403 || res.status === 404, `expected 403/404, got ${res.status}: ${res.text}`);
+      },
+    },
+    {
+      name: 'GET /conversations/{id}/messages — a non-participant gets 403, not 500',
+      run: async () => {
+        const res = await gw(ctx.outsider.tokens, `/conversations/${ctx.conversationId}/messages`);
+        assert(res.status === 403 || res.status === 404, `expected 403/404, got ${res.status}: ${res.text}`);
+      },
+    },
+    {
+      name: 'POST /conversations/{id}/messages — a non-participant gets 403, not 500',
+      run: async () => {
+        const res = await gw(ctx.outsider.tokens, `/conversations/${ctx.conversationId}/messages`, {
+          method: 'POST',
+          body: { content: 'Gateway suite: this must be refused.', message_type: 'text' },
+        });
+        assert(res.status === 403 || res.status === 404, `expected 403/404, got ${res.status}: ${res.text}`);
+      },
+    },
+    {
+      name: 'GET /messages/{id} — a non-participant gets 403, not 500',
+      run: async () => {
+        const res = await gw(ctx.outsider.tokens, `/messages/${ctx.messageId}`);
+        assert(res.status === 403 || res.status === 404, `expected 403/404, got ${res.status}: ${res.text}`);
+      },
+    },
+    {
+      name: 'GET /conversations/{id} — a conversation that does not exist is 404, not 500',
+      run: async () => {
+        const res = await gw(ctx.guest, '/conversations/00000000-0000-4000-8000-000000000000');
+        assert(res.status === 404, `expected 404 for a missing conversation, got ${res.status}: ${res.text}`);
+      },
+    },
+    {
+      name: 'cleanup — archive the fixture thread',
+      run: async () => {
+        if (!ctx.conversationId) return;
+        const del = await gw(ctx.guest, `/conversations/${ctx.conversationId}`, { method: 'DELETE' });
+        assert(del.status === 204, `DELETE /conversations/{id} expected 204, got ${del.status}`);
+        const after = await gw(ctx.guest, `/conversations/${ctx.conversationId}`);
+        assert(after.data?.status === 'archived', `cleanup did not archive the thread: ${after.data?.status}`);
+      },
+    },
+  ],
+};
