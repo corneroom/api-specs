@@ -1,65 +1,44 @@
-// DISABLED — finished flow, blocked on a PRODUCT bug, not on the test.
-// Rename to `.mjs` to enable. Nothing else needs changing.
+// chat-service — the STATUS CODE a conversation or message read returns when
+// the caller may not see it, or when it does not exist.
 //
-// ── THE BUG ────────────────────────────────────────────────────────────────
+// ── WHY THIS FILE EXISTS ───────────────────────────────────────────────────
 //
-// chat-service refuses a non-participant with **500 Internal Server Error**
-// instead of 403/404. Access control itself is CORRECT — nothing leaks, and
-// `services/conversation-flow.mjs` asserts that live — but the status code is
-// wrong on every conversation and message read/write path except the
-// attachment one.
+// Access control here was always correct — nothing leaked, and
+// `services/conversation-flow.mjs` asserts that live — but until 2026-09-15
+// every conversation and message path except the attachment one refused a
+// non-participant with **500 Internal Server Error** instead of 403, and
+// returned 500 for a conversation that does not exist instead of 404:
 //
-// Staging evidence (2026-09-14, a freshly registered account against a thread
-// it is not in):
-//
-//   GET  /conversations/{id}           -> 500 {"error":"Unauthorized access","toast":"conversation_retrieval_failed"}
+//   GET  /conversations/{id}           -> 500 {"error":"Unauthorized access"}
 //   GET  /conversations/{id}/messages  -> 500 "Unauthorized access\n"
-//   POST /conversations/{id}/messages  -> 500 {"error":"Unauthorized access","toast":"message_creation_failed"}
+//   POST /conversations/{id}/messages  -> 500 {"error":"Unauthorized access"}
 //   GET  /messages/{id}                -> 500 "Unauthorized access\n"
 //   GET  /messages/{id}/attachment     -> 403 "forbidden"          <- correct
 //
-// Cause: the handlers funnel EVERY error from the service layer into a 500
-// without inspecting it —
-//   GetConversationHandler   chat-service internal/service/chat_service.go:875-887
-//   GetMessagesHandler                                          :990-1010
-//   SendMessageHandler                                          :1037-1060
-//   GetMessageHandler / UpdateMessageHandler                    :1228-1243
-// while the service layer already returns distinguishable sentinels
-// (`ErrUnauthorized`, `ErrConversationNotFound`, `ErrMessageNotFound` —
-// chat_service.go:356, :410). `GetMessageAttachmentHandler` shows the fix
-// shape exactly, mapping those same three values to 403/404
-// (chat_service.go:1180-1187), so this is a handler-mapping gap, not a design
-// question.
-//
-// A second, related defect the last case pins: a conversation id that does
-// not exist also 500s, and its body echoes the raw Firestore error —
-// including the project id and full document path:
+// Worse, a missing conversation echoed the raw Firestore error back to the
+// client, project id and document path included:
 //
 //   GET /conversations/00000000-0000-4000-8000-000000000000
 //   -> 500 {"error":"rpc error: code = NotFound desc = \"projects/corneroom-82fbb/
 //           databases/(default)/documents/conversations/0000...\" not found"}
 //
-// Cause: `ConversationRepository.GetByID` detects not-found by comparing the
-// error's STRING to "rpc error: code = NotFound desc = Document not found"
-// (chat-service internal/repository/firestore/conversation.go:51), which the
-// real gRPC message never equals, so the not-found branch is dead and the raw
-// error is returned and rendered. The fix is `status.Code(err) ==
-// codes.NotFound`, which is what the rest of the codebase uses.
+// The handlers now map the service-layer sentinels the way
+// `GetMessageAttachmentHandler` always did — `ErrUnauthorized` -> 403,
+// `ErrConversationNotFound` / `ErrMessageNotFound` -> 404 — and the
+// repository classifies not-found by gRPC status code instead of by an error
+// string that never matched, so the path never reaches a response body.
 //
 // Why it matters beyond tidiness: 500s are what alerting and error budgets
 // count. A user tapping a stale push notification for a conversation they
-// were removed from currently registers as a server fault, and the mobile
-// client cannot tell "you may not see this" from "we broke" — chat-service's
-// own spec documents 403 and 404 for these operations
-// (chat-service docs/api.yaml, /conversations/{conversationId} and
+// were removed from used to register as a server fault, and the mobile client
+// could not tell "you may not see this" from "we broke". 403/404 is what
+// chat-service's own spec documents for these operations (chat-service
+// docs/api.yaml, /conversations/{conversationId} and
 // /conversations/{conversationId}/messages).
 //
-// ── WHAT TO DO ─────────────────────────────────────────────────────────────
-// Map the sentinels in those handlers the way the attachment handler already
-// does, then rename this file to `.mjs`. It asserts ONLY the status codes —
-// the security property is covered, live and always-on, by
-// `services/conversation-flow.mjs`, so nothing is unguarded while this sits
-// disabled.
+// This file asserts ONLY the status codes and that no datastore internals
+// appear in the body — the security property itself is covered, live and
+// always-on, by `services/conversation-flow.mjs`.
 import { login, loginHost, authHeaders } from '../lib/auth.mjs';
 import { config } from '../lib/env.mjs';
 import { fetchMeId } from '../lib/feed-helpers.mjs';
@@ -69,6 +48,14 @@ const ctx = { conversationId: null, messageId: null, guest: null, outsider: null
 
 function assert(cond, msg) {
   if (!cond) throw new Error(msg);
+}
+
+// The missing-conversation body used to be the raw Firestore error, which
+// names the GCP project and the full document path.
+function assertNoDatastoreLeak(body) {
+  for (const marker of ['projects/', 'databases/', 'rpc error']) {
+    assert(!body.includes(marker), `response body leaks datastore internals ("${marker}"): ${body}`);
+  }
 }
 
 async function gw(tokens, path, { method = 'GET', body } = {}) {
@@ -122,21 +109,23 @@ async function setup() {
 }
 
 export default {
-  name: 'chat-service (non-participant access returns the DOCUMENTED status — currently 500; see file header)',
+  name: 'chat-service (non-participant access returns the DOCUMENTED status: 403 / 404, never 500)',
   cases: [
     {
       name: 'GET /conversations/{id} — a non-participant gets 403, not 500',
       run: async () => {
         await setup();
         const res = await gw(ctx.outsider.tokens, `/conversations/${ctx.conversationId}`);
-        assert(res.status === 403 || res.status === 404, `expected 403/404, got ${res.status}: ${res.text}`);
+        assert(res.status === 403, `expected 403, got ${res.status}: ${res.text}`);
+        assertNoDatastoreLeak(res.text);
       },
     },
     {
       name: 'GET /conversations/{id}/messages — a non-participant gets 403, not 500',
       run: async () => {
         const res = await gw(ctx.outsider.tokens, `/conversations/${ctx.conversationId}/messages`);
-        assert(res.status === 403 || res.status === 404, `expected 403/404, got ${res.status}: ${res.text}`);
+        assert(res.status === 403, `expected 403, got ${res.status}: ${res.text}`);
+        assertNoDatastoreLeak(res.text);
       },
     },
     {
@@ -146,14 +135,16 @@ export default {
           method: 'POST',
           body: { content: 'Gateway suite: this must be refused.', message_type: 'text' },
         });
-        assert(res.status === 403 || res.status === 404, `expected 403/404, got ${res.status}: ${res.text}`);
+        assert(res.status === 403, `expected 403, got ${res.status}: ${res.text}`);
+        assertNoDatastoreLeak(res.text);
       },
     },
     {
       name: 'GET /messages/{id} — a non-participant gets 403, not 500',
       run: async () => {
         const res = await gw(ctx.outsider.tokens, `/messages/${ctx.messageId}`);
-        assert(res.status === 403 || res.status === 404, `expected 403/404, got ${res.status}: ${res.text}`);
+        assert(res.status === 403, `expected 403, got ${res.status}: ${res.text}`);
+        assertNoDatastoreLeak(res.text);
       },
     },
     {
@@ -161,6 +152,7 @@ export default {
       run: async () => {
         const res = await gw(ctx.guest, '/conversations/00000000-0000-4000-8000-000000000000');
         assert(res.status === 404, `expected 404 for a missing conversation, got ${res.status}: ${res.text}`);
+        assertNoDatastoreLeak(res.text);
       },
     },
     {

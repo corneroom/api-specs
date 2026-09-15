@@ -57,28 +57,17 @@
 //
 // ── BUGS FOUND WHILE WRITING THIS, NOT FIXED (no backend changes here) ─────
 //
-// 1. **A non-participant is refused with 500, not 403/404.** Access IS
-//    correctly denied — nothing leaks — but `GetConversationHandler`,
-//    `GetMessagesHandler` and `SendMessageHandler` funnel every error,
-//    including `ErrUnauthorized` and `ErrConversationNotFound`, into a 500
-//    (chat_service.go:875-887, :990-1010, :1037-1060), while
-//    `GetMessageAttachmentHandler` maps the SAME error values to 403/404
-//    correctly (chat_service.go:1180-1187). The spec documents 403/404.
-//    The cases below assert the SECURITY property (denied + no content
-//    leaked), which is true and must stay true; the contract assertion lives
-//    in `conversation-access-status.mjs.disabled`, ready to enable when the
-//    handlers map their errors.
-// 2. **`GET /conversations/unread` always returns 0.** It reads
-//    `conversation.UnreadCount` off the raw repository list
-//    (chat_service.go:1350-1366) without the personalization step that is the
-//    only thing that ever computes it (chat_service.go:1629-1637); the stored
-//    `unread_count` field is written 0 at create and `UpdateUnreadCount` has
-//    no caller. Confirmed live on staging: a conversation showing
-//    `unread_count:1` in `GET /conversations` reports `unread_count:0` from
-//    `/conversations/unread`. Not asserted here because the mobile app does
-//    not use that endpoint — it derives the badge from the list
-//    (app/mobile lib/core/providers/notification_indicators_provider.dart:23),
-//    which this file DOES assert. Reported, not fixed.
+// 1. **A non-participant was refused with 500, not 403/404** — FIXED
+//    2026-09-15. The handlers now map `ErrUnauthorized` to 403 and the
+//    not-found sentinels to 404, the way `GetMessageAttachmentHandler`
+//    always did. The cases below still assert the SECURITY property (denied
+//    + no content leaked), which is what must never regress; the status
+//    contract itself is asserted by `conversation-access-status.mjs`.
+// 2. **`GET /conversations/unread` always returned 0** — FIXED 2026-09-15.
+//    It read the stored `conversation.UnreadCount` (always 0 — it is written
+//    0 at create and nothing ever updates it) instead of computing the
+//    caller's own count, which is now shared with the conversation list.
+//    Asserted below, both directions.
 //
 // ── LEAK DISCIPLINE ────────────────────────────────────────────────────────
 // One reused conversation (archived at the end, end state verified), a
@@ -268,6 +257,27 @@ export default {
     },
 
     {
+      // This endpoint used to report 0 for everyone (header note 2): it read a
+      // stored field nothing ever writes instead of counting the caller's own
+      // unread messages. It must agree with the list the badge is drawn from.
+      name: 'GET /conversations/unread — the host\'s unread endpoint agrees with the list',
+      run: async () => {
+        assert(ctx.guestMessageId, 'no guest message to be unread');
+
+        const unread = await gw(ctx.host, '/conversations/unread');
+        assert(unread.status === 200, `GET /conversations/unread expected 200, got ${unread.status}: ${unread.text}`);
+        assert(
+          unread.data?.unread_count >= 1,
+          `the host has an unread message but the endpoint reports ${unread.data?.unread_count}`
+        );
+
+        const conv = (unread.data?.conversations_with_unread ?? []).find((c) => c.id === ctx.conversationId);
+        assert(conv, `this thread is missing from conversations_with_unread: ${unread.text}`);
+        assert(conv.unread_count >= 1, `the thread is listed as unread but carries unread_count=${conv.unread_count}`);
+      },
+    },
+
+    {
       name: 'PUT /conversations/{id}/read — reading clears the badge and stamps read_by',
       run: async () => {
         assert(ctx.guestMessageId, 'no guest message to read');
@@ -280,6 +290,12 @@ export default {
         const conv = findConv(hostList, ctx.conversationId);
         assert(conv, 'the thread vanished from the host list after marking read');
         assert(conv.unread_count === 0, `the host's badge must clear after reading, got unread_count=${conv.unread_count}`);
+
+        // ...and the dedicated endpoint must agree that it cleared.
+        const unread = await gw(ctx.host, '/conversations/unread');
+        assert(unread.status === 200, `GET /conversations/unread expected 200, got ${unread.status}: ${unread.text}`);
+        const stillUnread = (unread.data?.conversations_with_unread ?? []).find((c) => c.id === ctx.conversationId);
+        assert(!stillUnread, `the thread is still reported unread after marking read: ${JSON.stringify(stillUnread)}`);
 
         // read_by is what the sender's "seen" tick reads.
         const messages = await messagesSince(ctx.guest);
