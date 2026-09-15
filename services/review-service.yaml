@@ -543,6 +543,10 @@ components:
         id:
           type: string
           description: Unique review identifier
+        type:
+          type: string
+          enum: [user, listing, experience]
+          description: Type of entity being reviewed
         comment:
           type: string
           description: Review text
@@ -597,6 +601,22 @@ components:
         host_review_guest:
           type: boolean
           description: Whether the host has reviewed the guest
+        # Experience review fields (for experience reviews only)
+        reviewer_name:
+          type: string
+          description: Reviewer's display name (experience reviews only)
+        reviewer_avatar:
+          type: string
+          description: Reviewer's avatar URL (experience reviews only)
+        rating:
+          type: number
+          description: Star rating, 1-5 (experience reviews only)
+        experience_id:
+          type: string
+          description: Experience being reviewed (experience reviews only)
+        guide_id:
+          type: string
+          description: Guide who led the experience (experience reviews only)
       required:
         - id
         - overall_rating

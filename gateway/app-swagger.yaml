@@ -7242,7 +7242,7 @@ paths:
                 type: string
               description:
                 description: Listing description
-                maxLength: 255
+                maxLength: 1000
                 minLength: 10
                 type: string
               emergency_contact:
@@ -19856,12 +19856,18 @@ definitions:
       emoji_sentiment:
         description: "Emoji sentiment (\U0001F44D, \U0001F44D\U0001F44D, \U0001F44E)"
         type: string
+      experience_id:
+        description: Experience being reviewed (experience reviews only)
+        type: string
       guest_review_host:
         description: Whether the guest has reviewed the host
         type: boolean
       guest_review_listing:
         description: Whether the guest has reviewed the listing
         type: boolean
+      guide_id:
+        description: Guide who led the experience (experience reviews only)
+        type: string
       host_review_guest:
         description: Whether the host has reviewed the guest
         type: boolean
@@ -19885,6 +19891,9 @@ definitions:
       overall_rating:
         description: Overall rating score
         type: number
+      rating:
+        description: 'Star rating, 1-5 (experience reviews only)'
+        type: number
       reviewer:
         description: Person who wrote the review
         properties:
@@ -19898,6 +19907,19 @@ definitions:
           - id
           - name
         type: object
+      reviewer_avatar:
+        description: Reviewer's avatar URL (experience reviews only)
+        type: string
+      reviewer_name:
+        description: Reviewer's display name (experience reviews only)
+        type: string
+      type:
+        description: Type of entity being reviewed
+        enum:
+          - user
+          - listing
+          - experience
+        type: string
     required:
       - id
       - overall_rating

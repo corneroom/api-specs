@@ -403,9 +403,13 @@ paths:
           minimum: 0
           name: limit
           type: integer
-        - description: 'Search query (host, guest, id, etc)'
+        - description: >-
+            Exact-match search by booking code (e.g. "CR-BD6AUT"),
+            case/whitespace-insensitive and tolerant of the "CR-" prefix being
+            omitted. When given, short-circuits the paginated list entirely —
+            status/page/limit are ignored and at most one booking is returned.
           in: query
-          name: query
+          name: code
           type: string
         - description: Filter by booking status
           enum:
@@ -3501,6 +3505,9 @@ paths:
             - approved
             - rejected
             - refunded
+            - refund_failed
+            - held_dispute
+            - settled_by_chargeback
           in: query
           name: status
           type: string
@@ -6461,6 +6468,16 @@ definitions:
         description: PayPal payer email (empty for card payments)
         example: guest@example.com
         type: string
+      payment_intent_id:
+        description: >-
+          The real Stripe PaymentIntent id (pi_...), Stripe SetupIntent id
+          (seti_..., for free/$0 bookings — no charge, only a card saved) or
+          PayPal order id — the same id payment-service uses to call the
+          provider's own order-lookup API, so it's safe to paste into the
+          provider's dashboard. Empty string when the transaction row predates
+          this field.
+        example: pi_3PabcDEF2xyz
+        type: string
       provider:
         enum:
           - stripe
@@ -8362,6 +8379,15 @@ definitions:
           properties:
             amount:
               type: string
+            booking_id:
+              description: >-
+                The bookings-collection doc this charge/refund belongs to — a
+                space booking's id for space rows, or the experience
+                reservation's id (also a bookings doc) for experience rows. Null
+                only when the charge predates this field or isn't
+                booking-linked.
+              type: string
+              x-nullable: true
             coupon_code:
               description: >-
                 Referral coupon applied at checkout (platform absorbs the
@@ -8375,9 +8401,17 @@ definitions:
             coupon_discount_cents:
               description: Discount in the charge currency's minor unit (0 when no coupon)
               type: integer
+            created_at:
+              description: >-
+                Precise UTC timestamp — for matching this row against a Cloud
+                Run log line.
+              format: date-time
+              type: string
+              x-nullable: true
             customer:
               type: string
             date:
+              description: 'Friendly day-only date (e.g. "Jun 12, 2026") for display.'
               type: string
             id:
               type: string
