@@ -423,6 +423,56 @@ export default {
       },
     },
     {
+      // PATCH /bookings/{id}/complete is the guest's own "I've checked out",
+      // and it is the ONLY way a completion can happen early — the cron that
+      // otherwise completes bookings only ever looks at stays whose check-out
+      // has passed. Completing this stay would open its review window, credit
+      // the host's earnings and hand payment-service a payout for a stay that
+      // hasn't happened, so both refusals below are money guards, not
+      // ergonomics.
+      //
+      // The POSITIVE (a guest completing AFTER check-out) is not drivable here
+      // and deliberately isn't faked: every fixture is booked 300+ days out by
+      // futureDates(), for the reason its own header gives — the suite runs
+      // every 6 hours against a handful of shared listings and near dates
+      // collide. Backdating check_out in Firestore would be editing fixture
+      // data to suit a test. That path is covered by booking-service's
+      // internal/service/booking_complete_manual_test.go, which also pins that
+      // it writes exactly what the cron writes.
+      name: 'THE GUARD: the guest cannot complete a stay that has not ended yet',
+      run: async () => {
+        const res = await gw(ctx.guest.tokens, `/bookings/${ctx.bookingId}/complete`, { method: 'PATCH' });
+        assertRefused('complete', res, "hasn't ended");
+        assert(
+          res.status === 400,
+          `a stay that hasn't ended is a 400, not ${res.status} — a 403 would say the guest isn't allowed at all, ` +
+            `and a 500 would hide it: ${res.text.slice(0, 200)}`
+        );
+
+        const after = await getBooking(ctx.guest.tokens, ctx.bookingId);
+        assert(after.status === 'confirmed', `a refused completion must leave the booking alone — status is now '${after.status}'`);
+      },
+    },
+    {
+      // The host has no manual completion at all: theirs is the auto-complete
+      // cron. A host completing on the guest's behalf would credit their OWN
+      // earnings and open the guest's review window early, which is why this
+      // is checked before anything about dates — hence 403 here on the very
+      // same booking the guest was told was too early.
+      name: 'THE GUARD: the HOST cannot complete the guest\'s stay',
+      run: async () => {
+        const res = await gw(ctx.host.tokens, `/bookings/${ctx.bookingId}/complete`, { method: 'PATCH' });
+        assertRefused('complete', res, 'only the guest');
+        assert(
+          res.status === 403,
+          `the host is not merely early, they are not permitted — expected 403, got ${res.status}: ${res.text.slice(0, 200)}`
+        );
+
+        const after = await getBooking(ctx.guest.tokens, ctx.bookingId);
+        assert(after.status === 'confirmed', `a refused completion must leave the booking alone — status is now '${after.status}'`);
+      },
+    },
+    {
       name: "the guest cancels the ACCEPTED stay: refunded exactly the listing's policy tier, and the host is still credited nothing",
       run: async () => {
         const fraction = expectedRefundFraction(ctx.listing.cancellation_policy);
