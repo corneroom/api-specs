@@ -33,7 +33,7 @@
 // Submitting evidence fires `charge.dispute.closed`, which is the webhook
 // payment-service's `resolveDisputeOutcome` / `resolvePayoutsForDispute` react
 // to — i.e. this is the real production path, not a shortcut around it.
-import { config } from './env.mjs';
+import { assertStagingGateway } from './env.mjs';
 import { skip } from './skip.mjs';
 
 const STRIPE_API = 'https://api.stripe.com/v1';
@@ -60,10 +60,9 @@ export function requireStripeSecret() {
     );
   }
   // Belt and braces: a secret key is only ever valid against the sandbox, but a
-  // misconfigured GW_URL would mean driving prod bookings with it.
-  if (config.gwUrl.includes('api.corneroom.com') || config.gwUrl.includes('production')) {
-    throw new Error(`REFUSING TO RUN: GW_URL points at production (${config.gwUrl}). This flow is staging-only.`);
-  }
+  // misconfigured GW_URL would mean driving prod bookings with it. Allow-listed,
+  // not deny-listed — see assertStagingGateway.
+  assertStagingGateway('the Stripe dispute flow');
   return key;
 }
 

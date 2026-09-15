@@ -78,14 +78,21 @@
 // assumed.
 //
 // ─────────────────────────────────────────────────────────────────────────────
-// SAME FIXTURE CEILING AS THE STRIPE FLOW
+// THE PAYOUT-METHOD FIXTURE — AND WHY THIS FLOW CANNOT GUARANTEE IT
 //
-// No seeded bot host on staging has a `payout_method`, so any payout created on
-// the `complete` track is ALSO blocked for `host_payout_method_not_configured`.
-// The `complete` track therefore asserts the DISPUTE dimension (`has_dispute`,
-// `dispute_info`) and not `status: blocked` — which would be true for the wrong
-// reason — and a seller win asserts "the dispute is no longer what holds it"
-// rather than `ready`.
+// A payout for a host with no `payout_method` is blocked for
+// `host_payout_method_not_configured` whatever the dispute does, which makes
+// "blocked by the dispute" vacuous and "released on a win" unobservable.
+// test-data's `make seed-bot-host-payout-method apply=1` gives one bot host a
+// PayPal payout method, and the Stripe flow picks that host deliberately.
+//
+// This flow CANNOT: the host is whoever the human chose to book. So it reads
+// the actual host's `payout_method` at run time and adapts:
+//   · host HAS a method → a seller win must release the payout to `ready`
+//   · host has none     → the inverse fence: the win must NOT make it `ready`,
+//                         because the no-method block has to survive it
+// The setup case prints which bookable hosts have a method, so the next manual
+// run can book one of them and get the strong assertion.
 //
 // LEAK DISCIPLINE: this flow does not create the booking, so it does not own
 // it. The `cancel` track cancels it (which is the behaviour under test) and
@@ -97,16 +104,16 @@ import { loginAs } from '../lib/auth.mjs';
 import { cancelBooking, getBooking } from '../lib/booking-flow.mjs';
 import { getBookingTransactions } from '../lib/payment-helpers.mjs';
 import { poll } from '../lib/poll.mjs';
-import { skip } from '../lib/skip.mjs';
+import { skip, isSkip } from '../lib/skip.mjs';
 import {
   firestore,
   resolveBooking,
   getTransactionsByBookingId,
-  getRefundRequestsByBookingId,
-  getPayoutsByBookingId,
   getUserPayoutMethod,
+  findBotHostsWithPayoutMethod,
   fastForwardBookingToCompletion,
 } from '../lib/firestore.mjs';
+import { theRefundRequest, thePayout, theRefundLedgerRow } from '../lib/money-rows.mjs';
 import { runAutoCompleteSweep } from '../lib/staging-jobs.mjs';
 import {
   requirePayPalCreds,
@@ -179,6 +186,25 @@ function requireSubjectResolved() {
   if (!ctx.booking || !ctx.charge) skip('setup did not resolve the booking and its PayPal charge — see the setup case above');
 }
 
+// Deciding a dispute is IRREVERSIBLE, and lib/runner.mjs deliberately continues
+// past a failed case so that cleanup always runs. That combination is a trap:
+// if the ownership check on the dispute FAILS, the next case would still run and
+// close it. So the dispute id is only published to ctx once ownership has been
+// proven (`ctx.disputeVerified`), and the deciding case refuses without it.
+//
+// This is the belt. The braces are in the primitive: `decideDispute` REQUIRES
+// `expectedCaptureId` and re-verifies ownership against its own read, so no
+// caller ordering can bypass the check.
+function requireVerifiedDispute() {
+  requireSubjectResolved();
+  if (!ctx.disputeVerified || !ctx.disputeId) {
+    throw new Error(
+      'refusing to act on the dispute: ownership was not proven (the previous case must confirm PayPal has it filed ' +
+        "against this booking's capture). Closing a dispute is irreversible."
+    );
+  }
+}
+
 const chargeRow = async (bookingId) => {
   const rows = await getTransactionsByBookingId(bookingId);
   return rows.find((t) => t.type === 'booking') || null;
@@ -245,6 +271,23 @@ export default {
             `order=${charge.payment_intent_id} capture=${charge.capture_id} guest=${ctx.guestEmail}`
         );
         console.log(`    · track=${TRACK} outcome=${OUTCOME}`);
+
+        // On the complete track the payout assertions are only strong if the
+        // HOST the human happened to book has a payout method. This flow cannot
+        // choose that host (the human does), so it reports the configured ones
+        // up front — that is the list to book from next time.
+        if (TRACK === 'complete') {
+          const configured = await findBotHostsWithPayoutMethod();
+          const hostId = booking.host?.id || booking.host_id;
+          const match = configured.find((h) => h.id === hostId);
+          console.log(
+            match
+              ? `    · host ${hostId} HAS a payout method (${match.payoutMethod}) — payout block/release is provable`
+              : `    · host ${hostId} has NO payout method; its payout will be blocked for that reason regardless of ` +
+                `the dispute, so the release assertion softens to "not ready". Bookable hosts WITH a method: ` +
+                `${configured.map((h) => `${h.id}(${h.payoutMethod})`).join(', ') || 'none — run test-data `make seed-bot-host-payout-method apply=1`'}`
+          );
+        }
       },
     },
     {
@@ -265,6 +308,10 @@ export default {
             }
           );
         } catch (e) {
+          // A missing capability (expired ADC, no PayPal creds) must stay a
+          // SKIP — wrapping it in a diagnosis would turn a ⏭ into a ✗ on a
+          // money case, which reads exactly like a real regression.
+          if (isSkip(e)) throw e;
           // A bare timeout here is ambiguous in a way that matters: either the
           // human has not filed the dispute yet, or they have and OUR webhook
           // failed to map it to the booking. Ask PayPal directly and say which
@@ -273,13 +320,25 @@ export default {
           try {
             requirePayPalCreds();
             const found = await findDisputesForCapture(ctx.charge.capture_id);
-            verdict = found.length
-              ? `PayPal DOES have ${found.length} dispute(s) against capture ${ctx.charge.capture_id} ` +
+            if (found.length) {
+              verdict =
+                `PayPal DOES have ${found.length} dispute(s) against capture ${ctx.charge.capture_id} ` +
                 `(${found.map((d) => `${d.dispute_id}:${d.status}`).join(', ')}) — so the dispute was filed and ` +
-                `payment-service did NOT map it onto this booking. That is a product bug, not a missing manual step.`
-              : `PayPal has NO dispute against capture ${ctx.charge.capture_id} — step 3 of the human recipe has not ` +
-                `been done yet (file it as the sandbox buyer via "Report a Problem"), or it is still propagating.`
+                `payment-service did NOT map it onto this booking. That is a product bug, not a missing manual step.`;
+            } else if (found.unrecognisedId) {
+              // PayPal rejected the capture id outright, which is a different
+              // problem from "filed but unmapped" — say so rather than implying
+              // the human forgot a step.
+              verdict =
+                `PayPal does not recognise capture ${ctx.charge.capture_id} as a disputable transaction id. ` +
+                `Raw answer: ${found.unrecognisedId}`;
+            } else {
+              verdict =
+                `PayPal has NO dispute against capture ${ctx.charge.capture_id} — step 3 of the human recipe has not ` +
+                `been done yet (file it as the sandbox buyer via "Report a Problem"), or it is still propagating.`;
+            }
           } catch (inner) {
+            if (isSkip(inner)) throw inner;
             verdict = `could not ask PayPal: ${inner.message}`;
           }
           throw new Error(`${e.message}\n     DIAGNOSIS: ${verdict}`);
@@ -297,19 +356,21 @@ export default {
           `the charge row must read 'disputed' while the dispute is open (the shared shouldCompleteTransaction rule ` +
             `applies to PayPal too), got '${charge.status}'`
         );
-        ctx.disputeId = charge.dispute_id;
-
         // Cross-check the id we are about to act on really is PayPal's, and
         // really belongs to this capture — deciding the wrong dispute would be
-        // an irreversible action on someone else's sandbox data.
+        // an irreversible action on someone else's sandbox data. NOTHING is
+        // published to ctx until that passes (see requireVerifiedDispute).
         requirePayPalCreds();
-        const dispute = await getDispute(ctx.disputeId);
+        const candidateId = charge.dispute_id;
+        const dispute = await getDispute(candidateId);
         const captures = (dispute.disputed_transactions || []).map((t) => t.seller_transaction_id);
         assert(
-          captures.includes(ctx.charge.capture_id),
-          `PayPal dispute ${ctx.disputeId} is against capture(s) ${JSON.stringify(captures)}, not this booking's ` +
-            `capture ${ctx.charge.capture_id} — refusing to decide a dispute that is not this booking's`
+          captures.includes(charge.capture_id),
+          `PayPal dispute ${candidateId} is against capture(s) ${JSON.stringify(captures)}, not this booking's ` +
+            `capture ${charge.capture_id} — refusing to decide a dispute that is not this booking's`
         );
+        ctx.disputeId = candidateId;
+        ctx.disputeVerified = true;
         console.log(
           `    · PayPal dispute ${ctx.disputeId}: status=${dispute.status} state=${dispute.dispute_state} ` +
             `stage=${dispute.dispute_life_cycle_stage} actions=[${disputeActions(dispute).join(', ')}]`
@@ -327,14 +388,14 @@ export default {
           // may yet pay the buyer — refunding too pays them twice.
           const current = await getBooking(ctx.tokens, ctx.booking.id);
           if (current.status !== 'cancelled') await cancelBooking(ctx.tokens, ctx.booking.id, 'gateway suite: PayPal dispute flow');
-          const held = await poll(
+          await poll(
             async () => {
-              const rows = await getRefundRequestsByBookingId(ctx.booking.id);
-              const r = rows.find((x) => x.status === 'held_dispute');
-              return { done: !!r, value: r ?? rows };
+              const r = await theRefundRequest(ctx.booking.id).catch(() => null);
+              return { done: r?.status === 'held_dispute', value: r };
             },
             { timeoutMs: 150000, intervalMs: 6000, desc: `a held_dispute refund_request for booking ${ctx.booking.id}` }
           );
+          const held = await theRefundRequest(ctx.booking.id);
           assert(
             held.provider === 'paypal',
             `the held refund request must record the PayPal provider (the refund, if ever sent, goes back through ` +
@@ -345,6 +406,7 @@ export default {
             `a held_dispute request MUST carry ledger_transaction_id — without it closeHeldRow returns early and the ` +
               `guest's history shows nothing when the dispute resolves`
           );
+          // Recorded so every later assertion is pinned to THIS row.
           ctx.refundRequestId = held.id;
 
           const refunds = (await getBookingTransactions(ctx.tokens, ctx.booking.id)).filter((t) => t.type === 'refund');
@@ -370,12 +432,13 @@ export default {
         await runAutoCompleteSweep();
         const payout = await poll(
           async () => {
-            const rows = await getPayoutsByBookingId(ctx.booking.id);
-            return { done: rows.length > 0, value: rows[0] };
+            const p = await thePayout(ctx.booking.id);
+            return { done: !!p, value: p };
           },
           { timeoutMs: 180000, intervalMs: 6000, desc: `a payouts row for completed booking ${ctx.booking.id}` }
         );
         ctx.hostPayoutMethod = (await getUserPayoutMethod(payout.host_id)) || '(none)';
+        console.log(`    · host ${payout.host_id} payout_method=${ctx.hostPayoutMethod}`);
         console.log(
           `    · payout ${payout.id} status=${payout.status} has_dispute=${payout.has_dispute} ` +
             `payment_intent_id=${JSON.stringify(payout.payment_intent_id)} ` +
@@ -404,11 +467,10 @@ export default {
     {
       name: `decide the dispute in the ${OUTCOME === 'buyer' ? 'BUYER' : 'SELLER'}'s favour through the PayPal sandbox API`,
       run: async () => {
-        requireSubjectResolved();
+        requireVerifiedDispute();
         requirePayPalCreds();
-        assert(ctx.disputeId, 'no PayPal dispute id resolved — the previous case must run first');
 
-        const decided = await decideDispute(ctx.disputeId, OUTCOME);
+        const decided = await decideDispute(ctx.disputeId, OUTCOME, { expectedCaptureId: ctx.charge.capture_id });
         const code = outcomeCode(decided);
         ctx.outcomeCode = code;
         console.log(
@@ -474,9 +536,8 @@ export default {
         if (TRACK === 'cancel') {
           const req = await poll(
             async () => {
-              const rows = await getRefundRequestsByBookingId(ctx.booking.id);
-              const r = rows[0];
-              return { done: !!r && r.status !== 'held_dispute', value: r };
+              const r = await theRefundRequest(ctx.booking.id, { expectId: ctx.refundRequestId });
+              return { done: r.status !== 'held_dispute', value: r };
             },
             { timeoutMs: 180000, intervalMs: 6000, desc: `refund_request for ${ctx.booking.id} to leave held_dispute` }
           );
@@ -493,10 +554,22 @@ export default {
                 `'settled_by_chargeback', never 'refunded' — got '${req.status}'`
             );
             assert(
-              !req.refund_id || String(req.refund_id).startsWith('chargeback:'),
-              `no provider refund may be issued when the buyer already won; refund_id=${req.refund_id}`
+              !req.refund_id,
+              `a buyer win issues no provider refund, so the refund_request must carry no refund_id, got '${req.refund_id}'`
             );
-            assert(refunds[0].status !== 'on_hold', `the held refund row must reach a terminal state, still 'on_hold'`);
+            assert(
+              refunds[0].status === 'completed',
+              `a buyer win means PayPal returned the money — the guest's refund row must read 'completed', got ` +
+                `'${refunds[0].status}'`
+            );
+            // `chargeback:<disputeId>` is written on the LEDGER row by
+            // closeHeldRow, and the gateway does not expose it.
+            const ledger = await theRefundLedgerRow(ctx.booking.id);
+            assert(
+              String(ledger.refund_id || '') === `chargeback:${ctx.disputeId}`,
+              `the closed ledger row must record the chargeback that paid it — expected ` +
+                `refund_id='chargeback:${ctx.disputeId}', got '${ledger.refund_id}'`
+            );
           } else {
             // Seller win. Per the 2026-09-01 decision recorded at
             // payment-service payment_dispute.go:353-362 the parked policy
@@ -515,17 +588,28 @@ export default {
               Math.abs(refunds[0].amount) < 0.005,
               `a seller win pays the guest nothing — expected the closed refund row at 0, got ${refunds[0].amount}`
             );
+            const ledger = await theRefundLedgerRow(ctx.booking.id);
+            assert(
+              !ledger.refund_id,
+              `a seller win issues no refund at all — the ledger row must carry no refund_id, got '${ledger.refund_id}'`
+            );
           }
           return;
         }
 
         // complete track — the host's money.
+        // Poll ONLY on the resolution signal. `has_dispute === !buyerWon` was
+        // already true on the seller track BEFORE resolution (the payout is
+        // flagged while the dispute is open), so including it returned the
+        // stale row immediately and the assertions below failed by
+        // construction. `dispute_info.status` is written only by
+        // resolvePayoutsForDispute, so it is the one field that proves the
+        // close was processed.
         const payout = await poll(
           async () => {
-            const rows = await getPayoutsByBookingId(ctx.booking.id);
-            const p = rows[0];
-            const settled = p && (p.dispute_info?.status === ctx.expectedInternal || p.has_dispute === !buyerWon);
-            return { done: !!settled, value: p };
+            const p = await thePayout(ctx.booking.id);
+            const resolved = p?.dispute_info?.status === ctx.expectedInternal && (buyerWon || p.has_dispute === false);
+            return { done: !!resolved, value: p };
           },
           {
             timeoutMs: 180000,
@@ -557,14 +641,25 @@ export default {
             !/[Dd]ispute/.test(payout.last_error || ''),
             `the dispute must no longer be the reason the payout is held — last_error=${JSON.stringify(payout.last_error)}`
           );
-          if (payout.status === 'blocked') {
-            // Correct for a method-less host, and only for that reason.
+          // With a payout-method-configured host (test-data's
+          // `make seed-bot-host-payout-method`) nothing is left holding this
+          // payout, so it must be released. Without one, the no-method block
+          // must SURVIVE the win — that is the inverse fence.
+          const configured = ctx.hostPayoutMethod && !['(none)', 'not_specified'].includes(ctx.hostPayoutMethod);
+          if (configured) {
             assert(
-              ['(none)', 'not_specified'].includes(ctx.hostPayoutMethod),
-              `payout stayed blocked but the host's payout_method is '${ctx.hostPayoutMethod}' — that is not the ` +
-                'no-method case, so a seller win left it stuck'
+              payout.status === 'ready',
+              `the host has a payout method (${ctx.hostPayoutMethod}) and the dispute was won, so nothing is holding ` +
+                `this payout — expected status='ready', got '${payout.status}' ` +
+                `(last_error=${JSON.stringify(payout.last_error || '')})`
             );
-            console.log(`    · payout remains blocked for host_payout_method_not_configured (fixture ceiling, see header)`);
+          } else {
+            assert(
+              payout.status !== 'ready',
+              `the host has NO payout method (${ctx.hostPayoutMethod}), so winning the dispute must NOT make the ` +
+                `payout payable — it must stay blocked on the no-method reason, got status='ready'`
+            );
+            console.log(`    · payout remains blocked for host_payout_method_not_configured (no seeded method — see header)`);
           }
         }
       },

@@ -46,7 +46,7 @@
 // is what loads gitignored tests/.env, so without this import the credentials
 // below are invisible whenever this module is used outside a flow that already
 // imported env.mjs.
-import { config } from './env.mjs';
+import { config, assertStagingGateway } from './env.mjs';
 import { skip } from './skip.mjs';
 import { poll } from './poll.mjs';
 
@@ -74,11 +74,9 @@ export function requirePayPalCreds() {
     );
   }
   // The flow that uses this cancels or completes a real booking through the
-  // gateway, so a production GW_URL must stop it even though the PayPal host
-  // itself is pinned to the sandbox.
-  if (config.gwUrl.includes('api.corneroom.com') || config.gwUrl.includes('production')) {
-    throw new Error(`REFUSING TO RUN: GW_URL points at production (${config.gwUrl}). This flow is staging-only.`);
-  }
+  // gateway, so the gateway must be the staging one even though the PayPal host
+  // itself is pinned to the sandbox. Allow-listed, not deny-listed.
+  assertStagingGateway('the PayPal dispute flow');
   return { clientId, secret };
 }
 
@@ -165,7 +163,13 @@ export async function findDisputesForCapture(captureId) {
     );
     return json.items || [];
   } catch (e) {
-    if (/INVALID_REQUEST/.test(e.message)) {
+    // Narrow on purpose: ONLY the "PayPal does not recognise this
+    // disputed_transaction_id" shape is treated as "no disputes". Any other
+    // INVALID_REQUEST (a malformed page_size, a schema change) is a real error
+    // and must not be laundered into an empty result.
+    const isUnknownTransactionId =
+      /INVALID_REQUEST/.test(e.message) && /disputed_transaction_id|INVALID_REQUEST"\}\]/.test(e.message);
+    if (isUnknownTransactionId) {
       const empty = [];
       empty.unrecognisedId = e.message;
       return empty;
@@ -270,9 +274,31 @@ async function adjudicate(disputeId, adjudicationOutcome) {
 //              non-adjudication way to force a seller win
 // Returns the dispute once PayPal reports it terminal, so the caller can assert
 // on the real `outcome_code`.
-export async function decideDispute(disputeId, winner) {
+//
+// `expectedCaptureId` is REQUIRED and is re-verified here, against the dispute
+// detail this function reads for itself. Deciding a dispute is irreversible and
+// the sandbox account holds other people's disputes, so ownership must not be
+// something a caller can forget, check too late, or check and then ignore —
+// the test runner deliberately continues past a failed case, so a caller-side
+// assertion alone does NOT stop the next case calling this. The guard belongs
+// in the primitive.
+export async function decideDispute(disputeId, winner, { expectedCaptureId } = {}) {
   if (!['buyer', 'seller'].includes(winner)) throw new Error(`winner must be 'buyer' or 'seller', got '${winner}'`);
+  if (!expectedCaptureId) {
+    throw new Error(
+      `decideDispute(${disputeId}) requires expectedCaptureId — refusing to close a dispute without proving it ` +
+        'belongs to the capture under test'
+    );
+  }
   const before = await getDispute(disputeId);
+  const captures = (before.disputed_transactions || []).map((t) => t.seller_transaction_id);
+  if (!captures.includes(expectedCaptureId)) {
+    throw new Error(
+      `REFUSING to decide dispute ${disputeId}: it is filed against capture(s) ${JSON.stringify(captures)}, not the ` +
+        `expected ${expectedCaptureId}. Closing it would be an irreversible action on a dispute that is not the one ` +
+        'under test.'
+    );
+  }
   if (isTerminal(before)) {
     throw new Error(
       `dispute ${disputeId} is already terminal (outcome_code=${outcomeCode(before)}) — it cannot be decided again; ` +
@@ -296,7 +322,7 @@ export async function decideDispute(disputeId, winner) {
 }
 
 // PayPal outcome_code → the internal status payment-service normalizes it to
-// (`paypalDisputeOutcomeStatus`, payment-service internal/service/payment_dispute.go:1020).
+// (`paypalDisputeOutcomeStatus` in payment-service internal/service/payment_dispute.go).
 // Mirrored here so the test asserts the mapping rather than restating one side
 // of it: if the service's buckets change, this table is the thing to update.
 export function expectedInternalStatus(code) {

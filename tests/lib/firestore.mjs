@@ -214,18 +214,18 @@ export async function getUserPayoutMethod(userId) {
 // Seed one with test-data's `make seed-bot-host-payout-method apply=1`.
 export async function findBotHostsWithPayoutMethod() {
   return withAdcSkip('listing bot hosts with a payout method', async () => {
-  const out = [];
-  for (const method of ['paypal', 'stripe', 'manual']) {
-    const snap = await firestore().collection('users').where('payout_method', '==', method).get();
-    for (const d of snap.docs) {
-      const u = d.data();
-      // Bot only: the suite must never book a real host (they are notified for
-      // every booking, payment and cancellation).
-      if (u.bot !== true) continue;
-      out.push({ id: d.id, email: u.email, payoutMethod: method, payoutEmail: u.payout_email || '' });
+    const out = [];
+    for (const method of ['paypal', 'stripe', 'manual']) {
+      const snap = await firestore().collection('users').where('payout_method', '==', method).get();
+      for (const d of snap.docs) {
+        const u = d.data();
+        // Bot only: the suite must never book a real host (they are notified
+        // for every booking, payment and cancellation).
+        if (u.bot !== true) continue;
+        out.push({ id: d.id, email: u.email, payoutMethod: method, payoutEmail: u.payout_email || '' });
+      }
     }
-  }
-  return out;
+    return out;
   });
 }
 

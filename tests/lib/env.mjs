@@ -36,6 +36,30 @@ export const config = {
   hostPassword: process.env.TEST_HOST_PASSWORD || '',
 };
 
+// The ONE host the irreversible dispute flows are allowed to drive.
+//
+// An ALLOW-LIST, not a deny-list of production-looking substrings: a deny-list
+// is a guess about what production will be called, and it fails open for
+// anything it did not think of (a new custom domain, an IP, a tunnel). These
+// flows cancel and complete real bookings and close real disputes, so the only
+// safe rule is "this exact staging gateway or nothing".
+export const STAGING_GATEWAY_HOST = 'app-staging-gateway-cissa23j.uc.gateway.dev';
+
+export function assertStagingGateway(what) {
+  let host;
+  try {
+    host = new URL(config.gwUrl).host;
+  } catch {
+    throw new Error(`REFUSING TO RUN ${what}: GW_URL is not a valid URL (${config.gwUrl})`);
+  }
+  if (host !== STAGING_GATEWAY_HOST) {
+    throw new Error(
+      `REFUSING TO RUN ${what}: GW_URL host is '${host}', and this flow may only ever run against the staging ` +
+        `gateway ('${STAGING_GATEWAY_HOST}'). It cancels and completes real bookings and closes real disputes.`
+    );
+  }
+}
+
 export function requireCreds() {
   if (!config.email || !config.password) {
     console.error(

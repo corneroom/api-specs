@@ -186,13 +186,12 @@ import { requireStripeSecret, findDisputeForIntent, closeDisputeWon, closeDisput
 import {
   firestore,
   fastForwardBookingToCompletion,
-  getPayoutsByBookingId,
   getRefundRequestsByBookingId,
-  getTransactionsByBookingId,
   getUserPayoutMethod,
   findBotHostsWithPayoutMethod,
 } from '../lib/firestore.mjs';
 import { runAutoCompleteSweep } from '../lib/staging-jobs.mjs';
+import { theRefundRequest, thePayout, theRefundLedgerRow } from '../lib/money-rows.mjs';
 
 const ctx = { bookings: {} };
 
@@ -319,44 +318,21 @@ async function cancelAndExpectHold(key) {
   const entry = ctx.bookings[key];
   await cancelBooking(ctx.guest.tokens, entry.id);
   entry.cancelled = true;
-  const rows = await poll(
+  const held = await poll(
     async () => {
       const all = await getRefundRequestsByBookingId(entry.id);
-      return { done: all.some((x) => x.status === 'held_dispute'), value: all };
+      const r = all.find((x) => x.status === 'held_dispute');
+      return { done: !!r, value: r ?? all };
     },
     { timeoutMs: 120000, intervalMs: 5000, desc: `a held_dispute refund_request for booking ${entry.id}` }
   );
-  // The query is deliberately plural: a duplicate request for one booking is a
-  // real bug (they are keyed `<bookingId>_cancel`), so it must fail loudly
-  // rather than be hidden by picking [0].
-  assert(
-    rows.length === 1,
-    `expected exactly ONE refund_request for booking ${entry.id}, got ${rows.length}: ${JSON.stringify(rows.map((r) => r.id))}`
-  );
-  const [held] = rows;
-  entry.refundRequestId = held.id;
-  return held;
-}
-
-// The one refund_request for a booking, insisting there is exactly one.
-async function theRefundRequest(bookingId) {
-  const rows = await getRefundRequestsByBookingId(bookingId);
-  assert(
-    rows.length === 1,
-    `expected exactly ONE refund_request for booking ${bookingId}, got ${rows.length}: ${JSON.stringify(rows.map((r) => r.id))}`
-  );
-  return rows[0];
-}
-
-// The one payout for a booking, insisting there is exactly one (payouts are
-// one-per-booking by construction).
-async function thePayout(bookingId) {
-  const rows = await getPayoutsByBookingId(bookingId);
-  assert(
-    rows.length <= 1,
-    `expected at most ONE payout for booking ${bookingId}, got ${rows.length}: ${JSON.stringify(rows.map((r) => r.id))}`
-  );
-  return rows[0] || null;
+  // Re-read through the exactly-one selector: a duplicate request for one
+  // booking is a real bug (they are keyed `<bookingId>_cancel`) and must fail
+  // loudly rather than be hidden by the `.find()` above.
+  const only = await theRefundRequest(entry.id);
+  // Recorded so every later assertion is pinned to THIS row (see money-rows.mjs).
+  entry.refundRequestId = only.id;
+  return only;
 }
 
 // Complete the confirmed bookings for real: move the stays into the past, then
@@ -405,10 +381,10 @@ async function completeAndAwaitPayout(keys) {
 }
 
 // The dispute close is a webhook round-trip; poll our own state, not Stripe's.
-const pollRefundRequest = (bookingId, want, desc) =>
+const pollRefundRequest = (entry, want, desc) =>
   poll(
     async () => {
-      const r = await theRefundRequest(bookingId);
+      const r = await theRefundRequest(entry.id, { expectId: entry.refundRequestId });
       return { done: want.includes(r.status), value: r };
     },
     { timeoutMs: 150000, intervalMs: 5000, desc }
@@ -429,7 +405,7 @@ const pollPayout = (bookingId, done, desc) =>
 // lands — it is on the LEDGER row, not on the refund_request).
 async function refundRows(bookingId) {
   const viaGateway = (await getBookingTransactions(ctx.guest.tokens, bookingId)).filter((t) => t.type === 'refund');
-  const viaFirestore = (await getTransactionsByBookingId(bookingId)).filter((t) => t.type === 'refund');
+  const viaFirestore = await theRefundLedgerRow(bookingId);
   return { viaGateway, viaFirestore };
 }
 
@@ -581,7 +557,7 @@ export default {
         const entry = ctx.bookings.lostCancel;
         await closeDisputeLost(entry.disputeId);
         const req = await pollRefundRequest(
-          entry.id,
+          entry,
           ['settled_by_chargeback', 'refunded', 'rejected'],
           `refund_request for ${entry.id} to leave held_dispute after the dispute was LOST`
         );
@@ -612,11 +588,10 @@ export default {
         // `chargeback:<disputeId>` is recorded as the LEDGER row's refund_id
         // (closeHeldRow), which the gateway does not expose — hence the
         // Firestore read.
-        assert(viaFirestore.length === 1, `expected one refund transaction in Firestore, got ${viaFirestore.length}`);
         assert(
-          String(viaFirestore[0].refund_id || '') === `chargeback:${entry.disputeId}`,
+          String(viaFirestore.refund_id || '') === `chargeback:${entry.disputeId}`,
           `the closed ledger row must record the chargeback that paid it — expected refund_id='chargeback:${entry.disputeId}', ` +
-            `got '${viaFirestore[0].refund_id}'`
+            `got '${viaFirestore.refund_id}'`
         );
       },
     },
@@ -650,7 +625,7 @@ export default {
         // refund is NOT then paid on top — see this file's header before
         // changing this.
         const req = await pollRefundRequest(
-          entry.id,
+          entry,
           ['rejected', 'refunded', 'settled_by_chargeback'],
           `refund_request for ${entry.id} to leave held_dispute after the dispute was WON`
         );
@@ -670,8 +645,8 @@ export default {
           `a won dispute pays the guest nothing — expected the closed refund row at 0, got ${viaGateway[0].amount}`
         );
         assert(
-          !viaFirestore[0]?.refund_id,
-          `a won dispute issues no refund at all — the ledger row must carry no refund_id, got '${viaFirestore[0]?.refund_id}'`
+          !viaFirestore.refund_id,
+          `a won dispute issues no refund at all — the ledger row must carry no refund_id, got '${viaFirestore.refund_id}'`
         );
       },
     },
