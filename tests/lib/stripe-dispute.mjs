@@ -14,8 +14,10 @@
 //      is never sent anywhere;
 //   2. no key at all is a SKIP, not a failure (lib/skip.mjs), so the CI run
 //      that has no secret still goes green on everything else;
-//   3. the key is never printed — not in errors, not in debug output. Stripe
-//      error bodies are echoed, request bodies are not.
+//   3. this module never prints the key — Stripe error bodies are echoed,
+//      request bodies are not. (Stripe itself masks the key in its own
+//      invalid-API-key error text, so a bad key surfaces as `sk_test_...***`
+//      rather than in full; that is Stripe's masking, not ours.)
 //
 // Source of the key: staging Secret Manager, into gitignored tests/.env —
 //   CLOUDSDK_CONFIG=$HOME/.gcloud/corneroom gcloud secrets versions access latest \

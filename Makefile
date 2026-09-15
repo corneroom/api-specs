@@ -182,6 +182,11 @@ test-gateway: ## Run the gateway integration suite (auth-aware, per-service, STA
 	@node tests/run.mjs
 test-gw: test-gateway ## Alias for test-gateway
 
+.PHONY: test-gateway-dispute
+test-gateway-dispute: ## Run the gateway suite INCLUDING the gated dispute-resolution flows (slow, irreversible; STAGING only)
+	@echo "⚠  Dispute flows enabled: this books real Stripe-sandbox stays, runs the completion sweep and CLOSES disputes."
+	@DISPUTE_FLOW=1 node tests/run.mjs
+
 # Read-only smoke suite — no credentials, no writes, safe against production.
 # ENV is required (no default) for the same reason `gateway` requires it: a
 # silent default is how you end up verifying the wrong environment.

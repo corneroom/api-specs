@@ -168,14 +168,27 @@ Write flows currently here, all money state-machine transitions:
 | `conversation-flow.mjs` | a guest ↔ host thread about a listing: opened (and DEDUPED — a repeat open returns the same conversation), sent, unread-counted, read (`read_by` stamped), replied to, polled, edited by its sender only, and an attachment uploaded through `POST /documents/upload` and fetched back **byte for byte** by the recipient while the raw bucket URL stays private. A third account can read none of it and cannot post into it |
 | `community-flow.mjs` | a feed post the suite owns: published public, visible in the author's feed, another user's feed and the anonymous public profile feed; likes idempotent and reversible; views counted; the feed viewer's report reaching moderation; a block hiding **exactly** that author's items and nothing else, and unblock restoring them; author-only delete, and gone from both feeds |
 | `review-flow.mjs` | who may review, and when: a stay that hasn't started can't be reviewed, a stranger to the booking can't review it, an unknown booking 404s, malformed bodies 422, an experience review can't be aimed at a space booking — and every refusal leaves no review behind |
-| `payment-dispute-resolution-flow.mjs` | CR-650 / CR-679 — what happens when the dispute CLOSES: won → the held refund is closed WITHOUT paying (the 2026-09-01 rule, see the file header) and the dispute stops blocking the host's payout; lost → the held request settles as `settled_by_chargeback` and the payout stays blocked. **Gated + currently expected-red on the three payout cases** — see "The gated flow" below |
+| `payment-dispute-resolution-flow.mjs` | CR-650 / CR-679 — what happens when a STRIPE dispute CLOSES: won → the held refund is closed WITHOUT paying (the 2026-09-01 rule, see the file header) and the payout is released; lost → the held request settles as `settled_by_chargeback`, the ledger row reads `completed` with `refund_id: chargeback:<id>`, and the payout stays blocked. **Gated** — see "The gated dispute flows" below |
+| `paypal-dispute-resolve-flow.mjs` | CR-650 / CR-678 — the PayPal twin. A human must pay and file the dispute (PayPal has no API for either); the suite then observes, decides the dispute through the sandbox API and asserts the same terminal outcomes. **Gated**, and skips with a 4-line human recipe when no booking is named |
 | `devices-flow.mjs` | the push-token registry on a throwaway account — register, read back with the token intact, update in place (no duplicate row, token preserved), unregister, idempotent repeat unregister |
 
-### The gated flow: dispute resolution (`payment-dispute-resolution-flow.mjs`)
+### The gated dispute flows
 
-One flow needs two capabilities the rest of the suite deliberately does not have,
-so its cases **skip** (`⏭`, via `lib/skip.mjs`) instead of failing when they are
-absent — a skip means *missing capability*, never *the product misbehaved*:
+Two flows are **not** part of a normal run, even with every credential present:
+
+```bash
+make test-gateway            # everything EXCEPT the dispute flows
+make test-gateway-dispute    # the whole suite WITH them (DISPUTE_FLOW=1)
+```
+
+They are gated on `DISPUTE_FLOW=1` because between them they book four real
+Stripe-sandbox stays, fast-forward bookings, trigger the real completion sweep
+and **close disputes irreversibly** — ~15 minutes, and a dispute can only be
+decided once. A plain `make test-gateway` must stay a few minutes long.
+
+They also need capabilities the rest of the suite deliberately does not have,
+so their cases **skip** (`⏭`, via `lib/skip.mjs`) instead of failing when those
+are absent — a skip means *missing capability*, never *the product misbehaved*:
 
 | Capability | Why | Without it |
 |---|---|---|

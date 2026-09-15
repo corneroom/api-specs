@@ -43,6 +43,24 @@ export async function loginHost() {
   return cachedHost;
 }
 
+// A THIRD kind of identity: an arbitrary account named by env vars, used by
+// flows whose subject account is chosen per run (e.g. the PayPal dispute flow,
+// where a human pays as whichever guest they were logged in as). Cached PER
+// EMAIL for the same reason `login()` is cached at all — user-service
+// rate-limits its whole auth group to 10 requests per minute per IP.
+//
+// Returns the same shape as `login()`, so `authHeaders(tokens, ...)` works
+// unchanged. The password is never logged; `label` is what appears on failure.
+const cachedByEmail = new Map();
+
+export async function loginAs(email, password, label = 'named account') {
+  if (!email || !password) throw new Error(`${label}: email and password are both required`);
+  if (cachedByEmail.has(email)) return cachedByEmail.get(email);
+  const tokens = await loginWithPassword(email, password, label);
+  cachedByEmail.set(email, tokens);
+  return tokens;
+}
+
 // Model how the mobile app authenticates. The Flutter AuthInterceptor sends
 // THREE headers on every request (see mobile lib/core/network/interceptors/
 // auth_interceptor.dart): Authorization, X-Corneroom-Access, X-Forwarded-Authorization.
