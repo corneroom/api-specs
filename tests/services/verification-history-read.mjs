@@ -1,8 +1,9 @@
-// verification-service — reading a submission back. DISABLED: BLOCKED ON A
-// PRODUCT BUG, NOT ON THE TEST.
+// verification-service — reading a submission back.
 //
-// A `.mjs.disabled` file is a finished flow deliberately not discovered by
-// run.mjs (see tests/README.md). Re-enable by renaming to `.mjs` — nothing else.
+// ENABLED 2026-09-14: the product bug below is FIXED (verification-service
+// a329289 — `document_type` is now Optional on VerificationStatusResponse) and
+// these cases pass against staging. The write-up is kept as the regression's
+// history; the cases are the guard against it coming back.
 //
 // ─────────────────────────────────────────────────────────────────────────────
 // THE BUG (found 2026-09-13 while writing services/verification-flow.mjs)
@@ -120,7 +121,7 @@ async function anyPublishedImageUrl(tokens) {
 }
 
 export default {
-  name: 'verification-service (reading a submission back — BLOCKED, see file header)',
+  name: 'verification-service (reading a submission back)',
   cases: [
     {
       name: 'setup: a fresh user submits a selfie and it is approved',
