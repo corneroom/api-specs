@@ -1,4 +1,22 @@
-import { config, requireCreds } from './env.mjs';
+import { config, requireCreds, requireHostCreds } from './env.mjs';
+
+// POST /users/login/email — tokens come back in RESPONSE HEADERS, not the body.
+// `label` only ever appears in the failure message; the password is never
+// logged or echoed.
+async function loginWithPassword(email, password, label) {
+  const res = await fetch(`${config.gwUrl}/users/login/email`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  });
+  if (res.status !== 200) {
+    throw new Error(`${label} login failed: ${res.status} ${await res.text()}`);
+  }
+  const raw = res.headers.get('x-corneroom-access');
+  const refresh = res.headers.get('x-corneroom-refresh');
+  if (!raw) throw new Error(`${label} login ok but no X-Corneroom-Access header returned`);
+  return { raw, refresh };
+}
 
 let cached = null;
 
@@ -6,19 +24,23 @@ let cached = null;
 export async function login() {
   if (cached) return cached;
   requireCreds();
-  const res = await fetch(`${config.gwUrl}/users/login/email`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: config.email, password: config.password }),
-  });
-  if (res.status !== 200) {
-    throw new Error(`login failed: ${res.status} ${await res.text()}`);
-  }
-  const raw = res.headers.get('x-corneroom-access');
-  const refresh = res.headers.get('x-corneroom-refresh');
-  if (!raw) throw new Error('login ok but no X-Corneroom-Access header returned');
-  cached = { raw, refresh };
+  cached = await loginWithPassword(config.email, config.password, 'suite account');
   return cached;
+}
+
+let cachedHost = null;
+
+// The SECOND identity: a seeded bot HOST. Cached per process for the same
+// reason `login()` is — user-service rate-limits its whole auth group to 10
+// requests per minute per IP, so a flow must not re-login per case.
+//
+// Mirrors `login()` exactly, including the shape of what it returns, so
+// `authHeaders(hostTokens, ...)` works unchanged everywhere.
+export async function loginHost() {
+  if (cachedHost) return cachedHost;
+  requireHostCreds();
+  cachedHost = await loginWithPassword(config.hostEmail, config.hostPassword, 'bot host account');
+  return cachedHost;
 }
 
 // Model how the mobile app authenticates. The Flutter AuthInterceptor sends

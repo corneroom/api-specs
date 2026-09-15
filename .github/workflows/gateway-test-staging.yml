@@ -32,6 +32,12 @@ jobs:
           GW_URL: https://app-staging-gateway-cissa23j.uc.gateway.dev/api/v1
           TEST_EMAIL: ${{ secrets.GATEWAY_TEST_EMAIL }}
           TEST_PASSWORD: ${{ secrets.GATEWAY_TEST_PASSWORD }}
+          # Second identity: a seeded bot HOST, so the suite can drive the host
+          # side of a request-to-book stay (accept / decline). Only
+          # services/booking-host-flow.mjs needs it; everything else runs
+          # without it. See tests/README.md.
+          TEST_HOST_EMAIL: ${{ secrets.GATEWAY_TEST_HOST_EMAIL }}
+          TEST_HOST_PASSWORD: ${{ secrets.GATEWAY_TEST_HOST_PASSWORD }}
 
       - name: Notify Slack on failure
         if: failure()

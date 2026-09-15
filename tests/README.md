@@ -75,6 +75,34 @@ make test-gateway                    # (or: node tests/run.mjs)
 Creds come from `tests/.env` (gitignored) or the environment (`GW_URL`,
 `TEST_EMAIL`, `TEST_PASSWORD`) so CI can inject them. Never commit real creds.
 
+### Two accounts, and why
+
+| | `TEST_EMAIL` | `TEST_HOST_EMAIL` |
+|---|---|---|
+| Role | guest / reader | seeded bot **HOST** |
+| Hosts anything | no (`has_listing:false`) | yes — a bot-pool listing |
+| Needed by | everything | `services/booking-host-flow.mjs` only |
+| CI secret | `GATEWAY_TEST_EMAIL` / `…_PASSWORD` | `GATEWAY_TEST_HOST_EMAIL` / `…_PASSWORD` |
+
+Every host-side transition — `PATCH /bookings/{id}/accept`, `/reject`, and the
+luggage endpoints — requires `booking.Host.ID == userID` (booking-service
+`internal/service/booking.go:1060`, `:930`). The primary account hosts nothing,
+so those were undrivable and explicitly descoped in
+`booking-lifecycle-flow.mjs`'s and `payouts-flow.mjs`'s headers. The second
+credential closes that: `lib/auth.mjs` `loginHost()` mirrors `login()` (same
+cached-per-process shape, so `authHeaders(hostTokens, …)` works unchanged) and
+`lib/env.mjs` `requireHostCreds()` **throws** instead of exiting, so a run
+without it fails that one flow loudly and still executes every other flow's
+cleanup.
+
+It must be a **bot** host, for the same reason the fixture pool is bot-only:
+that flow books, accepts, declines and cancels for real, and a genuine host is
+pushed a notification for each. `lib/booking-flow.mjs` exposes
+`pickListingHostedBy` / `pickListingNotHostedBy`, which resolve the fixture from
+the bot pool by the host id read from `GET /users/me` — nothing is hardcoded, so
+a staging reseed is survivable as long as the named account still hosts a
+request-to-book listing.
+
 ## Auth model (important)
 
 The mobile `AuthInterceptor` sends **three** headers on every request:
@@ -126,6 +154,7 @@ Write flows currently here, all money state-machine transitions:
 | `payment-coupon-hold-flow.mjs` | one coupon can only discount one booking at a time; the hold releases when the booking drops it or its draft is deleted |
 | `payment-intent-reuse-flow.mjs` | one live PaymentIntent per booking — repeat/re-priced requests reuse it, and an authorized booking refuses a second one |
 | `booking-lifecycle-flow.mjs` | a request-to-book stay is AUTHORIZED and never captured while it waits for the host; a guest cancellation refunds exactly the policy tier (`full_refund_24h` / `fifty_percent_24h` / `no_refund`) |
+| `booking-host-flow.mjs` | the HOST side of the same stay, driven as a real seeded bot host (`TEST_HOST_EMAIL`): the request shows up in `GET /bookings/host`; a host cannot decide a booking on someone else's listing; **accept** captures the hold exactly once (booking → `confirmed`, Stripe → `succeeded`, ledger → `completed`) while crediting the host's `stats.earnings` **nothing** (that happens at completion, `booking_completion.go:358`); **decline** voids the hold (Stripe → `canceled`, ledger → `cancelled`, no refund row, nothing charged); and neither decision can be replayed |
 | `experience-reservations-flow.mjs` | guide-led Experiences end to end — reserve holds one seat (a repeat Reserve reuses it), the standalone `/payments/charges` captures immediately, a `flexible` cancel >24h out refunds the FULL gross and releases the seat, and a repeat cancel is a no-op |
 | `payouts-flow.mjs` | the host-money reads — `/payouts/connect/status`'s documented no-method shape, `/payments/earnings`'s response shape (that endpoint reads a collection nothing writes, so it can carry no money claim), and — on the ledger the product really keeps, `/users/me/stats` → `stats.earnings.<line>` — that a GUEST who pays for a stay and then cancels is credited nothing and gets no payout account. Its header records why Connect onboarding and "earnings moved" are descoped |
 | `verification-flow.mjs` | a selfie KYC submission is validated, auto-decided (staging `AI_MODE=mock`), and the approval lands on the user's profile as a verified entry via `verification-events`. Reading it back is blocked — see `verification-history-read.mjs.disabled` |
@@ -168,6 +197,20 @@ to re-enable it (rename back to `.mjs` — nothing else). Today that is:
 
 (`payment-dispute-flow.mjs.disabled` used to be listed here; the write race it
 exposed was fixed and it is enabled again.)
+
+### Still descoped, with the reason
+
+- **"earnings go UP after a completed stay."** The credit lands at
+  auto-completion, after check-out, and every fixture is booked ~300-600 days
+  out (`futureDates()` — near dates collide across the 6-hourly runs). Only the
+  negative is provable, and `booking-host-flow.mjs` proves it for a real host.
+- **A host owning BOTH an instant-book and a request-to-book listing.** Staging
+  has none: the 16 bot-hosted USD listings belong to 16 distinct New York seed
+  hosts, one each. The cross-host authorization case uses a *second* bot host's
+  listing instead. Nothing was toggled in Firestore to work around this.
+- **Luggage check-in / release.** Host-only, now unblocked by the host
+  credential, but a separate contract (`luggage_contract.md`) with its own
+  guest-confirm handshake.
 
 ## Roadmap
 - **Phase 1 (here):** read-only smoke of key endpoints + auth/security guards.

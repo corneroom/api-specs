@@ -274,6 +274,45 @@ export async function pickFreeListing(tokens) {
   return pickListing(tokens, { minPrice: 0, maxPrice: 0 });
 }
 
+// The HOST-side pickers. services/booking-host-flow.mjs logs in as a real
+// seeded bot host and has to find (a) that host's OWN listing, to receive a
+// request it can accept or decline, and (b) SOMEBODY ELSE's listing, to prove
+// a host cannot act on a booking that isn't theirs.
+//
+// Both resolve the listing from the SAME bot pool every other flow uses and
+// key off the host id read from `GET /users/me`, so nothing is hardcoded: a
+// staging reseed changes the ids, and these keep working as long as the
+// account named by TEST_HOST_EMAIL still owns a listing of the right kind.
+// That last part is the one thing they can't fix themselves, so the failure
+// message says exactly which constraint the environment stopped satisfying.
+export async function pickListingHostedBy(tokens, hostId, { instantBook = true } = {}) {
+  const pool = await botFixturePool(tokens, instantBook);
+  const mine = pool.filter((l) => l.host?.id === hostId);
+  if (mine.length === 0) {
+    throw new Error(
+      `host ${hostId} owns no bot-hosted ${FIXTURE_CURRENCY} ${instantBook ? 'instant-book' : 'request-to-book'} ` +
+        `listing among the ${pool.length} in the pool — point TEST_HOST_EMAIL at a seeded host that does, or reseed`
+    );
+  }
+  const [listing] = shuffled(mine);
+  console.log(`    · host fixture ${listing.id} — ${listing.price} ${listing.currency}, ${listing.cancellation_policy}, own host ${hostId}`);
+  return listing;
+}
+
+export async function pickListingNotHostedBy(tokens, hostId, { instantBook = true } = {}) {
+  const pool = await botFixturePool(tokens, instantBook);
+  const theirs = pool.filter((l) => l.host?.id && l.host.id !== hostId);
+  if (theirs.length === 0) {
+    throw new Error(
+      `no bot-hosted ${FIXTURE_CURRENCY} ${instantBook ? 'instant-book' : 'request-to-book'} listing owned by someone ` +
+        `OTHER than ${hostId} — the cross-host authorization case needs a second bot host's listing`
+    );
+  }
+  const [listing] = shuffled(theirs);
+  console.log(`    · other-host fixture ${listing.id} — bot host ${listing.host.id}`);
+  return listing;
+}
+
 // A far-future, semi-randomized 1-night date range (avoids booking-overlap
 // collisions with other concurrent runs on shared staging listings).
 export function futureDates() {

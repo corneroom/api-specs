@@ -22,13 +22,15 @@
 //    — the Stripe-hosted onboarding form — cannot be driven headless anyway.
 //    The auth guard on the endpoint stays in services/payouts.mjs.
 //
-// 2. "earnings go UP after a completed stay" — NOT DRIVABLE. Earnings are the
-//    HOST's, and every bookable fixture on staging is hosted by a seeded bot
-//    whose credentials this suite does not have (same blocker as host
-//    accept/decline — see booking-lifecycle-flow.mjs's header). Even with that
-//    identity the credit only happens at COMPLETION, after check-out, which for
-//    this suite's fixtures is ~a year out. The NEGATIVE half — "a guest is
-//    credited nothing" — is drivable and is asserted below, on the live surface.
+// 2. "earnings go UP after a completed stay" — STILL NOT DRIVABLE, but no
+//    longer for want of a host. The suite now holds a seeded bot HOST
+//    credential (TEST_HOST_EMAIL — see tests/README.md), and
+//    services/booking-host-flow.mjs asserts the HOST-side negative directly:
+//    accepting a stay, and then having it cancelled, credits
+//    `stats.earnings` nothing. The positive stays out of reach because the
+//    credit only happens at COMPLETION, after check-out, which for this suite's
+//    fixtures is ~a year out. The other negative half — "a guest is credited
+//    nothing" — is drivable and is asserted below, on the live surface.
 //
 // 3. `GET /payments/earnings` IS NOT THE EARNINGS LEDGER, so nothing here
 //    treats it as one. It reads the Firestore `earnings/{userId}` document

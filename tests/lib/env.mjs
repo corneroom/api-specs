@@ -28,6 +28,12 @@ export const config = {
   gwUrl: process.env.GW_URL || 'https://app-staging-gateway-cissa23j.uc.gateway.dev/api/v1',
   email: process.env.TEST_EMAIL || '',
   password: process.env.TEST_PASSWORD || '',
+  // SECOND account — a seeded bot HOST that owns bookable staging listings.
+  // The suite's primary account hosts nothing (`has_listing:false`), so every
+  // host-side transition (accept / reject / luggage check-in) used to be
+  // undrivable. See services/booking-host-flow.mjs.
+  hostEmail: process.env.TEST_HOST_EMAIL || '',
+  hostPassword: process.env.TEST_HOST_PASSWORD || '',
 };
 
 export function requireCreds() {
@@ -38,5 +44,19 @@ export function requireCreds() {
         '   (or export the vars in your shell / CI).\n'
     );
     process.exit(2);
+  }
+}
+
+// Host creds are needed by ONE flow, not by the whole run, so this THROWS
+// rather than exiting the process: a run without them should fail that flow's
+// cases loudly and still execute everything else (and, crucially, still run
+// the other flows' cleanup cases).
+export function requireHostCreds() {
+  if (!config.hostEmail || !config.hostPassword) {
+    throw new Error(
+      'Missing TEST_HOST_EMAIL / TEST_HOST_PASSWORD — the host-side flow needs a seeded bot HOST account ' +
+        '(see tests/.env.example and tests/README.md). In CI these come from the GATEWAY_TEST_HOST_EMAIL / ' +
+        'GATEWAY_TEST_HOST_PASSWORD repo secrets.'
+    );
   }
 }

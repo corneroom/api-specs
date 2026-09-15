@@ -23,19 +23,16 @@
 // clawed back later by a refund. That is what Part A pins, from outside, with
 // real Stripe sandbox objects.
 //
-// WHAT IS NOT COVERED, AND WHY — host accept / decline.
+// HOST ACCEPT / DECLINE LIVES IN services/booking-host-flow.mjs.
 // `PATCH /bookings/{id}/accept` and `/reject` both require
-// `booking.Host.ID == userID` (booking-service internal/service/booking.go:931
-// and :1057). Every bookable fixture on staging is hosted by a seeded bot whose
-// password this suite does not have and must not hardcode (tests/.env is the
-// only credential, and it hosts nothing — `GET /users/me` reports
-// `has_listing:false`). Standing up our own host is not a way out either: a
-// listing is only bookable when BOTH `verified` and `host.facematch_verified`
-// are true on the listing document (booking-service booking.go:39-47
-// `listingBookableByGuest`), and both are set by moderation/KYC, not by any
-// gateway call a test can make. So the accept/decline HAPPY paths are genuinely
-// undrivable headless and are deliberately absent rather than faked.
-// What IS drivable, and is asserted below, is the half that protects money:
+// `booking.Host.ID == userID` (booking-service internal/service/booking.go:930
+// and :1060), and this file's only credential hosts nothing — `GET /users/me`
+// reports `has_listing:false`. That is why the happy paths are absent HERE.
+// They are no longer absent from the suite: a SECOND credential
+// (TEST_HOST_EMAIL, a seeded bot host — see tests/README.md) drives them in
+// services/booking-host-flow.mjs, which owns "accept captures / decline voids".
+// What is drivable from the GUEST side, and is asserted below, is the half that
+// protects money:
 //   - a pending request is authorized and never captured (the state a decline
 //     would void, and the reason a decline costs the guest nothing), and
 //   - the guest cannot accept or decline their own request — the authorization
@@ -64,7 +61,9 @@
 // (403 "not the host" per the gateway spec; booking-service internal/service/
 // luggage.go enforces it), and the guest-side `/luggage/confirm` requires the
 // luggage sub-document to already be in `checked_in` — which only a host
-// check-in can create. Same blocker as accept/decline: no host identity. It is
+// check-in can create. The host identity that unblocked accept/decline (see
+// above) would unblock this too, but it is a separate contract
+// (luggage_contract.md) with its own guest-confirm handshake, so it stays
 // omitted rather than half-asserted.
 //
 // ── LEAK DISCIPLINE (see rewards-referral-flow.mjs's header) ───────────────
