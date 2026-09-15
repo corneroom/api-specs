@@ -22079,11 +22079,14 @@ components:
           description: Type of verification
         document_type:
           type: string
+          nullable: true
           enum:
             - drivers_license
             - passport
             - national_id
-          description: Document type
+          description: >-
+            Document type. Only set for facematch; null for selfie, voice,
+            location and background.
         status:
           type: string
           enum:
@@ -22116,7 +22119,6 @@ components:
         - id
         - user_id
         - verification_type
-        - document_type
         - status
         - created_at
         - updated_at

@@ -21266,12 +21266,15 @@ definitions:
         format: date-time
         type: string
       document_type:
-        description: Document type
+        description: >-
+          Document type. Only set for facematch; null for selfie, voice,
+          location and background.
         enum:
           - drivers_license
           - passport
           - national_id
         type: string
+        x-nullable: true
       id:
         description: Verification ID
         type: string
@@ -21313,7 +21316,6 @@ definitions:
       - id
       - user_id
       - verification_type
-      - document_type
       - status
       - created_at
       - updated_at
